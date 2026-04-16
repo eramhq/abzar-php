@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Validation;
 
 use Eram\Abzar\Digits\DigitConverter;
 
-class Iban
+final class Iban
 {
+    private function __construct()
+    {
+    }
+
     /**
      * IBAN bank codes (3-digit, positions 4-6).
      * Source: persian-tools v5.0.0-beta.0 sheba/codes.skip.ts (37 entries + 2)

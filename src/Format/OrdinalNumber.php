@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Format;
 
 use Eram\Abzar\Digits\DigitConverter;
 
-class OrdinalNumber
+final class OrdinalNumber
 {
+    private function __construct()
+    {
+    }
+
     public static function toWord(int $n): string
     {
         if ($n < 1) {

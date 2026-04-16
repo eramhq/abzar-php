@@ -1,12 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Validation;
 
 use Eram\Abzar\Digits\DigitConverter;
 
-class LegalId
+final class LegalId
 {
     private const COEFFICIENTS = [29, 27, 23, 19, 17];
+
+    private function __construct()
+    {
+    }
 
     public static function validate(string $input): ValidationResult
     {

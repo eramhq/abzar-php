@@ -1,11 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Format;
 
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Internal\ErrorInput;
 
-class TimeAgo
+final class TimeAgo
 {
+    private function __construct()
+    {
+    }
+
     private const MINUTE = 60;
     private const HOUR = 3600;
     private const DAY = 86400;
@@ -66,7 +73,9 @@ class TimeAgo
         $parsed = strtotime($timestamp);
 
         if ($parsed === false) {
-            throw new \InvalidArgumentException("تاریخ ورودی قابل تبدیل نیست: {$timestamp}");
+            throw new \InvalidArgumentException(
+                'تاریخ ورودی قابل تبدیل نیست: ' . ErrorInput::truncate($timestamp, 64)
+            );
         }
 
         return $parsed;

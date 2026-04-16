@@ -1,9 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Format;
 
-class NumberToWords
+final class NumberToWords
 {
+    private function __construct()
+    {
+    }
+
     private const ONES = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
 
     private const TEENS = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];

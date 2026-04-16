@@ -49,4 +49,33 @@ class ValidationResultTest extends TestCase
         $result = ValidationResult::failure('error', ['context' => 'test']);
         $this->assertSame(['context' => 'test'], $result->details());
     }
+
+    public function test_json_serialize_success(): void
+    {
+        $result = ValidationResult::success(['bank' => 'بانک ملی ایران']);
+        $this->assertSame(
+            '{"valid":true,"errors":[],"details":{"bank":"بانک ملی ایران"}}',
+            json_encode($result, JSON_UNESCAPED_UNICODE),
+        );
+    }
+
+    public function test_json_serialize_failure(): void
+    {
+        $result = ValidationResult::failure(['one', 'two'], ['field' => 'input']);
+        $this->assertSame(
+            ['valid' => false, 'errors' => ['one', 'two'], 'details' => ['field' => 'input']],
+            $result->jsonSerialize(),
+        );
+    }
+
+    public function test_stringable_valid(): void
+    {
+        $this->assertSame('valid', (string) ValidationResult::success());
+    }
+
+    public function test_stringable_failure_joins_errors(): void
+    {
+        $result = ValidationResult::failure(['one', 'two']);
+        $this->assertSame('one; two', (string) $result);
+    }
 }

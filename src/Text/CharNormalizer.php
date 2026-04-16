@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Text;
 
 use Eram\Abzar\Digits\DigitConverter;
@@ -37,24 +39,7 @@ class CharNormalizer
 
     public function normalizeContent(string $html): string
     {
-        if ($html === '') {
-            return $html;
-        }
-
-        $pattern = '/((?:<script[\s>][\s\S]*?<\/script>)|(?:<style[\s>][\s\S]*?<\/style>)|(?:<!--[\s\S]*?-->)|(?:<[^>]*>))/si';
-        $segments = preg_split($pattern, $html, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-        if ($segments === false) {
-            return $html;
-        }
-
-        foreach ($segments as &$segment) {
-            if (!isset($segment[0]) || $segment[0] !== '<') {
-                $segment = $this->normalize($segment);
-            }
-        }
-
-        return implode('', $segments);
+        return HtmlSegmenter::transformText($html, $this->normalize(...));
     }
 
     public function normalizeForSearch(string $text): string

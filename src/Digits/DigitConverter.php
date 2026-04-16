@@ -1,12 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Digits;
 
-class DigitConverter
+use Eram\Abzar\Text\HtmlSegmenter;
+
+final class DigitConverter
 {
     public const ENGLISH_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     public const PERSIAN_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
     public const ARABIC_DIGITS  = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+    private function __construct()
+    {
+    }
 
     public static function toPersian(string $text): string
     {
@@ -33,27 +41,10 @@ class DigitConverter
     }
 
     /**
-     * Convert digits in HTML content, skipping tags, scripts, and styles.
+     * Convert digits in HTML content, skipping tags, scripts, styles, and comments.
      */
     public static function convertContent(string $html): string
     {
-        if ($html === '') {
-            return $html;
-        }
-
-        $pattern = '/((?:<script[\s>][\s\S]*?<\/script>)|(?:<style[\s>][\s\S]*?<\/style>)|(?:<[^>]*>))/si';
-        $segments = preg_split($pattern, $html, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-        if ($segments === false) {
-            return $html;
-        }
-
-        foreach ($segments as &$segment) {
-            if (!isset($segment[0]) || $segment[0] !== '<') {
-                $segment = self::toPersian($segment);
-            }
-        }
-
-        return implode('', $segments);
+        return HtmlSegmenter::transformText($html, self::toPersian(...));
     }
 }

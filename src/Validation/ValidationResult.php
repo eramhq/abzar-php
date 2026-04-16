@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Validation;
 
-final class ValidationResult
+final class ValidationResult implements \JsonSerializable, \Stringable
 {
     /**
      * @param list<string>         $errors
@@ -50,5 +52,26 @@ final class ValidationResult
     public static function failure(string|array $errors, array $details = []): self
     {
         return new self(false, (array) $errors, $details);
+    }
+
+    /**
+     * @return array{valid: bool, errors: list<string>, details: array<string, mixed>}
+     */
+    public function jsonSerialize(): array
+    {
+        return [
+            'valid'   => $this->valid,
+            'errors'  => $this->errors,
+            'details' => $this->details,
+        ];
+    }
+
+    public function __toString(): string
+    {
+        if ($this->valid) {
+            return 'valid';
+        }
+
+        return $this->errors === [] ? 'invalid' : implode('; ', $this->errors);
     }
 }

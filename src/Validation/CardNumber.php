@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Validation;
 
 use Eram\Abzar\Digits\DigitConverter;
 
-class CardNumber
+final class CardNumber
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Bank BIN (first 6 digits) to Persian bank name.
      * Source: persian-tools v5.0.0-beta.0 banksCode.skip.ts (49 entries)

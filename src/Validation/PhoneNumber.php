@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Validation;
 
 use Eram\Abzar\Digits\DigitConverter;
 
-class PhoneNumber
+final class PhoneNumber
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Operator prefixes (3-digit after 09).
      * Source: persian-tools v5.0.0-beta.0

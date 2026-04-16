@@ -108,13 +108,36 @@ DigitConverter::convertContent('<a href="page-5">Item 5</a>');
 // '<a href="page-5">Item ۵</a>'
 ```
 
-## WordPress
+## Related packages
 
-Using WordPress? See [`eramhq/persian-kit`](https://github.com/eramhq/persian-kit) — a plugin that wires Abzar into the WordPress hooks you'd expect (`the_content`, `sanitize_title`, `pre_get_posts`, etc.) and adds admin tools for one-shot database normalization.
+Abzar deliberately stays narrow. Two companion packages cover adjacent ground:
+
+- [`eramhq/daynum`](https://github.com/eramhq/daynum) — jalali / shamsi calendar utilities. Abzar does **not** ship calendar logic; install daynum for anything date-related.
+- [`eramhq/persian-kit`](https://github.com/eramhq/persian-kit) — WordPress plugin that wires abzar into WP hooks (`the_content`, `sanitize_title`, `pre_get_posts`), adds admin tools for one-shot database normalization, and exposes shortcodes / blocks.
+
+See [`docs/en/related.md`](docs/en/related.md) for a longer comparison.
+
+## Versus other Persian PHP libraries
+
+|  | abzar | [persian-tools (JS)](https://github.com/persian-tools/persian-tools) | [nikapps/iran-validator](https://github.com/nikapps/iran-validator) |
+|---|---|---|---|
+| Language | PHP 8.1+ | JS/TS | PHP 7.4+ |
+| Zero runtime deps | Yes | — | Yes |
+| Typed result object (`isValid`/`errors`/`details`) | Yes | Partial | No (bool only) |
+| `JsonSerializable` result | Yes | n/a | No |
+| Structured error codes (roadmap) | Yes (`0.3`) | No | No |
+| Bank card / IBAN / phone / national-ID / legal-ID | Yes | Yes | Subset |
+| Number-to-words / time-ago / ordinals | Yes | Yes | No |
+| Slug / char normalize / digit convert | Yes | Partial | No |
+| WordPress integration | Via `eramhq/persian-kit` | No | No |
+
+## Framework bridges
+
+Abzar stays framework-agnostic. Integration recipes for Laravel FormRequest, Symfony Validator, Symfony Console, and WordPress live under [`docs/en/recipes/`](docs/en/recipes). Each is a few dozen lines — paste into your project and tweak.
 
 ## Stability
 
-Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.1@beta` until the API stabilizes.
+Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.1@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected.
 
 ## License
 

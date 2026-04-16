@@ -1,11 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Format;
 
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Internal\ErrorInput;
 
-class NumberFormatter
+final class NumberFormatter
 {
+    private function __construct()
+    {
+    }
+
     public static function withSeparators(int|float|string $number, string $separator = ','): string
     {
         if (is_string($number)) {
@@ -16,7 +23,9 @@ class NumberFormatter
         $numberStr = (string) $number;
 
         if (!preg_match('/^-?\d+(\.\d+)?$/', $numberStr)) {
-            throw new \InvalidArgumentException("مقدار ورودی عددی معتبر نیست: {$numberStr}");
+            throw new \InvalidArgumentException(
+                'مقدار ورودی عددی معتبر نیست: ' . ErrorInput::truncate($numberStr, 32)
+            );
         }
 
         $negative = str_starts_with($numberStr, '-');

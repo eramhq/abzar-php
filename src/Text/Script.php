@@ -1,9 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Text;
 
-class Script
+final class Script
 {
+    private function __construct()
+    {
+    }
+
     // Core Persian letters + digits + short vowels + alef variants + ZWNJ
     private const PERSIAN_BASIC = 'آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهیئؤ'
         . '۰۱۲۳۴۵۶۷۸۹'

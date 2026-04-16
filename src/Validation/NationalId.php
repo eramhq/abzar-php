@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Validation;
 
 use Eram\Abzar\Digits\DigitConverter;
 
-class NationalId
+final class NationalId
 {
+    private function __construct()
+    {
+    }
+
     /**
      * City code mappings: 3-digit prefix => [city, province].
      * Source: persian-tools v5.0.0-beta.0 place-by-ID data + Gravity Forms national_id.js
