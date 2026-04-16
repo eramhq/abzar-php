@@ -1,0 +1,68 @@
+{
+    "name": "eram/abzar",
+    "description": "Zero-runtime-dependency Persian (Farsi) utility toolkit for PHP 8.1+: validators (national ID, IBAN, bank card, phone), formatters (number-to-words, time-ago, ordinals), text utilities (slug, script detection, char normalization), and digit conversion.",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/eramhq/abzar-php",
+    "support": {
+        "issues": "https://github.com/eramhq/abzar-php/issues",
+        "source": "https://github.com/eramhq/abzar-php"
+    },
+    "keywords": [
+        "persian",
+        "farsi",
+        "iran",
+        "validation",
+        "national-id",
+        "iban",
+        "phone",
+        "slug",
+        "number-to-words",
+        "digit-conversion",
+        "utilities"
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Eram\\Abzar\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Eram\\Abzar\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    },
+    "archive": {
+        "exclude": [
+            "/.github",
+            "/tests",
+            "/tools",
+            "/phpunit.xml.dist",
+            "/phpstan.neon",
+            "/.gitattributes",
+            "/.gitignore",
+            "/vendor",
+            "/composer.lock",
+            "/.phpunit.cache",
+            "/.phpunit.result.cache",
+            "/.idea",
+            "/.vscode",
+            "/.DS_Store"
+        ]
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite=unit",
+        "phpstan": "phpstan analyse --memory-limit=512M"
+    }
+}
