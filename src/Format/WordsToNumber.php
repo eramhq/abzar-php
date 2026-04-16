@@ -9,9 +9,8 @@ namespace Eram\Abzar\Format;
  * {@see NumberToWords::convert()}.
  *
  *  * Accepts leading {@code منفی} for negative numbers.
- *  * {@code ممیز} flips into fractional mode; the post-separator integer is
- *    divided by {@code 10^digits} to produce the decimal part — result is a
- *    {@code float}.
+ *  * {@code ممیز} flips into fractional mode; leading {@code صفر} tokens count
+ *    as zero-padding (so "سه ممیز صفر پنج" yields 3.05). Result is a {@code float}.
  *  * Returns {@code null} on unparseable input (mixed digits + words,
  *    plural scales like {@code میلیون ها}, empty whitespace).
  */
@@ -47,13 +46,30 @@ final class WordsToNumber
         }
 
         if (isset($parts[1])) {
-            $fracWord = $parts[1];
-            $fracInt  = self::parseInteger($fracWord);
-            if ($fracInt === null) {
+            $fracTokens = self::tokenize($parts[1]);
+            if ($fracTokens === null || $fracTokens === []) {
                 return null;
             }
-            $digits = max(1, (int) floor(log10(max($fracInt, 1)) + 1));
-            $value  = (float) $intPart + ($fracInt / (10 ** $digits));
+
+            $leadingZeros = 0;
+            while (isset($fracTokens[$leadingZeros]) && $fracTokens[$leadingZeros] === 'صفر') {
+                $leadingZeros++;
+            }
+            $remainder = array_slice($fracTokens, $leadingZeros);
+
+            if ($remainder === []) {
+                $value = (float) $intPart;
+
+                return $negative ? -$value : $value;
+            }
+
+            $fracInt = self::sumTokens($remainder);
+            if ($fracInt === null || $fracInt === 0) {
+                return null;
+            }
+            $remainingDigits = (int) floor(log10($fracInt)) + 1;
+            $totalDigits     = $leadingZeros + $remainingDigits;
+            $value           = (float) $intPart + ($fracInt / (10 ** $totalDigits));
 
             return $negative ? -$value : $value;
         }
@@ -72,16 +88,34 @@ final class WordsToNumber
             return 0;
         }
 
-        // Split on " و " (Persian "and" conjunction) and whitespace/ZWNJ.
-        $tokens = preg_split('/(?:\s+و\s+|\s+|\x{200C}+)/u', $text);
+        $tokens = self::tokenize($text);
+
+        return $tokens === null ? null : self::sumTokens($tokens);
+    }
+
+    /**
+     * Split on " و " (Persian "and" conjunction) and whitespace/ZWNJ.
+     *
+     * @return list<string>|null
+     */
+    private static function tokenize(string $text): ?array
+    {
+        $tokens = preg_split('/(?:\s+و\s+|\s+|\x{200C}+)/u', trim($text));
         if ($tokens === false) {
             return null;
         }
-        $tokens = array_values(array_filter($tokens, static fn (string $t): bool => $t !== ''));
 
-        $lookup   = self::lookup();
-        $total    = 0;
-        $segment  = 0;
+        return array_values(array_filter($tokens, static fn (string $t): bool => $t !== ''));
+    }
+
+    /**
+     * @param list<string> $tokens
+     */
+    private static function sumTokens(array $tokens): ?int
+    {
+        $lookup  = self::lookup();
+        $total   = 0;
+        $segment = 0;
 
         foreach ($tokens as $token) {
             if (!isset($lookup[$token])) {
@@ -138,7 +172,13 @@ final class WordsToNumber
         $map['صد']   = ['unit', 100];
         $map['هزار'] = ['scale', 1000];
 
-        $scales = [2 => 1_000_000, 3 => 1_000_000_000, 4 => 1_000_000_000_000, 5 => 1_000_000_000_000_000];
+        $scales = [
+            2 => 1_000_000,
+            3 => 1_000_000_000,
+            4 => 1_000_000_000_000,
+            5 => 1_000_000_000_000_000,
+            6 => 1_000_000_000_000_000_000,
+        ];
         foreach ($scales as $i => $multiplier) {
             $map[PersianNumerals::SCALES[$i]] = ['scale', $multiplier];
         }

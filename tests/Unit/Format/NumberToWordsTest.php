@@ -90,4 +90,29 @@ class NumberToWordsTest extends TestCase
     {
         $this->assertSame('یک', NumberToWords::convert(1.0));
     }
+
+    public function test_decimal_with_leading_zero(): void
+    {
+        $this->assertSame('سه ممیز صفر پنج', NumberToWords::convert(3.05));
+    }
+
+    public function test_decimal_with_multiple_leading_zeros(): void
+    {
+        $this->assertSame('سه ممیز صفر صفر پنج', NumberToWords::convert(3.005));
+    }
+
+    public function test_decimal_with_zero_prefix_and_composite(): void
+    {
+        $this->assertSame('سه ممیز صفر بیست و پنج', NumberToWords::convert(3.025));
+    }
+
+    public function test_decimal_zero_integer_with_leading_zero(): void
+    {
+        $this->assertSame('صفر ممیز صفر پنج', NumberToWords::convert(0.05));
+    }
+
+    public function test_quintillion(): void
+    {
+        $this->assertSame('یک کوینتیلیون', NumberToWords::convert(1_000_000_000_000_000_000));
+    }
 }

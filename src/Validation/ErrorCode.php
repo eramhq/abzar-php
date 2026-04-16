@@ -71,7 +71,7 @@ enum ErrorCode: string
             self::IBAN_INVALID_CHECKSUM          => 'شماره شبا نامعتبر است',
 
             self::PHONE_NUMBER_EMPTY             => 'شماره تلفن نمی‌تواند خالی باشد',
-            self::PHONE_NUMBER_INVALID_FORMAT    => 'شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود',
+            self::PHONE_NUMBER_INVALID_FORMAT    => 'شماره تلفن باید یک شماره موبایل یا تلفن ثابت ایرانی معتبر باشد',
 
             self::LEGAL_ID_EMPTY                 => 'شناسه حقوقی نمی‌تواند خالی باشد',
             self::LEGAL_ID_WRONG_LENGTH          => 'شناسه حقوقی باید ۱۱ رقم باشد',

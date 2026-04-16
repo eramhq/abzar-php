@@ -4,7 +4,7 @@ Abzar follows [Semantic Versioning](https://semver.org/). This page spells out w
 
 ## Current status: `0.x`
 
-While abzar is in `0.x`, breaking changes can happen in any minor release. Pin with `^0.1@beta` and review the [CHANGELOG](../../CHANGELOG.md) before upgrading.
+While abzar is in `0.x`, breaking changes can happen in any minor release. Pin with `^0.3@beta` and review the [CHANGELOG](../../CHANGELOG.md) before upgrading.
 
 From `1.0.0` onward, the commitments below apply.
 

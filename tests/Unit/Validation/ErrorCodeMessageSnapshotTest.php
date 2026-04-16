@@ -36,7 +36,7 @@ final class ErrorCodeMessageSnapshotTest extends TestCase
         yield 'iban checksum'             => [ErrorCode::IBAN_INVALID_CHECKSUM,         'شماره شبا نامعتبر است'];
 
         yield 'phone empty'               => [ErrorCode::PHONE_NUMBER_EMPTY,            'شماره تلفن نمی‌تواند خالی باشد'];
-        yield 'phone format'              => [ErrorCode::PHONE_NUMBER_INVALID_FORMAT,   'شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود'];
+        yield 'phone format'              => [ErrorCode::PHONE_NUMBER_INVALID_FORMAT,   'شماره تلفن باید یک شماره موبایل یا تلفن ثابت ایرانی معتبر باشد'];
 
         yield 'legal-id empty'            => [ErrorCode::LEGAL_ID_EMPTY,                'شناسه حقوقی نمی‌تواند خالی باشد'];
         yield 'legal-id length'           => [ErrorCode::LEGAL_ID_WRONG_LENGTH,         'شناسه حقوقی باید ۱۱ رقم باشد'];

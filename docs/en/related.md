@@ -20,7 +20,7 @@ WordPress plugin that wires abzar into WP hooks (`the_content`, `sanitize_title`
 
 ### [persian-tools/persian-tools](https://github.com/persian-tools/persian-tools) (JavaScript)
 
-The JavaScript library that inspired several of abzar's algorithms and data tables. Useful as a cross-reference for validators and fixture data; parity tests are planned.
+The JavaScript library that inspired several of abzar's algorithms and data tables. Useful as a cross-reference for validators and fixture data.
 
 ### [nikapps/iran-validator](https://github.com/nikapps/iran-validator) (PHP)
 
@@ -30,7 +30,7 @@ An older PHP library covering a subset of Iranian validators. Differences versus
 |---|---|---|
 | Zero runtime deps | Yes | Yes |
 | Typed `ValidationResult` return | Yes (`isValid / errors / details`) | Boolean only |
-| Structured error codes (`0.3+`) | Yes (planned) | No |
+| Structured error codes (`0.3+`) | Yes | No |
 | Formatter / text / digit utilities | Yes | Validation only |
 | PHP version baseline | 8.1+ | 7.4+ |
 | Recent releases | Active | Dormant |

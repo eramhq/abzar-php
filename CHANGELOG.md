@@ -4,6 +4,24 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+## [0.3.1-beta] — 2026-04-16
+
+### Fixed
+
+- `NumberToWords::convert()` now preserves leading zeros in the fractional part. `3.05` renders as `سه ممیز صفر پنج` (previously collapsed to `سه ممیز پنج`). Output is a **behavioural break** relative to 0.3.0-beta — acceptable under the documented `0.x` stability policy.
+- `WordsToNumber::parse()` accepts leading `صفر` tokens after `ممیز` and counts them as zero-padding, so round-tripping `3.05` through `NumberToWords` → `WordsToNumber` now yields `3.05` exactly. Previously these inputs returned `null`.
+- `ErrorCode::PHONE_NUMBER_INVALID_FORMAT` message no longer claims mobile-only. `PhoneNumber::validate()` has accepted landlines since 0.3.0-beta; the message is now `شماره تلفن باید یک شماره موبایل یا تلفن ثابت ایرانی معتبر باشد`. Error code value (`PHONE_NUMBER.INVALID_FORMAT`) is unchanged.
+
+### Added
+
+- `PersianNumerals::SCALES` extended with `کوینتیلیون` (10¹⁸), covering the full `int` range up to `PHP_INT_MAX`. `WordsToNumber` lookup updated in lockstep.
+- `NumberToWords::convert()` now throws `OverflowException` if a group lands past the largest known scale, instead of silently truncating.
+
+### Docs
+
+- Installation and API-stability pages now recommend pinning `^0.3@beta`.
+- `docs/en/related.md` no longer claims persian-tools parity tests are planned (they shipped in 0.3.0-beta) and no longer hedges the structured-error-codes row.
+
 ## [0.3.0-beta] — 2026-04-16
 
 First tagged release. Supersedes the untagged `[0.1.0-beta]` draft that never reached a git tag.

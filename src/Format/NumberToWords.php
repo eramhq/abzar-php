@@ -39,10 +39,15 @@ final class NumberToWords
                 : self::convertInteger($integerPart);
 
             if ($decimalPart !== '') {
-                $decimalValue = (int) $decimalPart;
-                if ($decimalValue > 0) {
+                $leadingZeros = strspn($decimalPart, '0');
+                $significant  = substr($decimalPart, $leadingZeros);
+
+                if ($significant !== '') {
                     $separator = $result !== '' ? ' ممیز ' : 'صفر ممیز ';
-                    $result .= $separator . self::convertInteger($decimalValue);
+                    $zeroWords = $leadingZeros > 0
+                        ? str_repeat('صفر ', $leadingZeros)
+                        : '';
+                    $result .= $separator . $zeroWords . self::convertInteger((int) $significant);
                 }
             }
 
@@ -71,7 +76,10 @@ final class NumberToWords
             }
 
             $groupText = self::convertGroup($groups[$i]);
-            if ($i > 0 && isset(self::SCALES[$i])) {
+            if ($i > 0) {
+                if (!isset(self::SCALES[$i])) {
+                    throw new \OverflowException('Number exceeds the largest supported Persian scale.');
+                }
                 $groupText .= ' ' . self::SCALES[$i];
             }
 
