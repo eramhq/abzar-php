@@ -74,7 +74,7 @@ class NumberFormatterTest extends TestCase
 
     public function test_invalid_string_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Eram\Abzar\AbzarFormatException::class);
         NumberFormatter::withSeparators('abc');
     }
 }

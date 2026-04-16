@@ -4,13 +4,45 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
+use Eram\Abzar\AbzarValidationException;
 use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Validation\Details\PhoneNumberDetails;
 
-final class PhoneNumber
+final class PhoneNumber implements \JsonSerializable, \Stringable
 {
-    private function __construct()
+    private function __construct(
+        private readonly PhoneNumberDetails $detail,
+    ) {
+    }
+
+    /**
+     * @throws AbzarValidationException
+     */
+    public static function from(string $input): self
     {
+        $result = self::validate($input);
+        if (!$result->isValid()) {
+            throw AbzarValidationException::fromResult($result);
+        }
+
+        /** @var PhoneNumberDetails $detail */
+        $detail = $result->detail();
+
+        return new self($detail);
+    }
+
+    public static function tryFrom(string $input): ?self
+    {
+        $result = self::validate($input);
+        if (!$result->isValid()) {
+            return null;
+        }
+
+        /** @var PhoneNumberDetails $detail */
+        $detail = $result->detail();
+
+        return new self($detail);
     }
 
     public static function validate(string $input): ValidationResult
@@ -18,7 +50,7 @@ final class PhoneNumber
         $input = ErrorInput::digits($input, '()');
 
         if ($input === '') {
-            return ValidationResult::failure(ErrorCode::PHONE_NUMBER_EMPTY);
+            return ValidationResult::invalid(ErrorCode::PHONE_NUMBER_EMPTY);
         }
 
         if (str_starts_with($input, '+98')) {
@@ -45,14 +77,93 @@ final class PhoneNumber
             }
         }
 
-        return ValidationResult::failure(ErrorCode::PHONE_NUMBER_INVALID_FORMAT);
+        return ValidationResult::invalid(ErrorCode::PHONE_NUMBER_INVALID_FORMAT);
     }
 
     public static function normalize(string $input): ?string
     {
         $result = self::validate($input);
+        if (!$result->isValid()) {
+            return null;
+        }
 
-        return $result->isValid() ? $result->details()['normalized_local'] : null;
+        /** @var PhoneNumberDetails $detail */
+        $detail = $result->detail();
+
+        return $detail->normalizedLocal;
+    }
+
+    public function value(): string
+    {
+        return $this->detail->normalizedLocal;
+    }
+
+    public function e164(): string
+    {
+        return $this->detail->normalizedE164;
+    }
+
+    public function type(): PhoneNumberType
+    {
+        return $this->detail->type;
+    }
+
+    public function isMobile(): bool
+    {
+        return $this->detail->isMobile();
+    }
+
+    public function isLandline(): bool
+    {
+        return $this->detail->isLandline();
+    }
+
+    public function operator(): ?string
+    {
+        return $this->detail->operator;
+    }
+
+    public function operatorEnum(): ?Operator
+    {
+        return $this->detail->operatorEnum();
+    }
+
+    public function areaCode(): ?string
+    {
+        return $this->detail->areaCode;
+    }
+
+    public function city(): ?string
+    {
+        return $this->detail->city;
+    }
+
+    public function province(): ?string
+    {
+        return $this->detail->province;
+    }
+
+    public function provinceEnum(): ?Province
+    {
+        return $this->detail->provinceEnum();
+    }
+
+    public function detail(): PhoneNumberDetails
+    {
+        return $this->detail;
+    }
+
+    public function __toString(): string
+    {
+        return $this->detail->normalizedLocal;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->detail->jsonSerialize();
     }
 
     private static function mobileResult(string $normalizedLocal): ?ValidationResult
@@ -64,12 +175,11 @@ final class PhoneNumber
             return null;
         }
 
-        return ValidationResult::success([
-            'normalized_local' => $normalizedLocal,
-            'normalized_e164'  => self::toE164($normalizedLocal),
-            'operator'         => $operators[$prefix],
-            'type'             => 'mobile',
-        ]);
+        return ValidationResult::valid(PhoneNumberDetails::mobile(
+            normalizedLocal: $normalizedLocal,
+            normalizedE164:  self::toE164($normalizedLocal),
+            operator:        $operators[$prefix],
+        ));
     }
 
     private static function landlineResult(string $normalizedLocal): ?ValidationResult
@@ -81,14 +191,13 @@ final class PhoneNumber
             return null;
         }
 
-        return ValidationResult::success([
-            'normalized_local' => $normalizedLocal,
-            'normalized_e164'  => self::toE164($normalizedLocal),
-            'type'             => 'landline',
-            'area_code'        => $areaCode,
-            'province'         => $areaCodes[$areaCode]['province'],
-            'city'             => $areaCodes[$areaCode]['city'],
-        ]);
+        return ValidationResult::valid(PhoneNumberDetails::landline(
+            normalizedLocal: $normalizedLocal,
+            normalizedE164:  self::toE164($normalizedLocal),
+            areaCode:        $areaCode,
+            city:            $areaCodes[$areaCode]['city'],
+            province:        $areaCodes[$areaCode]['province'],
+        ));
     }
 
     private static function toE164(string $normalizedLocal): string

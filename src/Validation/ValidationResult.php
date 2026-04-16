@@ -4,22 +4,32 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
+/**
+ * Outcome of a {@code ::validate()} call — always returned, never thrown.
+ *
+ * Construct via the three named factories:
+ *  * {@see self::valid()} — successful validation with a typed detail DTO.
+ *  * {@see self::validWithWarnings()} — success but with non-fatal warnings.
+ *  * {@see self::invalid()} — rejection, with one or more {@see ErrorCode}s.
+ *
+ * Detail payloads are per-validator {@code readonly} DTOs under
+ * {@see \Eram\Abzar\Validation\Details}. Call {@see self::detail()} to access.
+ */
 final class ValidationResult implements \JsonSerializable, \Stringable
 {
     /**
-     * @param list<string>         $errors
-     * @param list<?ErrorCode>     $errorCodes
-     * @param list<string>         $warnings
-     * @param list<?ErrorCode>     $warningCodes
-     * @param array<string, mixed> $details
+     * @param list<string>       $errors
+     * @param list<?ErrorCode>   $errorCodes
+     * @param list<string>       $warnings
+     * @param list<?ErrorCode>   $warningCodes
      */
     private function __construct(
-        private readonly bool  $valid,
-        private readonly array $errors = [],
-        private readonly array $errorCodes = [],
-        private readonly array $warnings = [],
-        private readonly array $warningCodes = [],
-        private readonly array $details = [],
+        private readonly bool           $valid,
+        private readonly array          $errors = [],
+        private readonly array          $errorCodes = [],
+        private readonly array          $warnings = [],
+        private readonly array          $warningCodes = [],
+        private readonly ?\JsonSerializable $detail = null,
     ) {
     }
 
@@ -60,54 +70,58 @@ final class ValidationResult implements \JsonSerializable, \Stringable
         return self::pruneNulls($this->warningCodes);
     }
 
+    public function detail(): ?\JsonSerializable
+    {
+        return $this->detail;
+    }
+
     /**
-     * @return array<string, mixed>
+     * Successful validation.
      */
-    public function details(): array
+    public static function valid(?\JsonSerializable $detail = null): self
     {
-        return $this->details;
-    }
-
-    public function bank(): ?Bank
-    {
-        return $this->detailEnum('bank', Bank::fromPersian(...));
-    }
-
-    public function operator(): ?Operator
-    {
-        return $this->detailEnum('operator', Operator::fromPersian(...));
-    }
-
-    public function province(): ?Province
-    {
-        return $this->detailEnum('province', Province::fromPersian(...));
+        return new self(valid: true, detail: $detail);
     }
 
     /**
-     * @param array<string, mixed>                    $details
+     * Successful validation with non-fatal warnings.
+     *
      * @param list<string|ErrorCode>|string|ErrorCode $warnings
      */
-    public static function success(array $details = [], string|ErrorCode|array $warnings = []): self
-    {
-        [$warnMsgs, $warnCodes] = self::resolve($warnings);
+    public static function validWithWarnings(
+        string|ErrorCode|array $warnings,
+        ?\JsonSerializable $detail = null,
+    ): self {
+        [$msgs, $codes] = self::resolve($warnings);
 
-        return new self(true, [], [], $warnMsgs, $warnCodes, $details);
+        return new self(
+            valid: true,
+            warnings: $msgs,
+            warningCodes: $codes,
+            detail: $detail,
+        );
     }
 
     /**
+     * Rejected validation.
+     *
      * @param list<string|ErrorCode>|string|ErrorCode $errors
-     * @param array<string, mixed>                    $details
      * @param list<string|ErrorCode>|string|ErrorCode $warnings
      */
-    public static function failure(
+    public static function invalid(
         string|ErrorCode|array $errors,
-        array $details = [],
         string|ErrorCode|array $warnings = [],
     ): self {
         [$errMsgs, $errCodes]   = self::resolve($errors);
         [$warnMsgs, $warnCodes] = self::resolve($warnings);
 
-        return new self(false, $errMsgs, $errCodes, $warnMsgs, $warnCodes, $details);
+        return new self(
+            valid: false,
+            errors: $errMsgs,
+            errorCodes: $errCodes,
+            warnings: $warnMsgs,
+            warningCodes: $warnCodes,
+        );
     }
 
     /**
@@ -115,7 +129,7 @@ final class ValidationResult implements \JsonSerializable, \Stringable
      *     valid: bool,
      *     errors: list<string>,
      *     error_codes: list<string>,
-     *     details: array<string, mixed>,
+     *     detail: ?\JsonSerializable,
      *     warnings?: list<string>,
      *     warning_codes?: list<string>
      * }
@@ -126,7 +140,7 @@ final class ValidationResult implements \JsonSerializable, \Stringable
             'valid'       => $this->valid,
             'errors'      => $this->errors,
             'error_codes' => self::codeValues($this->errorCodes),
-            'details'     => $this->details,
+            'detail'      => $this->detail,
         ];
 
         if ($this->warnings !== []) {
@@ -144,18 +158,6 @@ final class ValidationResult implements \JsonSerializable, \Stringable
         }
 
         return $this->errors === [] ? 'invalid' : implode('; ', $this->errors);
-    }
-
-    /**
-     * @template T of \BackedEnum
-     * @param callable(string): ?T $factory
-     * @return T|null
-     */
-    private function detailEnum(string $key, callable $factory): ?object
-    {
-        $name = $this->details[$key] ?? null;
-
-        return is_string($name) ? $factory($name) : null;
     }
 
     /**

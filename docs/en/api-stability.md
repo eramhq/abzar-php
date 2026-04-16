@@ -4,9 +4,32 @@ Abzar follows [Semantic Versioning](https://semver.org/). This page spells out w
 
 ## Current status: `0.x`
 
-While abzar is in `0.x`, breaking changes can happen in any minor release. Pin with `^0.3@beta` and review the [CHANGELOG](../../CHANGELOG.md) before upgrading.
+While abzar is in `0.x`, breaking changes can happen in any minor release. Pin with `^0.4@beta` and review the [CHANGELOG](../../CHANGELOG.md) before upgrading.
 
 From `1.0.0` onward, the commitments below apply.
+
+## Result-vs-throw policy
+
+Abzar draws a deliberate line between *domain* failures and *caller-contract* failures:
+
+- **Validators** (`NationalId`, `CardNumber`, `Iban`, `LegalId`, `PhoneNumber`, `PostalCode`, `BillId`) treat invalid input as their normal domain. They expose three entry points:
+  - `::validate($input): ValidationResult` — returns a result object for pass/fail checks.
+  - `::from($input): static` — throws `AbzarValidationException` on failure; returns a value-object handle on success.
+  - `::tryFrom($input): ?static` — returns a value-object handle or `null`.
+- **Formatters** (`NumberFormatter`, `OrdinalNumber`, `TimeAgo`, `Currency`, …) fail fast. Bad input is a programmer error — a sane caller already holds a sanitized value. They throw `AbzarFormatException`.
+
+Both exception types extend the abstract `Eram\Abzar\AbzarException`, which carries an `errorCode(): ErrorCode`. Catch the base class to handle every library failure uniformly:
+
+```php
+try {
+    $phone = PhoneNumber::from($userInput);
+    echo Currency::format($amount);
+} catch (AbzarException $e) {
+    report($e->errorCode()->value, $e->getMessage());
+}
+```
+
+`AbzarValidationException` additionally exposes `result(): ValidationResult` for callers that want the full error list.
 
 ## Stable (BC-protected)
 
@@ -18,16 +41,18 @@ From `1.0.0` onward, the commitments below apply.
   - `errorCodes(): list<ErrorCode>`
   - `warnings(): list<string>`
   - `warningCodes(): list<ErrorCode>`
-  - `details(): array<string, mixed>`
-  - `bank() / operator() / province()` typed accessors
+  - `detail(): ?JsonSerializable` — typed per-validator DTO (`Eram\Abzar\Validation\Details\*`)
   - `jsonSerialize()` output shape.
+- **Value-object accessors** (`->value()`, `->city()`, `->bin()`, etc.) on each validator class.
+- **Detail DTO property names** (`$cityCode`, `$bin`, `$bankCode`, `$normalizedLocal`, …). These are public readonly properties under `Eram\Abzar\Validation\Details\`.
 - **`Eram\Abzar\Validation\ErrorCode`** — the backing string value for each case is API surface from `0.3` onward. Renaming or dropping a case is a breaking change. New cases may be added in minor releases.
+- **`Eram\Abzar\AbzarException` hierarchy**: the abstract root and the two concrete classes (`AbzarValidationException`, `AbzarFormatException`) are stable.
 - **Input-accepting conventions**: Persian / Arabic / English digits are accepted interchangeably across all validators and formatters.
 
 ## Explicitly unstable
 
 - **Persian error message text**. `ValidationResult::errors()` returns human-facing Persian strings. They may be reworded for clarity, punctuation, or tone between minor releases. Do not pattern-match on them; use error codes (when available) or the overall `isValid()` boolean.
-- **`details()` value strings** that come from lookup tables: bank names, city names, province names, operator names. These reflect real-world data that changes (mergers, renames, splits). The **keys** are stable; the strings are not.
+- **Detail DTO lookup strings** that come from bundled tables: bank names, city names, province names, operator names. These reflect real-world data that changes (mergers, renames, splits). The **DTO property names** are stable; the **string values** are not.
 - **Lookup-table contents**: entries are added, removed, and corrected as upstream data is updated. Consumers relying on a specific BIN or city-code mapping should snapshot the value in their own code if they need exact reproducibility.
 - **Internal classes and methods**. Anything marked `@internal`, anything under a namespace not explicitly documented, and private / protected members.
 

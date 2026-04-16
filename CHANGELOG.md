@@ -4,6 +4,29 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+### Changed (breaking — 0.x)
+
+- **API shape refactor.** All seven validators (`NationalId`, `CardNumber`, `Iban`, `LegalId`, `PhoneNumber`, `PostalCode`, `BillId`) now expose `::from($input): static` and `::tryFrom($input): ?static` value-object constructors in addition to the existing `::validate(): ValidationResult`. Instances are `Stringable` + `JsonSerializable` with typed accessors (e.g. `$ni->city()`, `$card->bin()`, `$phone->isMobile()`).
+- **`ValidationResult` factories renamed** to eliminate the old positional-details-vs-warnings ambiguity:
+  - `ValidationResult::success($details, $warnings)` → `ValidationResult::valid($detail?)` + `ValidationResult::validWithWarnings($warnings, $detail?)`.
+  - `ValidationResult::failure($errors, …)` → `ValidationResult::invalid($errors, $warnings?)`.
+- **Typed detail DTOs** replace `array<string, mixed>`. `ValidationResult::details(): array` is gone; `ValidationResult::detail(): ?JsonSerializable` returns a per-validator `readonly` DTO under `Eram\Abzar\Validation\Details\` (`NationalIdDetails`, `CardNumberDetails`, `IbanDetails`, `PhoneNumberDetails`, `BillIdDetails`, `PostalCodeDetails`). `ValidationResult::bank() / operator() / province()` helpers were removed — access them via the value object (e.g. `$card->bankEnum()`) or DTO property.
+- **Single exception hierarchy.** Every library-raised exception now extends the new abstract `Eram\Abzar\AbzarException`, which carries an `errorCode(): ErrorCode`. Formatters throw `AbzarFormatException` (previously plain `\InvalidArgumentException`); VO constructors throw `AbzarValidationException` (new; also exposes the originating `ValidationResult`). `catch (AbzarException $e)` now covers every failure uniformly.
+- **Result-vs-throw policy documented.** `docs/en/api-stability.md` gained a "Result-vs-throw policy" section. Short version: validators return a result, formatters fail fast.
+
+### Added
+
+- `Eram\Abzar\Validation\BillType` — backed enum replacing the `BillId::TYPES` string map. Cases: `WATER`, `ELECTRIC`, `GAS`, `PHONE`, `MOBILE`, `TAX`, `SERVICES`, `PASSPORT`, `OTHER`. `BillIdDetails::$type` now holds this enum directly; `BillId::type()` returns `BillType`.
+- `Eram\Abzar\Validation\PhoneNumberType` — backed enum (`MOBILE` / `LANDLINE`) replacing raw strings on `PhoneNumberDetails::$type` / `PhoneNumber::type()`.
+- `PhoneNumberDetails::mobile()` / `::landline()` named constructors — the direct constructor is private; the two factories make mobile/landline variants structurally unambiguous.
+- Canonical input now carried on each detail DTO (`NationalIdDetails::$value`, `CardNumberDetails::$value`, `IbanDetails::$value`). Value objects read through to the DTO rather than storing a redundant second copy.
+
+### Removed
+
+- `ValidationResult::success()`, `ValidationResult::failure()`, and `ValidationResult::details()` — superseded by the named factories and typed DTO accessor above.
+- `ValidationResult::bank()`, `::operator()`, `::province()` shortcut accessors — fetch from the value object or detail DTO instead.
+- Private `NationalId::canonicalize()` and `Iban::canonicalize()` — the canonical string now lives on the detail DTO, so no second normalization pass is needed on the `::from()` happy path.
+
 ## [0.3.1-beta] — 2026-04-16
 
 ### Fixed

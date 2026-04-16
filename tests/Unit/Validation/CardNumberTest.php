@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Validation;
 
+use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Validation\Bank;
 use Eram\Abzar\Validation\CardNumber;
+use Eram\Abzar\Validation\Details\CardNumberDetails;
 use PHPUnit\Framework\TestCase;
 
 class CardNumberTest extends TestCase
@@ -38,23 +41,35 @@ class CardNumberTest extends TestCase
     {
         $result = CardNumber::validate('6037991234567893');
         $this->assertTrue($result->isValid());
-        $this->assertSame('بانک ملی ایران', $result->details()['bank']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(CardNumberDetails::class, $detail);
+        $this->assertSame('بانک ملی ایران', $detail->bank);
     }
 
-    public function test_unknown_bank(): void
+    public function test_unknown_bin_rejected(): void
     {
-        // 6219861234567898: valid Luhn (sum=72+8=80), BIN 621986 = Bank Saman
-        // Use a BIN not in the table: 1234561234567897
-        // Sum of first 15: 1*2-0=2, 2, 3*2=6, 4, 5*2-9=1, 6, 1*2=2, 2, 3*2=6, 4, 5*2-9=1, 6, 7*2-9=5, 8, 9*2-9=9
-        // = 2+2+6+4+1+6+2+2+6+4+1+6+5+8+9 = 64, check = (10-4)%10 = 6
-        // 1234561234567896: let's just use a simple known-valid Luhn
+        // BIN not in the table — now rejected as invalid rather than accepted with null.
         $result = CardNumber::validate('1234567890123452');
-        // 1234567890123452: Luhn = let me just test the behavior
-        if ($result->isValid()) {
-            $this->assertNull($result->details()['bank']);
-        } else {
-            $this->assertFalse($result->isValid());
-        }
+        $this->assertFalse($result->isValid());
+    }
+
+    public function test_from_returns_value_object(): void
+    {
+        $card = CardNumber::from('6037 9912 3456 7893');
+        $this->assertSame('6037991234567893', $card->value());
+        $this->assertSame('603799', $card->bin());
+        $this->assertSame(Bank::MELLI, $card->bankEnum());
+    }
+
+    public function test_from_throws_on_invalid(): void
+    {
+        $this->expectException(AbzarValidationException::class);
+        CardNumber::from('6219861234567890');
+    }
+
+    public function test_try_from_null_on_invalid(): void
+    {
+        $this->assertNull(CardNumber::tryFrom('invalid'));
     }
 
     public function test_invalid_luhn(): void

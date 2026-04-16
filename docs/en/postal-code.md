@@ -27,14 +27,15 @@ PostalCode::validate('۱۶۱۹۷۳۵۷۴۴')->isValid(); // true — Persian dig
 
 ## Details
 
-On success, `details()` returns:
+On success, `detail()` returns a `PostalCodeDetails` instance:
 
 ```php
-[
-    'postal_code' => '1619735744',
-    'zone_code'   => '16197',  // first 5 digits (zone)
-    'district'    => null,     // reserved for a future lookup table
-]
-```
+$pc = PostalCode::from('1619735744');
+$pc->value();        // '1619735744'
+$pc->zoneCode();     // '16197' (first 5 digits — mail zone)
 
-The `district` field is always `null` in 0.4. Callers should treat it as optional.
+// Via ValidationResult:
+$detail = PostalCode::validate('1619735744')->detail();
+$detail->postalCode; // '1619735744'
+$detail->zoneCode;   // '16197'
+```

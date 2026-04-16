@@ -152,11 +152,8 @@ final class PersianToolsContractTest extends TestCase
     public function test_iban_bank_lookup_parity(): void
     {
         // sheba.spec.ts lines 30-52
-        $r1 = Iban::validate('IR820540102680020817909002');
-        self::assertSame('بانک پارسیان', $r1->details()['bank']);
-
-        $r2 = Iban::validate('IR550570022080013447370101');
-        self::assertSame('بانک پاسارگاد', $r2->details()['bank']);
+        self::assertSame('بانک پارسیان', Iban::from('IR820540102680020817909002')->bank());
+        self::assertSame('بانک پاسارگاد', Iban::from('IR550570022080013447370101')->bank());
     }
 
     /**
@@ -209,9 +206,9 @@ final class PersianToolsContractTest extends TestCase
         ];
 
         foreach ($cases as $phone => $expected) {
-            $r = PhoneNumber::validate($phone);
-            self::assertTrue($r->isValid(), "expected $phone valid");
-            self::assertSame($expected, $r->operator(), "operator mismatch for $phone");
+            $vo = PhoneNumber::tryFrom($phone);
+            self::assertNotNull($vo, "expected $phone valid");
+            self::assertSame($expected, $vo->operatorEnum(), "operator mismatch for $phone");
         }
     }
 

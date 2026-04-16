@@ -80,11 +80,11 @@ final class CustomerDto
 }
 ```
 
-## Exposing `details()`
+## Exposing the value object
 
-If a downstream service needs the bank / operator / city lookup details, don't re-validate. Call the abzar validator once in your command/handler and pass the `details()` array alongside the DTO:
+If a downstream service needs the bank / operator / city lookup details, don't re-validate. Call the value-object constructor once in your command/handler and pass the instance alongside the DTO:
 
 ```php
-$result = \Eram\Abzar\Validation\CardNumber::validate($dto->card);
-$cardDetails = $result->isValid() ? $result->details() : null;
+$card = \Eram\Abzar\Validation\CardNumber::tryFrom($dto->card);
+// $card?->bank(), $card?->bin(), $card?->bankEnum() etc.
 ```

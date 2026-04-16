@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Eram\Abzar\Tests\Unit\Validation;
 
 use Eram\Abzar\Validation\BillId;
+use Eram\Abzar\Validation\BillType;
+use Eram\Abzar\Validation\Details\BillIdDetails;
 use Eram\Abzar\Validation\ErrorCode;
 use PHPUnit\Framework\TestCase;
 
@@ -37,21 +39,22 @@ final class BillIdTest extends TestCase
      *
      * @dataProvider upstreamValidPairs
      */
-    public function test_upstream_valid_pairs_pass(string $billId, string $paymentId, string $type): void
+    public function test_upstream_valid_pairs_pass(string $billId, string $paymentId, BillType $type): void
     {
         $result = BillId::validate($billId, $paymentId);
         self::assertTrue($result->isValid(), 'errors: ' . implode('; ', $result->errors()));
-        self::assertSame($type, $result->details()['type']);
+        $detail = $result->detail();
+        self::assertInstanceOf(BillIdDetails::class, $detail);
+        self::assertSame($type, $detail->type);
     }
 
     /**
-     * @return iterable<string, array{string, string, string}>
+     * @return iterable<string, array{string, string, BillType}>
      */
     public static function upstreamValidPairs(): iterable
     {
-        // Format: [billId, paymentId, expected type]
-        yield 'phone' => ['7748317800142', '1770160', 'phone'];
-        yield 'water' => ['2050327604613', '1070189', 'water'];
+        yield 'phone' => ['7748317800142', '1770160', BillType::PHONE];
+        yield 'water' => ['2050327604613', '1070189', BillType::WATER];
     }
 
     /**
@@ -94,8 +97,10 @@ final class BillIdTest extends TestCase
 
         $result = BillId::validate($billId, $paymentId);
         self::assertTrue($result->isValid(), 'errors: ' . implode('; ', $result->errors()));
-        self::assertSame('electric', $result->details()['type']);
-        self::assertSame($billId, $result->details()['bill_id']);
+        $detail = $result->detail();
+        self::assertInstanceOf(BillIdDetails::class, $detail);
+        self::assertSame(BillType::ELECTRIC, $detail->type);
+        self::assertSame($billId, $detail->billId);
     }
 
     public function test_unknown_type_digit_decodes_to_other(): void
@@ -112,7 +117,9 @@ final class BillIdTest extends TestCase
 
         $result = BillId::validate($billId, $paymentId);
         self::assertTrue($result->isValid());
-        self::assertSame('other', $result->details()['type']);
+        $detail = $result->detail();
+        self::assertInstanceOf(BillIdDetails::class, $detail);
+        self::assertSame(BillType::OTHER, $detail->type);
     }
 
     private static function mod11(string $digits): int

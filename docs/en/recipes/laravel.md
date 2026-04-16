@@ -72,17 +72,17 @@ Validator::extend('iranian_mobile', function ($attribute, $value, $parameters, $
 
 Then: `'phone' => ['required', 'string', 'iranian_mobile']`.
 
-## Surfacing `details()`
+## Surfacing the value object
 
-If you need the lookup details (bank, operator, city/province) in your controller, don't re-validate — call the validator once, attach the details to the request, and use them downstream:
+If you need the lookup details (bank, operator, city/province) in your controller, don't re-validate — call the value-object constructor once, attach the instance to the request, and use them downstream:
 
 ```php
 public function after(): array
 {
     return [function (\Illuminate\Validation\Validator $validator): void {
-        $result = \Eram\Abzar\Validation\CardNumber::validate($this->input('card'));
-        if ($result->isValid()) {
-            $this->merge(['_card_details' => $result->details()]);
+        $card = \Eram\Abzar\Validation\CardNumber::tryFrom($this->input('card'));
+        if ($card !== null) {
+            $this->merge(['_card' => $card]); // access via $card->bank(), $card->bin()
         }
     }];
 }

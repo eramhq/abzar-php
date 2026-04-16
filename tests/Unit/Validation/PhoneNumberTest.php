@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Validation;
 
+use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Validation\Details\PhoneNumberDetails;
+use Eram\Abzar\Validation\Operator;
 use Eram\Abzar\Validation\PhoneNumber;
+use Eram\Abzar\Validation\PhoneNumberType;
 use PHPUnit\Framework\TestCase;
 
 class PhoneNumberTest extends TestCase
@@ -45,18 +49,22 @@ class PhoneNumberTest extends TestCase
         $this->assertTrue($result->isValid());
     }
 
-    public function test_normalized_formats_in_details(): void
+    public function test_normalized_formats_in_detail(): void
     {
         $result = PhoneNumber::validate('+989121234567');
-        $this->assertSame('09121234567', $result->details()['normalized_local']);
-        $this->assertSame('+989121234567', $result->details()['normalized_e164']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame('09121234567', $detail->normalizedLocal);
+        $this->assertSame('+989121234567', $detail->normalizedE164);
     }
 
     public function test_valid_international_without_plus(): void
     {
         $result = PhoneNumber::validate('989121234567');
         $this->assertTrue($result->isValid());
-        $this->assertSame('+989121234567', $result->details()['normalized_e164']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame('+989121234567', $detail->normalizedE164);
     }
 
     public function test_normalize_returns_local_format(): void
@@ -67,24 +75,29 @@ class PhoneNumberTest extends TestCase
     public function test_mci_operator(): void
     {
         $result = PhoneNumber::validate('09121234567');
-        $this->assertSame('همراه اول', $result->details()['operator']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame('همراه اول', $detail->operator);
     }
 
     public function test_irancell_operator(): void
     {
         $result = PhoneNumber::validate('09351234567');
-        $this->assertSame('ایرانسل', $result->details()['operator']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame('ایرانسل', $detail->operator);
     }
 
     public function test_rightel_operator(): void
     {
         $result = PhoneNumber::validate('09211234567');
-        $this->assertSame('رایتل', $result->details()['operator']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame('رایتل', $detail->operator);
     }
 
     public function test_unknown_mobile_prefix_rejected(): void
     {
-        // 094x prefixes are not in the Iranian operator table — matches upstream persian-tools behavior.
         $result = PhoneNumber::validate('09401234567');
         $this->assertFalse($result->isValid());
     }
@@ -111,33 +124,68 @@ class PhoneNumberTest extends TestCase
     {
         $result = PhoneNumber::validate('02112345678');
         $this->assertTrue($result->isValid());
-        $this->assertSame('landline', $result->details()['type']);
-        $this->assertSame('021', $result->details()['area_code']);
-        $this->assertSame('تهران', $result->details()['province']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame(PhoneNumberType::LANDLINE, $detail->type);
+        $this->assertSame('021', $detail->areaCode);
+        $this->assertSame('تهران', $detail->province);
     }
 
     public function test_landline_mashhad(): void
     {
         $result = PhoneNumber::validate('05112345678');
         $this->assertTrue($result->isValid());
-        $this->assertSame('landline', $result->details()['type']);
-        $this->assertSame('خراسان رضوی', $result->details()['province']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame(PhoneNumberType::LANDLINE, $detail->type);
+        $this->assertSame('خراسان رضوی', $detail->province);
     }
 
     public function test_landline_e164_normalization(): void
     {
         $result = PhoneNumber::validate('+982112345678');
         $this->assertTrue($result->isValid());
-        $this->assertSame('02112345678', $result->details()['normalized_local']);
-        $this->assertSame('+982112345678', $result->details()['normalized_e164']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame('02112345678', $detail->normalizedLocal);
+        $this->assertSame('+982112345678', $detail->normalizedE164);
     }
 
-    public function test_unknown_area_code_rejected(): void
+    public function test_0999_classified_as_mobile_aptel(): void
     {
-        // 099 is not a valid area code and 0999 is not a valid mobile prefix length 11
-        $result = PhoneNumber::validate('09912345678');
-        $this->assertTrue($result->isValid()); // 0999 is mobile (Aptel) — covered elsewhere
-        $result = PhoneNumber::validate('00012345678');
-        $this->assertFalse($result->isValid());
+        $this->assertTrue(PhoneNumber::validate('09912345678')->isValid());
+    }
+
+    public function test_zero_prefixed_area_code_rejected(): void
+    {
+        $this->assertFalse(PhoneNumber::validate('00012345678')->isValid());
+    }
+
+    public function test_from_returns_value_object(): void
+    {
+        $phone = PhoneNumber::from('+989121234567');
+        $this->assertSame('09121234567', $phone->value());
+        $this->assertSame('+989121234567', $phone->e164());
+        $this->assertTrue($phone->isMobile());
+        $this->assertSame(Operator::MCI, $phone->operatorEnum());
+    }
+
+    public function test_from_throws_on_invalid(): void
+    {
+        $this->expectException(AbzarValidationException::class);
+        PhoneNumber::from('invalid');
+    }
+
+    public function test_try_from_null_on_invalid(): void
+    {
+        $this->assertNull(PhoneNumber::tryFrom(''));
+    }
+
+    public function test_from_landline(): void
+    {
+        $phone = PhoneNumber::from('02112345678');
+        $this->assertTrue($phone->isLandline());
+        $this->assertSame('021', $phone->areaCode());
+        $this->assertSame('تهران', $phone->province());
     }
 }

@@ -18,6 +18,8 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 >
 > Error-code values are stable API surface as of `0.3` — renaming a case is a breaking change.
 
+> **Exception hierarchy.** Every thrown exception extends `Eram\Abzar\AbzarException` (abstract; carries `errorCode(): ErrorCode`). Two concrete subclasses: `AbzarValidationException` (thrown by `::from()`) and `AbzarFormatException` (thrown by formatters). Catch the base to handle every library failure uniformly.
+
 ## Feature matrix
 
 | Namespace | Class | What it does |
@@ -31,7 +33,8 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 | `Validation` | `BillId` | `شناسه قبض` / `شناسه پرداخت` mod-11 pair validator with bill-type decoding |
 | `Validation` | `ErrorCode` | Stable `DOMAIN.REASON` codes emitted by every validator + format exception |
 | `Validation` | `Bank` / `Operator` / `Province` | Typed enums with `fromPersian()` lookup and Arabic-char-tolerant matching |
-| `Validation` | `ValidationResult` | Shared `{isValid, errors, errorCodes, warnings, details}` return type (implements `JsonSerializable` / `Stringable`) |
+| `Validation` | `ValidationResult` | Shared `{isValid, errors, errorCodes, warnings, detail}` return type (implements `JsonSerializable` / `Stringable`) |
+| `Validation\Details` | `NationalIdDetails` / `CardNumberDetails` / … | Typed readonly DTOs exposed via `ValidationResult::detail()` |
 | `Format` | `NumberFormatter` | Thousands-separator formatter with digit normalization |
 | `Format` | `NumberToWords` | Integer / float to Persian words (`۱۲۳۴` → `یک هزار و دویست و سی و چهار`) |
 | `Format` | `WordsToNumber` | Parse Persian number words back to `int` / `float` |
@@ -47,7 +50,7 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 ## Install
 
 ```bash
-composer require eram/abzar:^0.3@beta
+composer require eram/abzar:^0.4@beta
 ```
 
 Requires PHP 8.1+. No runtime extensions beyond `mbstring`.
@@ -56,21 +59,32 @@ Requires PHP 8.1+. No runtime extensions beyond `mbstring`.
 
 ### Validation
 
+Three entry points per validator (same pattern as `BackedEnum`):
+
 ```php
-use Eram\Abzar\Validation\NationalId;
-use Eram\Abzar\Validation\Iban;
-use Eram\Abzar\Validation\CardNumber;
-use Eram\Abzar\Validation\PhoneNumber;
+use Eram\Abzar\Validation\{NationalId, Iban, CardNumber, PhoneNumber};
 
-$r = NationalId::validate('0013542419');
-$r->isValid();              // true
-$r->details();              // ['city_code' => '001', 'city' => 'تهران مرکزی', 'province' => 'تهران']
-$r->errorCodes();           // [] (empty on success)
+// 1. Value object on success — throws AbzarValidationException on failure.
+$ni = NationalId::from('0013542419');
+$ni->value();              // '0013542419'
+$ni->city();               // 'تهران مرکزی'
+$ni->province();           // 'تهران'
+$ni->cityCode();           // '001'
 
-Iban::validate('IR820540102680020817909002')->bank();                 // Bank::PARSIAN (enum)
-CardNumber::validate('6037 9912 3456 7893')->details()['bank'];       // 'بانک ملی ایران'
-PhoneNumber::validate('+989121234567')->operator();                   // Operator::MCI (enum)
-PhoneNumber::normalize('+989121234567');                              // '09121234567'
+// 2. Null-returning variant.
+$phone = PhoneNumber::tryFrom('+989121234567');
+$phone?->e164();           // '+989121234567'
+$phone?->operatorEnum();   // Operator::MCI
+$phone?->isMobile();       // true
+
+// 3. ValidationResult for plain pass/fail checks with full error detail.
+$r = CardNumber::validate('6037 9912 3456 7893');
+$r->isValid();             // true
+$r->detail()->bank;        // 'بانک ملی ایران' (CardNumberDetails)
+$r->errorCodes();          // [] (empty on success)
+
+Iban::from('IR820540102680020817909002')->bankEnum();  // Bank::PARSIAN
+PhoneNumber::normalize('+989121234567');               // '09121234567'
 ```
 
 ### Formatting

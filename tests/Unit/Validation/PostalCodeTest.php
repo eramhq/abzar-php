@@ -14,9 +14,28 @@ final class PostalCodeTest extends TestCase
     {
         $result = PostalCode::validate('1619735744');
         self::assertTrue($result->isValid());
-        self::assertSame('1619735744', $result->details()['postal_code']);
-        self::assertSame('16197', $result->details()['zone_code']);
-        self::assertNull($result->details()['district']);
+        $detail = $result->detail();
+        self::assertInstanceOf(\Eram\Abzar\Validation\Details\PostalCodeDetails::class, $detail);
+        self::assertSame('1619735744', $detail->postalCode);
+        self::assertSame('16197', $detail->zoneCode);
+    }
+
+    public function test_from_returns_value_object(): void
+    {
+        $pc = PostalCode::from('16197-35744');
+        self::assertSame('1619735744', $pc->value());
+        self::assertSame('16197', $pc->zoneCode());
+    }
+
+    public function test_from_throws_on_invalid(): void
+    {
+        $this->expectException(\Eram\Abzar\AbzarValidationException::class);
+        PostalCode::from('0000000000');
+    }
+
+    public function test_try_from_null_on_invalid(): void
+    {
+        self::assertNull(PostalCode::tryFrom(''));
     }
 
     public function test_valid_with_persian_digits(): void

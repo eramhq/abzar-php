@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Format;
 
+use Eram\Abzar\AbzarFormatException;
 use Eram\Abzar\Format\OrdinalNumber;
 use PHPUnit\Framework\TestCase;
 
@@ -50,13 +51,13 @@ class OrdinalNumberTest extends TestCase
 
     public function test_to_word_zero_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(AbzarFormatException::class);
         OrdinalNumber::toWord(0);
     }
 
     public function test_to_word_negative_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(AbzarFormatException::class);
         OrdinalNumber::toWord(-1);
     }
 
@@ -79,7 +80,7 @@ class OrdinalNumberTest extends TestCase
 
     public function test_to_short_zero_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(AbzarFormatException::class);
         OrdinalNumber::toShort(0);
     }
 
@@ -102,7 +103,7 @@ class OrdinalNumberTest extends TestCase
 
     public function test_add_suffix_empty_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(AbzarFormatException::class);
         OrdinalNumber::addSuffix('');
     }
 }

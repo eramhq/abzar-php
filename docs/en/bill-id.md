@@ -4,10 +4,12 @@
 
 ```php
 use Eram\Abzar\Validation\BillId;
+use Eram\Abzar\Validation\BillType;
 
-$result = BillId::validate($billId, $paymentId);
-if ($result->isValid()) {
-    $type = $result->details()['type']; // water | electric | gas | phone | mobile | tax | services | passport | other
+$bill = BillId::tryFrom($billId, $paymentId);
+if ($bill !== null) {
+    $type = $bill->type();           // BillType enum (WATER, ELECTRIC, GAS, PHONE, MOBILE, TAX, SERVICES, PASSPORT, OTHER)
+    $typeString = $type->value;      // 'water' | 'electric' | ...
 }
 ```
 

@@ -4,13 +4,45 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
+use Eram\Abzar\AbzarValidationException;
 use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Validation\Details\IbanDetails;
 
-final class Iban
+final class Iban implements \JsonSerializable, \Stringable
 {
-    private function __construct()
+    private function __construct(
+        private readonly IbanDetails $detail,
+    ) {
+    }
+
+    /**
+     * @throws AbzarValidationException
+     */
+    public static function from(string $input): self
     {
+        $result = self::validate($input);
+        if (!$result->isValid()) {
+            throw AbzarValidationException::fromResult($result);
+        }
+
+        /** @var IbanDetails $detail */
+        $detail = $result->detail();
+
+        return new self($detail);
+    }
+
+    public static function tryFrom(string $input): ?self
+    {
+        $result = self::validate($input);
+        if (!$result->isValid()) {
+            return null;
+        }
+
+        /** @var IbanDetails $detail */
+        $detail = $result->detail();
+
+        return new self($detail);
     }
 
     public static function validate(string $input): ValidationResult
@@ -19,32 +51,70 @@ final class Iban
         $input = strtoupper((string) preg_replace('/\s/', '', $input));
 
         if ($input === '') {
-            return ValidationResult::failure(ErrorCode::IBAN_EMPTY);
+            return ValidationResult::invalid(ErrorCode::IBAN_EMPTY);
         }
 
-        // Auto-prepend IR for 24-digit input
         if (preg_match('/^\d{24}$/', $input)) {
             $input = 'IR' . $input;
         }
 
         if (!preg_match('/^IR\d{24}$/', $input)) {
             if (preg_match('/^[A-Z]{2}/', $input) && !str_starts_with($input, 'IR')) {
-                return ValidationResult::failure(ErrorCode::IBAN_MISSING_PREFIX);
+                return ValidationResult::invalid(ErrorCode::IBAN_MISSING_PREFIX);
             }
-            return ValidationResult::failure(ErrorCode::IBAN_WRONG_LENGTH);
+            return ValidationResult::invalid(ErrorCode::IBAN_WRONG_LENGTH);
         }
 
         if (!self::mod97($input)) {
-            return ValidationResult::failure(ErrorCode::IBAN_INVALID_CHECKSUM);
+            return ValidationResult::invalid(ErrorCode::IBAN_INVALID_CHECKSUM);
         }
 
         $bankCode = substr($input, 4, 3);
         $bank     = DataSources::ibanBanks()[$bankCode] ?? null;
 
-        return ValidationResult::success([
-            'bank_code' => $bankCode,
-            'bank'      => $bank,
-        ]);
+        return ValidationResult::valid(new IbanDetails(
+            value:    $input,
+            bankCode: $bankCode,
+            bank:     $bank,
+        ));
+    }
+
+    public function value(): string
+    {
+        return $this->detail->value;
+    }
+
+    public function bankCode(): string
+    {
+        return $this->detail->bankCode;
+    }
+
+    public function bank(): ?string
+    {
+        return $this->detail->bank;
+    }
+
+    public function bankEnum(): ?Bank
+    {
+        return $this->detail->bankEnum();
+    }
+
+    public function detail(): IbanDetails
+    {
+        return $this->detail;
+    }
+
+    public function __toString(): string
+    {
+        return $this->detail->value;
+    }
+
+    /**
+     * @return array{value: string, bank_code: string, bank: ?string}
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->detail->jsonSerialize();
     }
 
     private static function mod97(string $iban): bool

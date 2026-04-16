@@ -93,7 +93,7 @@ class TimeAgoTest extends TestCase
 
     public function test_invalid_string_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Eram\Abzar\AbzarFormatException::class);
         TimeAgo::format('not-a-date');
     }
 

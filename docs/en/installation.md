@@ -9,7 +9,7 @@
 ## Install via Composer
 
 ```bash
-composer require eram/abzar:^0.3@beta
+composer require eram/abzar:^0.4@beta
 ```
 
 While Abzar is in `0.x`, pin the beta range to opt into stability updates without accidentally jumping a breaking minor.

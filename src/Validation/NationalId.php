@@ -4,13 +4,50 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
+use Eram\Abzar\AbzarValidationException;
 use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Validation\Details\NationalIdDetails;
 
-final class NationalId
+/**
+ * Iranian National ID (کد ملی) — a 10-digit personal identifier. Ingest
+ * via {@see self::from()} or {@see self::tryFrom()} when the input should
+ * become a handle; use {@see self::validate()} for a plain pass/fail check.
+ */
+final class NationalId implements \JsonSerializable, \Stringable
 {
-    private function __construct()
+    private function __construct(
+        private readonly NationalIdDetails $detail,
+    ) {
+    }
+
+    /**
+     * @throws AbzarValidationException when the input is not a valid national ID.
+     */
+    public static function from(string $input): self
     {
+        $result = self::validate($input);
+        if (!$result->isValid()) {
+            throw AbzarValidationException::fromResult($result);
+        }
+
+        /** @var NationalIdDetails $detail */
+        $detail = $result->detail();
+
+        return new self($detail);
+    }
+
+    public static function tryFrom(string $input): ?self
+    {
+        $result = self::validate($input);
+        if (!$result->isValid()) {
+            return null;
+        }
+
+        /** @var NationalIdDetails $detail */
+        $detail = $result->detail();
+
+        return new self($detail);
     }
 
     public static function validate(string $input): ValidationResult
@@ -18,7 +55,7 @@ final class NationalId
         $input = ErrorInput::digits($input);
 
         if ($input === '') {
-            return ValidationResult::failure(ErrorCode::NATIONAL_ID_EMPTY);
+            return ValidationResult::invalid(ErrorCode::NATIONAL_ID_EMPTY);
         }
 
         $len = strlen($input);
@@ -27,19 +64,19 @@ final class NationalId
         }
 
         if (!preg_match('/^\d{10}$/', $input)) {
-            return ValidationResult::failure(ErrorCode::NATIONAL_ID_WRONG_LENGTH);
+            return ValidationResult::invalid(ErrorCode::NATIONAL_ID_WRONG_LENGTH);
         }
 
         if (preg_match('/^(\d)\1{9}$/', $input)) {
-            return ValidationResult::failure(ErrorCode::NATIONAL_ID_ALL_SAME_DIGITS);
+            return ValidationResult::invalid(ErrorCode::NATIONAL_ID_ALL_SAME_DIGITS);
         }
 
         if ($input === '0123456789') {
-            return ValidationResult::failure(ErrorCode::NATIONAL_ID_SEQUENTIAL_DIGITS);
+            return ValidationResult::invalid(ErrorCode::NATIONAL_ID_SEQUENTIAL_DIGITS);
         }
 
         if (substr($input, 3, 6) === '000000') {
-            return ValidationResult::failure(ErrorCode::NATIONAL_ID_MIDDLE_ZEROS);
+            return ValidationResult::invalid(ErrorCode::NATIONAL_ID_MIDDLE_ZEROS);
         }
 
         $sum = 0;
@@ -47,26 +84,65 @@ final class NationalId
             $sum += (int) $input[$i] * (10 - $i);
         }
 
-        $remainder = $sum % 11;
+        $remainder  = $sum % 11;
         $checkDigit = (int) $input[9];
-
-        if ($remainder < 2) {
-            $valid = $checkDigit === $remainder;
-        } else {
-            $valid = $checkDigit === (11 - $remainder);
-        }
+        $valid      = $remainder < 2 ? $checkDigit === $remainder : $checkDigit === (11 - $remainder);
 
         if (!$valid) {
-            return ValidationResult::failure(ErrorCode::NATIONAL_ID_INVALID_CHECKSUM);
+            return ValidationResult::invalid(ErrorCode::NATIONAL_ID_INVALID_CHECKSUM);
         }
 
-        $prefix    = substr($input, 0, 3);
-        $cityData  = DataSources::nationalIdCityCodes()[$prefix] ?? ['city' => null, 'province' => null];
+        $prefix   = substr($input, 0, 3);
+        $cityData = DataSources::nationalIdCityCodes()[$prefix] ?? ['city' => null, 'province' => null];
 
-        return ValidationResult::success([
-            'city_code' => $prefix,
-            'city'      => $cityData['city'],
-            'province'  => $cityData['province'],
-        ]);
+        return ValidationResult::valid(new NationalIdDetails(
+            value:    $input,
+            cityCode: $prefix,
+            city:     $cityData['city'],
+            province: $cityData['province'],
+        ));
+    }
+
+    public function value(): string
+    {
+        return $this->detail->value;
+    }
+
+    public function cityCode(): string
+    {
+        return $this->detail->cityCode;
+    }
+
+    public function city(): ?string
+    {
+        return $this->detail->city;
+    }
+
+    public function province(): ?string
+    {
+        return $this->detail->province;
+    }
+
+    public function provinceEnum(): ?Province
+    {
+        return $this->detail->provinceEnum();
+    }
+
+    public function detail(): NationalIdDetails
+    {
+        return $this->detail;
+    }
+
+    public function __toString(): string
+    {
+        return $this->detail->value;
+    }
+
+    /**
+     * @return array{value: string, city_code: string, city: ?string, province: ?string}
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->detail->jsonSerialize();
     }
 }

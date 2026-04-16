@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Validation;
 
+use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Validation\Details\IbanDetails;
+use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\Iban;
 use PHPUnit\Framework\TestCase;
 
@@ -46,8 +49,10 @@ class IbanTest extends TestCase
     {
         $result = Iban::validate('IR820540102680020817909002');
         $this->assertTrue($result->isValid());
-        $this->assertSame('بانک پارسیان', $result->details()['bank']);
-        $this->assertSame('054', $result->details()['bank_code']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(IbanDetails::class, $detail);
+        $this->assertSame('بانک پارسیان', $detail->bank);
+        $this->assertSame('054', $detail->bankCode);
     }
 
     public function test_invalid_mod97(): void
@@ -83,13 +88,40 @@ class IbanTest extends TestCase
 
     public function test_unknown_bank(): void
     {
-        // Construct IBAN with unknown bank code (e.g. 099)
-        // IR + check digits + 099 + 19 digits
-        // We need a valid mod-97 for this
-        // Let's just test that a valid IBAN with an unknown bank code returns null bank
-        // Use bank code that's not in our list - hard to construct valid mod97 by hand
-        // Instead, let's check an IBAN where the bank is identified
         $result = Iban::validate('IR820540102680020817909002');
-        $this->assertNotNull($result->details()['bank']);
+        $detail = $result->detail();
+        $this->assertInstanceOf(IbanDetails::class, $detail);
+        $this->assertNotNull($detail->bank);
+    }
+
+    public function test_from_returns_value_object(): void
+    {
+        $iban = Iban::from('IR820540102680020817909002');
+        $this->assertSame('IR820540102680020817909002', $iban->value());
+        $this->assertSame('054', $iban->bankCode());
+        $this->assertSame('بانک پارسیان', $iban->bank());
+    }
+
+    public function test_from_throws_on_invalid(): void
+    {
+        $this->expectException(AbzarValidationException::class);
+        Iban::from('IR820540102680020817909003');
+    }
+
+    public function test_try_from_null_on_invalid(): void
+    {
+        $this->assertNull(Iban::tryFrom('invalid'));
+    }
+
+    public function test_from_normalizes_input(): void
+    {
+        $iban = Iban::from('ir82 0540 1026 8002 0817 9090 02');
+        $this->assertSame('IR820540102680020817909002', $iban->value());
+    }
+
+    public function test_validation_error_code_missing_prefix(): void
+    {
+        $result = Iban::validate('DE820540102680020817909002');
+        $this->assertSame([ErrorCode::IBAN_MISSING_PREFIX], $result->errorCodes());
     }
 }

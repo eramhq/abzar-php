@@ -70,4 +70,22 @@ class LegalIdTest extends TestCase
         $result = LegalId::validate('  10380284790  ');
         $this->assertTrue($result->isValid());
     }
+
+    public function test_from_returns_value_object(): void
+    {
+        $legal = LegalId::from('10380284790');
+        $this->assertSame('10380284790', $legal->value());
+        $this->assertSame('10380284790', (string) $legal);
+    }
+
+    public function test_from_throws_on_invalid(): void
+    {
+        $this->expectException(\Eram\Abzar\AbzarValidationException::class);
+        LegalId::from('10380284792');
+    }
+
+    public function test_try_from_null_on_invalid(): void
+    {
+        $this->assertNull(LegalId::tryFrom(''));
+    }
 }

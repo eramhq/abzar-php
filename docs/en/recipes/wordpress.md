@@ -31,12 +31,12 @@ The HTML-aware `convertContent` leaves `<script>`, `<style>`, tags, attributes, 
 ```php
 register_rest_field('post', 'customer_national_id', [
     'update_callback' => function ($value, \WP_Post $post) {
-        $result = \Eram\Abzar\Validation\NationalId::validate((string) $value);
-        if (!$result->isValid()) {
-            return new \WP_Error('invalid_nid', (string) $result, ['status' => 400]);
+        $ni = \Eram\Abzar\Validation\NationalId::tryFrom((string) $value);
+        if ($ni === null) {
+            return new \WP_Error('invalid_nid', 'Invalid national ID', ['status' => 400]);
         }
-        update_post_meta($post->ID, 'customer_national_id', $value);
-        update_post_meta($post->ID, 'customer_city', $result->details()['city'] ?? null);
+        update_post_meta($post->ID, 'customer_national_id', $ni->value());
+        update_post_meta($post->ID, 'customer_city', $ni->city());
         return true;
     },
 ]);

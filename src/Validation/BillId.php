@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
+use Eram\Abzar\AbzarValidationException;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Validation\Details\BillIdDetails;
 
 /**
  * Bank utility bill ID ({@code شناسه قبض}) + payment ID ({@code شناسه پرداخت})
@@ -12,26 +14,45 @@ use Eram\Abzar\Internal\ErrorInput;
  * {@link https://github.com/persian-tools/persian-tools/blob/main/src/modules/bill/index.ts}
  * on 2026-04-16.
  *
- * Unknown type-digits (0, 7) decode to {@code 'other'} rather than rejecting —
- * a documented leniency over the upstream JS library.
+ * Unknown type-digits (0, 7) decode to {@see BillType::OTHER} rather than
+ * rejecting — a documented leniency over the upstream JS library.
  */
-final class BillId
+final class BillId implements \JsonSerializable, \Stringable
 {
     private const WEIGHTS = [2, 3, 4, 5, 6, 7];
 
-    private const TYPES = [
-        1 => 'water',
-        2 => 'electric',
-        3 => 'gas',
-        4 => 'phone',
-        5 => 'mobile',
-        6 => 'tax',
-        8 => 'services',
-        9 => 'passport',
-    ];
+    private function __construct(
+        private readonly BillIdDetails $detail,
+    ) {
+    }
 
-    private function __construct()
+    /**
+     * @throws AbzarValidationException
+     */
+    public static function from(string $billId, string $paymentId): self
     {
+        $result = self::validate($billId, $paymentId);
+        if (!$result->isValid()) {
+            throw AbzarValidationException::fromResult($result);
+        }
+
+        /** @var BillIdDetails $detail */
+        $detail = $result->detail();
+
+        return new self($detail);
+    }
+
+    public static function tryFrom(string $billId, string $paymentId): ?self
+    {
+        $result = self::validate($billId, $paymentId);
+        if (!$result->isValid()) {
+            return null;
+        }
+
+        /** @var BillIdDetails $detail */
+        $detail = $result->detail();
+
+        return new self($detail);
     }
 
     public static function validate(string $billId, string $paymentId): ValidationResult
@@ -40,29 +61,59 @@ final class BillId
         $paymentId = ErrorInput::digits($paymentId);
 
         if ($billId === '' || $paymentId === '') {
-            return ValidationResult::failure(ErrorCode::BILL_ID_EMPTY);
+            return ValidationResult::invalid(ErrorCode::BILL_ID_EMPTY);
         }
 
         if (!preg_match('/^\d{6,18}$/', $billId) || !preg_match('/^\d{6,18}$/', $paymentId)) {
-            return ValidationResult::failure(ErrorCode::BILL_ID_WRONG_LENGTH);
+            return ValidationResult::invalid(ErrorCode::BILL_ID_WRONG_LENGTH);
         }
 
         if (!self::checksumMatches($billId)) {
-            return ValidationResult::failure(ErrorCode::BILL_ID_INVALID_CHECKSUM);
+            return ValidationResult::invalid(ErrorCode::BILL_ID_INVALID_CHECKSUM);
         }
 
         if (!self::paymentMatches($billId, $paymentId)) {
-            return ValidationResult::failure(ErrorCode::BILL_ID_PAYMENT_MISMATCH);
+            return ValidationResult::invalid(ErrorCode::BILL_ID_PAYMENT_MISMATCH);
         }
 
-        $typeDigit = (int) $billId[-2];
-        $type      = self::TYPES[$typeDigit] ?? 'other';
+        return ValidationResult::valid(new BillIdDetails(
+            billId:    $billId,
+            paymentId: $paymentId,
+            type:      BillType::fromTypeDigit((int) $billId[-2]),
+        ));
+    }
 
-        return ValidationResult::success([
-            'bill_id'    => $billId,
-            'payment_id' => $paymentId,
-            'type'       => $type,
-        ]);
+    public function billId(): string
+    {
+        return $this->detail->billId;
+    }
+
+    public function paymentId(): string
+    {
+        return $this->detail->paymentId;
+    }
+
+    public function type(): BillType
+    {
+        return $this->detail->type;
+    }
+
+    public function detail(): BillIdDetails
+    {
+        return $this->detail;
+    }
+
+    public function __toString(): string
+    {
+        return $this->detail->billId;
+    }
+
+    /**
+     * @return array{bill_id: string, payment_id: string, type: string}
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->detail->jsonSerialize();
     }
 
     private static function checksumMatches(string $digits): bool
