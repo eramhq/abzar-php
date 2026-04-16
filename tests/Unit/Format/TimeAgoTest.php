@@ -94,4 +94,28 @@ class TimeAgoTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         TimeAgo::format('not-a-date');
     }
+
+    public function test_jalali_hook_fires_on_year_bucket(): void
+    {
+        $hook = static fn (int $ts): string => 'اردیبهشت 1402';
+        $result = TimeAgo::format(
+            self::NOW - 63072000,
+            now: self::NOW,
+            persianDigits: false,
+            jalaliMonthResolver: $hook,
+        );
+        $this->assertSame('حدود 2 سال پیش — اردیبهشت 1402', $result);
+    }
+
+    public function test_jalali_hook_skipped_for_shorter_deltas(): void
+    {
+        $hook = static fn (int $ts): string => 'SHOULD NOT APPEAR';
+        $result = TimeAgo::format(
+            self::NOW - 300,
+            now: self::NOW,
+            persianDigits: false,
+            jalaliMonthResolver: $hook,
+        );
+        $this->assertSame('5 دقیقه پیش', $result);
+    }
 }

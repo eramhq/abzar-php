@@ -6,6 +6,7 @@ namespace Eram\Abzar\Format;
 
 use Eram\Abzar\Digits\DigitConverter;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Validation\ErrorCode;
 
 final class TimeAgo
 {
@@ -20,10 +21,18 @@ final class TimeAgo
     private const MONTH = 2592000;
     private const YEAR = 31536000;
 
+    /**
+     * @param (callable(int): string)|null $jalaliMonthResolver
+     *        Optional hook invoked for ≥ 1 year deltas to append a Jalali
+     *        month + year tag (e.g. {@code اردیبهشت ۱۴۰۲}). Receives the
+     *        resolved UTC timestamp; the caller is responsible for
+     *        timezone handling (typically {@code Asia/Tehran}).
+     */
     public static function format(
         int|string|\DateTimeInterface $timestamp,
         ?int $now = null,
         bool $persianDigits = true,
+        ?callable $jalaliMonthResolver = null,
     ): string {
         $time = self::resolveTimestamp($timestamp);
         $now ??= time();
@@ -36,6 +45,8 @@ final class TimeAgo
             $suffix = 'بعد';
         }
 
+        $inYearBucket = $diff >= self::YEAR;
+
         $text = match (true) {
             $diff < 10          => 'همین الان',
             $diff < self::MINUTE => "چند ثانیه {$suffix}",
@@ -46,6 +57,10 @@ final class TimeAgo
             $diff < self::YEAR   => self::unit(intdiv($diff, self::MONTH), 'ماه', $suffix, true),
             default              => self::unit(intdiv($diff, self::YEAR), 'سال', $suffix, true),
         };
+
+        if ($inYearBucket && $jalaliMonthResolver !== null) {
+            $text .= ' — ' . $jalaliMonthResolver($time);
+        }
 
         if ($persianDigits) {
             $text = DigitConverter::toPersian($text);
@@ -74,7 +89,7 @@ final class TimeAgo
 
         if ($parsed === false) {
             throw new \InvalidArgumentException(
-                'تاریخ ورودی قابل تبدیل نیست: ' . ErrorInput::truncate($timestamp, 64)
+                ErrorCode::TIME_AGO_INVALID_TIMESTAMP->message() . ': ' . ErrorInput::truncate($timestamp, 64)
             );
         }
 

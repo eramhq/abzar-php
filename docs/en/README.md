@@ -7,6 +7,12 @@ Abzar is a zero-runtime-dependency Persian (Farsi) utility toolkit for PHP 8.1+.
 - [Installation](installation.md)
 - [API stability & backwards-compatibility policy](api-stability.md)
 - [Async runtime safety (Octane / RoadRunner / Swoole)](async-runtimes.md)
+- Reference
+  - [Postal Code](postal-code.md)
+  - [Bill ID](bill-id.md)
+  - [Keyboard Fixer](keyboard-fixer.md)
+  - [Words to Number](words-to-number.md)
+  - [Currency](currency.md)
 - [Integration recipes](recipes/)
   - [Laravel FormRequest](recipes/laravel.md)
   - [Symfony Validator](recipes/symfony.md)

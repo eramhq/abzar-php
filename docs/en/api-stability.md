@@ -15,9 +15,13 @@ From `1.0.0` onward, the commitments below apply.
 - **`ValidationResult` public shape**:
   - `isValid(): bool`
   - `errors(): list<string>`
+  - `errorCodes(): list<ErrorCode>`
+  - `warnings(): list<string>`
+  - `warningCodes(): list<ErrorCode>`
   - `details(): array<string, mixed>`
+  - `bank() / operator() / province()` typed accessors
   - `jsonSerialize()` output shape.
-- **Documented error codes** (planned for `0.3` — see roadmap). Once introduced, error code strings themselves are stable; the Persian message text backing them is not.
+- **`Eram\Abzar\Validation\ErrorCode`** — the backing string value for each case is API surface from `0.3` onward. Renaming or dropping a case is a breaking change. New cases may be added in minor releases.
 - **Input-accepting conventions**: Persian / Arabic / English digits are accepted interchangeably across all validators and formatters.
 
 ## Explicitly unstable

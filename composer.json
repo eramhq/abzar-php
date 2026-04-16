@@ -27,11 +27,14 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.64",
+        "infection/infection": "^0.29",
+        "phpbench/phpbench": "^1.3",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^10.5"
     },
     "suggest": {
-        "eramhq/daynum": "Jalali / Shamsi calendar utilities (date parsing, month names, conversions) — companion to abzar."
+        "eramhq/daynum": "Jalali / Shamsi calendar utilities (date parsing, month names, conversions) — companion to abzar.",
+        "ext-intl": "Required only for CharNormalizer::normalizeToNfc (Unicode NFC normalization); everything else is pure PHP."
     },
     "autoload": {
         "psr-4": {
@@ -70,6 +73,8 @@
         "test:unit": "phpunit --testsuite=unit",
         "phpstan": "phpstan analyse --memory-limit=512M",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
-        "cs-fix": "php-cs-fixer fix"
+        "cs-fix": "php-cs-fixer fix",
+        "bench": "phpbench run --report=default",
+        "mutate": "infection --threads=max --min-msi=80 --only-covered"
     }
 }

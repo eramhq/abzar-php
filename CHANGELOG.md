@@ -4,6 +4,37 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+### Added (0.3 — error codes, warnings, enums, data split)
+
+- `Eram\Abzar\Validation\ErrorCode` — backed enum with stable `DOMAIN.REASON` values for every validator and format-exception failure. Renames are breaking; new cases are additive.
+- `ValidationResult` grew paired typed accessors: `errorCodes(): list<ErrorCode>`, `warnings(): list<string>`, `warningCodes(): list<ErrorCode>`, and convenience lookups `bank(): ?Bank`, `operator(): ?Operator`, `province(): ?Province`.
+- `ValidationResult::success()` accepts an optional `warnings` argument; `ValidationResult::failure()` accepts `string|ErrorCode|list<string|ErrorCode>`.
+- `Eram\Abzar\Validation\Bank` — 37-case enum with canonical bank names. Card-surface aliases (e.g. `موسسه کوثر` → `KOSAR`) resolve via `Bank::fromPersian()`. `isDefunct()` flags merged institutions.
+- `Eram\Abzar\Validation\Operator` — 6-case enum for mobile-operator lookup.
+- `Eram\Abzar\Validation\Province` — 31-case enum with Arabic-Yeh / Arabic-Kaf tolerant lookup.
+- `CharNormalizer` opt-in flags (all default `false`): `foldHamza`, `stripTashkeel`, `stripKashida`, `stripBidiMarks`, `normalizeToNfc` (requires `ext-intl`).
+- `Eram\Abzar\Data\DataSources` + extracted data files (`NationalIdCityCodes`, `CardBanks`, `IbanBanks`, `PhoneOperators`). Pulled from `private const` arrays; each validator lazy-loads its table on first call. Source attribution lives on `DataSources::SOURCE` / `UPDATED_AT`.
+- Benchmark scaffolding (`phpbench/phpbench` dev dep, `tools/benchmarks/*Bench.php`, `composer bench`).
+- Mutation-testing scaffolding (`infection/infection` dev dep, `infection.json5`, `composer mutate`).
+- `tests/fixtures/persian-tools/` directory + README for pulling upstream JS fixtures to run contract parity tests.
+- `composer suggest ext-intl` — opt-in NFC path only.
+
+### Added (0.4 — feature widening)
+
+- `Eram\Abzar\Validation\PostalCode` — 10-digit Iranian postal code validator.
+- `Eram\Abzar\Validation\BillId` — `شناسه قبض` / `شناسه پرداخت` mod-11 validator with bill-type decoding.
+- `PhoneNumber` now validates landline numbers (031, 021, 051, 041, …) and returns `details.type = 'mobile' | 'landline'`. 31-entry area-code table ships in `src/Data/PhoneAreaCodes.php`.
+- `Eram\Abzar\Text\KeyboardFixer` — swap between English QWERTY and Persian keyboard layouts.
+- `Eram\Abzar\Format\WordsToNumber` — parse Persian number words back to `int|float|null`. Shares the `PersianNumerals` table with `NumberToWords`.
+- `Eram\Abzar\Format\Currency` + `CurrencyUnit` — Toman / Rial formatter and converter.
+- `TimeAgo::format()` gained an optional `jalaliMonthResolver` callback, invoked only when the diff lands in the `سال` bucket. No hard `eramhq/daynum` dependency.
+
+### Changed
+
+- `ValidationResult::jsonSerialize()` now emits `error_codes` (always) and `warnings` / `warning_codes` (when non-empty) alongside the existing `errors` / `details`. Additive for deserializers that tolerate unknown fields; strict-schema consumers should regenerate.
+- `PhoneNumber::validate()` — previously-rejected `02112345678`-style landlines are now accepted and classified. The `details.type` field, previously always `'mobile'`, can now be `'landline'`. Callers pattern-matching on `type === 'mobile'` to decide pass/fail need to update.
+- Validators now route Persian messages through `ErrorCode::message()`; consumer assertions against the pre-0.3 Persian strings remain byte-for-byte equal.
+
 ### Added
 
 - `declare(strict_types=1)` on every source file — silent numeric coercion is now a type error.

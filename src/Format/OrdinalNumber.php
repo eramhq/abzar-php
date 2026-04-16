@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eram\Abzar\Format;
 
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Validation\ErrorCode;
 
 final class OrdinalNumber
 {
@@ -15,7 +16,7 @@ final class OrdinalNumber
     public static function toWord(int $n): string
     {
         if ($n < 1) {
-            throw new \InvalidArgumentException('عدد ترتیبی باید بزرگ‌تر از صفر باشد');
+            throw new \InvalidArgumentException(ErrorCode::ORDINAL_NUMBER_NON_POSITIVE->message());
         }
 
         $word = NumberToWords::convert($n);
@@ -26,7 +27,7 @@ final class OrdinalNumber
     public static function toShort(int $n, string $digits = 'persian'): string
     {
         if ($n < 1) {
-            throw new \InvalidArgumentException('عدد ترتیبی باید بزرگ‌تر از صفر باشد');
+            throw new \InvalidArgumentException(ErrorCode::ORDINAL_NUMBER_NON_POSITIVE->message());
         }
 
         $str = (string) $n;
@@ -43,7 +44,7 @@ final class OrdinalNumber
         $word = trim($persianWord);
 
         if ($word === '') {
-            throw new \InvalidArgumentException('ورودی نمی‌تواند خالی باشد');
+            throw new \InvalidArgumentException(ErrorCode::ORDINAL_NUMBER_EMPTY_INPUT->message());
         }
 
         if (str_ends_with($word, 'سه')) {

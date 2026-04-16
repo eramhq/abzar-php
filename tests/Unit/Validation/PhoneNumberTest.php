@@ -105,9 +105,37 @@ class PhoneNumberTest extends TestCase
         $this->assertFalse($result->isValid());
     }
 
-    public function test_landline_rejected(): void
+    public function test_landline_tehran(): void
     {
         $result = PhoneNumber::validate('02112345678');
+        $this->assertTrue($result->isValid());
+        $this->assertSame('landline', $result->details()['type']);
+        $this->assertSame('021', $result->details()['area_code']);
+        $this->assertSame('تهران', $result->details()['province']);
+    }
+
+    public function test_landline_mashhad(): void
+    {
+        $result = PhoneNumber::validate('05112345678');
+        $this->assertTrue($result->isValid());
+        $this->assertSame('landline', $result->details()['type']);
+        $this->assertSame('خراسان رضوی', $result->details()['province']);
+    }
+
+    public function test_landline_e164_normalization(): void
+    {
+        $result = PhoneNumber::validate('+982112345678');
+        $this->assertTrue($result->isValid());
+        $this->assertSame('02112345678', $result->details()['normalized_local']);
+        $this->assertSame('+982112345678', $result->details()['normalized_e164']);
+    }
+
+    public function test_unknown_area_code_rejected(): void
+    {
+        // 099 is not a valid area code and 0999 is not a valid mobile prefix length 11
+        $result = PhoneNumber::validate('09912345678');
+        $this->assertTrue($result->isValid()); // 0999 is mobile (Aptel) — covered elsewhere
+        $result = PhoneNumber::validate('00012345678');
         $this->assertFalse($result->isValid());
     }
 }

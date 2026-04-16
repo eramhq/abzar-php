@@ -16,15 +16,14 @@ final class LegalId
 
     public static function validate(string $input): ValidationResult
     {
-        $input = trim($input);
-        $input = DigitConverter::toEnglish($input);
+        $input = DigitConverter::toEnglish(trim($input));
 
         if ($input === '') {
-            return ValidationResult::failure('شناسه حقوقی نمی‌تواند خالی باشد');
+            return ValidationResult::failure(ErrorCode::LEGAL_ID_EMPTY);
         }
 
         if (!preg_match('/^\d{11}$/', $input)) {
-            return ValidationResult::failure('شناسه حقوقی باید ۱۱ رقم باشد');
+            return ValidationResult::failure(ErrorCode::LEGAL_ID_WRONG_LENGTH);
         }
 
         $digits = array_map('intval', str_split($input));
@@ -32,10 +31,10 @@ final class LegalId
         // Middle 6 digits (positions 3-8) must not all be zero
         $middle = array_slice($digits, 3, 6);
         if (array_sum($middle) === 0) {
-            return ValidationResult::failure('شناسه حقوقی نامعتبر است');
+            return ValidationResult::failure(ErrorCode::LEGAL_ID_MIDDLE_ZEROS);
         }
 
-        $d = $digits[9] + 2;
+        $d   = $digits[9] + 2;
         $sum = 0;
 
         for ($i = 0; $i < 10; $i++) {
@@ -48,7 +47,7 @@ final class LegalId
         }
 
         if ($digits[10] !== $checksum) {
-            return ValidationResult::failure('شناسه حقوقی نامعتبر است');
+            return ValidationResult::failure(ErrorCode::LEGAL_ID_INVALID_CHECKSUM);
         }
 
         return ValidationResult::success();

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
-use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Data\DataSources;
+use Eram\Abzar\Internal\ErrorInput;
 
 final class PhoneNumber
 {
@@ -12,65 +13,12 @@ final class PhoneNumber
     {
     }
 
-    /**
-     * Operator prefixes (3-digit after 09).
-     * Source: persian-tools v5.0.0-beta.0
-     */
-    private const OPERATORS = [
-        // MCI (همراه اول)
-        '910' => 'همراه اول',
-        '911' => 'همراه اول',
-        '912' => 'همراه اول',
-        '913' => 'همراه اول',
-        '914' => 'همراه اول',
-        '915' => 'همراه اول',
-        '916' => 'همراه اول',
-        '917' => 'همراه اول',
-        '918' => 'همراه اول',
-        '919' => 'همراه اول',
-        '990' => 'همراه اول',
-        '991' => 'همراه اول',
-        '992' => 'همراه اول',
-        '993' => 'همراه اول',
-        '994' => 'همراه اول',
-        '995' => 'همراه اول',
-        '996' => 'همراه اول',
-        // Irancell (ایرانسل)
-        '900' => 'ایرانسل',
-        '901' => 'ایرانسل',
-        '902' => 'ایرانسل',
-        '903' => 'ایرانسل',
-        '904' => 'ایرانسل',
-        '905' => 'ایرانسل',
-        '930' => 'ایرانسل',
-        '933' => 'ایرانسل',
-        '935' => 'ایرانسل',
-        '936' => 'ایرانسل',
-        '937' => 'ایرانسل',
-        '938' => 'ایرانسل',
-        '939' => 'ایرانسل',
-        '941' => 'ایرانسل',
-        // RighTel (رایتل)
-        '920' => 'رایتل',
-        '921' => 'رایتل',
-        '922' => 'رایتل',
-        '923' => 'رایتل',
-        // Taliya (تالیا)
-        '932' => 'تالیا',
-        // Shatel Mobile (شاتل موبایل)
-        '998' => 'شاتل موبایل',
-        // Aptel (آپتل)
-        '999' => 'آپتل',
-    ];
-
     public static function validate(string $input): ValidationResult
     {
-        $input = trim($input);
-        $input = DigitConverter::toEnglish($input);
-        $input = (string) preg_replace('/[\s()\-]/', '', $input);
+        $input = ErrorInput::digits($input, '()');
 
         if ($input === '') {
-            return ValidationResult::failure('شماره تلفن نمی‌تواند خالی باشد');
+            return ValidationResult::failure(ErrorCode::PHONE_NUMBER_EMPTY);
         }
 
         if (str_starts_with($input, '+98')) {
@@ -83,32 +31,60 @@ final class PhoneNumber
             $input = '0' . $input;
         }
 
-        if (!preg_match('/^09\d{9}$/', $input)) {
-            return ValidationResult::failure('شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود');
+        if (preg_match('/^09\d{9}$/', $input)) {
+            return self::mobileResult($input);
         }
 
-        $normalizedLocal = $input;
-        $normalizedE164 = '+98' . substr($normalizedLocal, 1);
+        if (preg_match('/^0\d{10}$/', $input)) {
+            $landline = self::landlineResult($input);
+            if ($landline !== null) {
+                return $landline;
+            }
+        }
 
-        $prefix = substr($normalizedLocal, 1, 3);
-        $operator = self::OPERATORS[$prefix] ?? null;
-
-        return ValidationResult::success([
-            'normalized_local' => $normalizedLocal,
-            'normalized_e164'  => $normalizedE164,
-            'operator'         => $operator,
-            'type'             => 'mobile',
-        ]);
+        return ValidationResult::failure(ErrorCode::PHONE_NUMBER_INVALID_FORMAT);
     }
 
     public static function normalize(string $input): ?string
     {
         $result = self::validate($input);
 
-        if (!$result->isValid()) {
+        return $result->isValid() ? $result->details()['normalized_local'] : null;
+    }
+
+    private static function mobileResult(string $normalizedLocal): ValidationResult
+    {
+        $prefix = substr($normalizedLocal, 1, 3);
+
+        return ValidationResult::success([
+            'normalized_local' => $normalizedLocal,
+            'normalized_e164'  => self::toE164($normalizedLocal),
+            'operator'         => DataSources::phoneOperators()[$prefix] ?? null,
+            'type'             => 'mobile',
+        ]);
+    }
+
+    private static function landlineResult(string $normalizedLocal): ?ValidationResult
+    {
+        $areaCode  = substr($normalizedLocal, 0, 3);
+        $areaCodes = DataSources::phoneAreaCodes();
+
+        if (!isset($areaCodes[$areaCode])) {
             return null;
         }
 
-        return $result->details()['normalized_local'];
+        return ValidationResult::success([
+            'normalized_local' => $normalizedLocal,
+            'normalized_e164'  => self::toE164($normalizedLocal),
+            'type'             => 'landline',
+            'area_code'        => $areaCode,
+            'province'         => $areaCodes[$areaCode]['province'],
+            'city'             => $areaCodes[$areaCode]['city'],
+        ]);
+    }
+
+    private static function toE164(string $normalizedLocal): string
+    {
+        return '+98' . substr($normalizedLocal, 1);
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Internal;
 
+use Eram\Abzar\Digits\DigitConverter;
+
 /**
  * @internal Not covered by BC guarantees; do not depend on from outside abzar.
  */
@@ -25,5 +27,17 @@ final class ErrorInput
             return mb_substr($safe, 0, $max, 'UTF-8') . '…';
         }
         return $safe;
+    }
+
+    /**
+     * Canonicalize digit-bearing input: trim, fold Persian / Arabic digits to
+     * ASCII, and remove whitespace, dashes, and any additional characters
+     * in $extraCharClass (regex class body, without brackets — e.g. "()").
+     */
+    public static function digits(string $value, string $extraCharClass = ''): string
+    {
+        $value = DigitConverter::toEnglish(trim($value));
+
+        return (string) preg_replace('/[\s\-' . $extraCharClass . ']/', '', $value);
     }
 }

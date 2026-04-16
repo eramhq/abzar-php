@@ -6,6 +6,7 @@ namespace Eram\Abzar\Format;
 
 use Eram\Abzar\Digits\DigitConverter;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Validation\ErrorCode;
 
 final class NumberFormatter
 {
@@ -24,7 +25,7 @@ final class NumberFormatter
 
         if (!preg_match('/^-?\d+(\.\d+)?$/', $numberStr)) {
             throw new \InvalidArgumentException(
-                'مقدار ورودی عددی معتبر نیست: ' . ErrorInput::truncate($numberStr, 32)
+                ErrorCode::NUMBER_FORMATTER_INVALID->message() . ': ' . ErrorInput::truncate($numberStr, 32)
             );
         }
 

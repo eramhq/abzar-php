@@ -10,15 +10,11 @@ final class NumberToWords
     {
     }
 
-    private const ONES = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
-
-    private const TEENS = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
-
-    private const TENS = ['', '', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
-
-    private const HUNDREDS = ['', 'یکصد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
-
-    private const SCALES = ['', 'هزار', 'میلیون', 'میلیارد', 'تریلیون', 'کوادریلیون'];
+    private const ONES     = PersianNumerals::ONES;
+    private const TEENS    = PersianNumerals::TEENS;
+    private const TENS     = PersianNumerals::TENS;
+    private const HUNDREDS = PersianNumerals::HUNDREDS;
+    private const SCALES   = PersianNumerals::SCALES;
 
     public static function convert(int|float $number): string
     {
