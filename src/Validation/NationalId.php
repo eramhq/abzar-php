@@ -669,9 +669,7 @@ class NationalId
             return ValidationResult::failure('کد ملی نامعتبر است');
         }
 
-        // City lookup — prefix is guaranteed to exist in CITY_CODES because
-        // validate() already rejected unknown prefixes above. Some entries
-        // (e.g. 775, 778, 986) have null city/province values.
+        // Prefix presence is guaranteed by the isset() check above; some entries (775, 778, 986) carry null city/province.
         $cityData = self::CITY_CODES[$prefix];
 
         return ValidationResult::success([

@@ -6,14 +6,13 @@ use Eram\Abzar\Digits\DigitConverter;
 
 class Slug
 {
+    private static ?CharNormalizer $normalizer = null;
+
     public static function generate(string $text): string
     {
-        static $normalizer = null;
-        if ($normalizer === null) {
-            $normalizer = new CharNormalizer();
-        }
+        self::$normalizer ??= new CharNormalizer();
 
-        $text = $normalizer->normalize($text);
+        $text = self::$normalizer->normalize($text);
         $text = DigitConverter::toEnglish($text);
         $text = mb_strtolower($text, 'UTF-8');
         $text = (string) preg_replace('/[\s_]+/u', '-', $text);

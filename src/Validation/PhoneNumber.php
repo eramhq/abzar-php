@@ -67,7 +67,6 @@ class PhoneNumber
             return ValidationResult::failure('شماره تلفن نمی‌تواند خالی باشد');
         }
 
-        // Normalize prefix
         if (str_starts_with($input, '+98')) {
             $input = '0' . substr($input, 3);
         } elseif (str_starts_with($input, '0098')) {
