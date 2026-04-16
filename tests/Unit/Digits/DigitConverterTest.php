@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Digits;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Digits\DigitConverter;
+use PHPUnit\Framework\TestCase;
 
 class DigitConverterTest extends TestCase
 {

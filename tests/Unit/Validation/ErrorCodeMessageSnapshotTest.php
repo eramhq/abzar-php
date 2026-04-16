@@ -24,7 +24,6 @@ final class ErrorCodeMessageSnapshotTest extends TestCase
         yield 'national-id same digits'   => [ErrorCode::NATIONAL_ID_ALL_SAME_DIGITS,   'کد ملی نامعتبر است'];
         yield 'national-id sequential'    => [ErrorCode::NATIONAL_ID_SEQUENTIAL_DIGITS, 'کد ملی نامعتبر است'];
         yield 'national-id middle zeros'  => [ErrorCode::NATIONAL_ID_MIDDLE_ZEROS,      'کد ملی نامعتبر است'];
-        yield 'national-id prefix'        => [ErrorCode::NATIONAL_ID_INVALID_PREFIX,    'کد ملی نامعتبر است'];
         yield 'national-id checksum'      => [ErrorCode::NATIONAL_ID_INVALID_CHECKSUM,  'کد ملی نامعتبر است'];
 
         yield 'card empty'                => [ErrorCode::CARD_NUMBER_EMPTY,             'شماره کارت نمی‌تواند خالی باشد'];

@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Validation;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Validation\CardNumber;
+use PHPUnit\Framework\TestCase;
 
 class CardNumberTest extends TestCase
 {

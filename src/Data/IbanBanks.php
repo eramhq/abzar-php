@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * @generated data table — do not edit by hand.
  * @see \Eram\Abzar\Data\DataSources
  */
-return array (
+return  [
   '010' => 'بانک مرکزی جمهوری اسلامی ایران',
   '011' => 'بانک صنعت و معدن',
   '012' => 'بانک ملت',
@@ -43,4 +45,4 @@ return array (
   '080' => 'موسسه اعتباری نور',
   '090' => 'بانک مهر ایران',
   '095' => 'بانک ایران و ونزوئلا',
-);
+];

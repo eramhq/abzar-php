@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * @generated data table — do not edit by hand.
  * @see \Eram\Abzar\Data\DataSources
  */
-return array (
+return  [
   910 => 'همراه اول',
   911 => 'همراه اول',
   912 => 'همراه اول',
@@ -43,4 +45,4 @@ return array (
   932 => 'تالیا',
   998 => 'شاتل موبایل',
   999 => 'آپتل',
-);
+];

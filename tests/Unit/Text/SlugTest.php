@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Text;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Text\Slug;
+use PHPUnit\Framework\TestCase;
 
 class SlugTest extends TestCase
 {

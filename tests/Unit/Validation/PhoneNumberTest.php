@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Validation;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Validation\PhoneNumber;
+use PHPUnit\Framework\TestCase;
 
 class PhoneNumberTest extends TestCase
 {
@@ -80,11 +82,11 @@ class PhoneNumberTest extends TestCase
         $this->assertSame('رایتل', $result->details()['operator']);
     }
 
-    public function test_unknown_operator(): void
+    public function test_unknown_mobile_prefix_rejected(): void
     {
+        // 094x prefixes are not in the Iranian operator table — matches upstream persian-tools behavior.
         $result = PhoneNumber::validate('09401234567');
-        $this->assertTrue($result->isValid());
-        $this->assertNull($result->details()['operator']);
+        $this->assertFalse($result->isValid());
     }
 
     public function test_too_short(): void

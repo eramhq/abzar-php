@@ -32,46 +32,81 @@ final class BillIdTest extends TestCase
         self::assertSame([ErrorCode::BILL_ID_INVALID_CHECKSUM], $result->errorCodes());
     }
 
-    public function test_valid_pair_passes_with_type_decoding(): void
+    /**
+     * Test vectors sourced from persian-tools/test/bill.spec.ts.
+     *
+     * @dataProvider upstreamValidPairs
+     */
+    public function test_upstream_valid_pairs_pass(string $billId, string $paymentId, string $type): void
     {
-        // Generate a checksum-valid pair programmatically using the public algorithm.
-        // Bill prefix ending in "2" (electric) so type decodes to 'electric'.
-        $billPrefix = '12345678902';
+        $result = BillId::validate($billId, $paymentId);
+        self::assertTrue($result->isValid(), 'errors: ' . implode('; ', $result->errors()));
+        self::assertSame($type, $result->details()['type']);
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function upstreamValidPairs(): iterable
+    {
+        // Format: [billId, paymentId, expected type]
+        yield 'phone' => ['7748317800142', '1770160', 'phone'];
+        yield 'water' => ['2050327604613', '1070189', 'water'];
+    }
+
+    /**
+     * @dataProvider upstreamInvalidPairs
+     */
+    public function test_upstream_invalid_pairs_fail(string $billId, string $paymentId): void
+    {
+        $result = BillId::validate($billId, $paymentId);
+        self::assertFalse($result->isValid());
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function upstreamInvalidPairs(): iterable
+    {
+        // persian-tools marks these as isValid=false.
+        yield 'bad bill checksum'       => ['2234322344613', '1070189'];
+        yield 'payment mismatch'        => ['9174639504124', '12908197'];
+    }
+
+    public function test_payment_id_mismatch_fails(): void
+    {
+        // Upstream valid bill, wrong payment-check digits.
+        $result = BillId::validate('7748317800142', '1770199');
+        self::assertFalse($result->isValid());
+        self::assertSame([ErrorCode::BILL_ID_PAYMENT_MISMATCH], $result->errorCodes());
+    }
+
+    public function test_type_decoding_for_constructed_pair(): void
+    {
+        // Constructed via the documented algorithm so we hit every known type.
+        $billPrefix = '12345678902'; // type digit = 2 → electric
         $billId     = $billPrefix . (string) self::mod11($billPrefix);
 
         $paymentPrefix = '1234';
-        $first         = self::mod11($billId . $paymentPrefix);
+        $first         = self::mod11($paymentPrefix);
         $second        = self::mod11($billId . $paymentPrefix . (string) $first);
         $paymentId     = $paymentPrefix . $first . $second;
 
         $result = BillId::validate($billId, $paymentId);
-
         self::assertTrue($result->isValid(), 'errors: ' . implode('; ', $result->errors()));
         self::assertSame('electric', $result->details()['type']);
         self::assertSame($billId, $result->details()['bill_id']);
     }
 
-    public function test_payment_id_mismatch_fails(): void
-    {
-        $billPrefix = '12345678902';
-        $billId     = $billPrefix . (string) self::mod11($billPrefix);
-
-        // Use deliberately wrong payment last-two digits.
-        $paymentId = '123499';
-
-        $result = BillId::validate($billId, $paymentId);
-        self::assertFalse($result->isValid());
-        self::assertSame([ErrorCode::BILL_ID_PAYMENT_MISMATCH], $result->errorCodes());
-    }
-
     public function test_unknown_type_digit_decodes_to_other(): void
     {
-        // Type digit '7' isn't in the table — should fall through to 'other'.
+        // Type digit '7' isn't in the table — falls through to 'other'
+        // (a documented leniency over upstream's 'unknown' rejection).
         $billPrefix = '12345678907';
         $billId     = $billPrefix . (string) self::mod11($billPrefix);
 
         $paymentPrefix = '1234';
-        $first         = self::mod11($billId . $paymentPrefix);
+        $first         = self::mod11($paymentPrefix);
         $second        = self::mod11($billId . $paymentPrefix . (string) $first);
         $paymentId     = $paymentPrefix . $first . $second;
 

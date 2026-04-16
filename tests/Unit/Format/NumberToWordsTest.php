@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Format;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Format\NumberToWords;
+use PHPUnit\Framework\TestCase;
 
 class NumberToWordsTest extends TestCase
 {

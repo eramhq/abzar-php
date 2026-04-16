@@ -18,7 +18,6 @@ enum ErrorCode: string
     case NATIONAL_ID_ALL_SAME_DIGITS    = 'NATIONAL_ID.ALL_SAME_DIGITS';
     case NATIONAL_ID_SEQUENTIAL_DIGITS  = 'NATIONAL_ID.SEQUENTIAL_DIGITS';
     case NATIONAL_ID_MIDDLE_ZEROS       = 'NATIONAL_ID.MIDDLE_ZEROS';
-    case NATIONAL_ID_INVALID_PREFIX     = 'NATIONAL_ID.INVALID_PREFIX';
     case NATIONAL_ID_INVALID_CHECKSUM   = 'NATIONAL_ID.INVALID_CHECKSUM';
 
     case CARD_NUMBER_EMPTY              = 'CARD_NUMBER.EMPTY';
@@ -60,7 +59,6 @@ enum ErrorCode: string
             self::NATIONAL_ID_ALL_SAME_DIGITS,
             self::NATIONAL_ID_SEQUENTIAL_DIGITS,
             self::NATIONAL_ID_MIDDLE_ZEROS,
-            self::NATIONAL_ID_INVALID_PREFIX,
             self::NATIONAL_ID_INVALID_CHECKSUM   => 'کد ملی نامعتبر است',
 
             self::CARD_NUMBER_EMPTY              => 'شماره کارت نمی‌تواند خالی باشد',

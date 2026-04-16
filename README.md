@@ -6,7 +6,17 @@ Abzar (`ابزار`, "tool") is a pure-PHP library covering the small but opinio
 
 No framework coupling, no runtime extensions beyond stock PHP, no transitive Composer dependencies.
 
-> **Note on messages.** Validation error strings are Persian and byte-identical to the upstream data. They are intentionally not localized in `0.x` — if you are building an English-facing UI, treat them as opaque codes and either map them yourself or wait for stable error-code support in a later release.
+> **Messages and error codes.** Persian error messages are byte-identical to the upstream data. For language-neutral error handling, every validator failure also emits a machine-readable `ErrorCode`:
+>
+> ```php
+> use Eram\Abzar\Validation\{CardNumber, ErrorCode};
+>
+> $r = CardNumber::validate('');
+> $r->errorCodes();                                  // [ErrorCode::CARD_NUMBER_EMPTY]
+> in_array(ErrorCode::CARD_NUMBER_EMPTY, $r->errorCodes(), true); // true
+> ```
+>
+> Error-code values are stable API surface as of `0.3` — renaming a case is a breaking change.
 
 ## Feature matrix
 
@@ -14,23 +24,30 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 |---|---|---|
 | `Validation` | `NationalId` | Iranian national-ID checksum + city / province lookup |
 | `Validation` | `LegalId` | 11-digit Iranian legal-entity ID checksum |
-| `Validation` | `PhoneNumber` | Iranian mobile number validation + operator detection (`09xx`, `+98`, `0098`, `98`) |
+| `Validation` | `PhoneNumber` | Iranian mobile + landline number validation, operator / area-code detection (`09xx`, `+98`, `0098`, `98`) |
 | `Validation` | `CardNumber` | 16-digit bank card Luhn check + bank name from BIN |
 | `Validation` | `Iban` | `IR`-prefixed IBAN mod-97 check + bank lookup |
-| `Validation` | `ValidationResult` | Shared `{isValid, errors, details}` return type |
+| `Validation` | `PostalCode` | 10-digit Iranian postal code validator |
+| `Validation` | `BillId` | `شناسه قبض` / `شناسه پرداخت` mod-11 pair validator with bill-type decoding |
+| `Validation` | `ErrorCode` | Stable `DOMAIN.REASON` codes emitted by every validator + format exception |
+| `Validation` | `Bank` / `Operator` / `Province` | Typed enums with `fromPersian()` lookup and Arabic-char-tolerant matching |
+| `Validation` | `ValidationResult` | Shared `{isValid, errors, errorCodes, warnings, details}` return type (implements `JsonSerializable` / `Stringable`) |
 | `Format` | `NumberFormatter` | Thousands-separator formatter with digit normalization |
 | `Format` | `NumberToWords` | Integer / float to Persian words (`۱۲۳۴` → `یک هزار و دویست و سی و چهار`) |
+| `Format` | `WordsToNumber` | Parse Persian number words back to `int` / `float` |
 | `Format` | `OrdinalNumber` | Persian ordinals: `toWord(3)` → `سوم`, `toShort(43)` → `۴۳ام` |
 | `Format` | `TimeAgo` | Fuzzy relative time in Persian (`۵ دقیقه پیش`, `حدود ۳ روز پیش`) |
+| `Format` | `Currency` / `CurrencyUnit` | Toman / Rial formatter and converter |
 | `Text` | `Script` | `isPersian` / `hasPersian` / `isArabic` / `hasArabic` detectors |
 | `Text` | `Slug` | Persian-aware slug (`سلام دنیا` → `سلام-دنیا`) |
-| `Text` | `CharNormalizer` | Arabic → Persian char + digit normalization, HTML-aware `normalizeContent()` |
+| `Text` | `CharNormalizer` | Arabic → Persian char + digit normalization, HTML-aware `normalizeContent()`, opt-in hamza / tashkeel / kashida / NFC flags |
+| `Text` | `KeyboardFixer` | Swap between English QWERTY and Persian keyboard layouts |
 | `Digits` | `DigitConverter` | `toPersian` / `toEnglish` / `toArabic` + HTML-aware `convertContent()` |
 
 ## Install
 
 ```bash
-composer require eram/abzar:^0.1@beta
+composer require eram/abzar:^0.3@beta
 ```
 
 Requires PHP 8.1+. No runtime extensions beyond `mbstring`.
@@ -48,10 +65,11 @@ use Eram\Abzar\Validation\PhoneNumber;
 $r = NationalId::validate('0013542419');
 $r->isValid();              // true
 $r->details();              // ['city_code' => '001', 'city' => 'تهران مرکزی', 'province' => 'تهران']
+$r->errorCodes();           // [] (empty on success)
 
-Iban::validate('IR820540102680020817909002')->details()['bank'];     // 'بانک پارسیان'
+Iban::validate('IR820540102680020817909002')->bank();                 // Bank::PARSIAN (enum)
 CardNumber::validate('6037 9912 3456 7893')->details()['bank'];       // 'بانک ملی ایران'
-PhoneNumber::validate('+989121234567')->details()['operator'];        // 'همراه اول'
+PhoneNumber::validate('+989121234567')->operator();                   // Operator::MCI (enum)
 PhoneNumber::normalize('+989121234567');                              // '09121234567'
 ```
 
@@ -108,6 +126,10 @@ DigitConverter::convertContent('<a href="page-5">Item 5</a>');
 // '<a href="page-5">Item ۵</a>'
 ```
 
+## Further reading
+
+Longer-form docs live under [`docs/en/`](docs/en/README.md): per-class references ([Postal Code](docs/en/postal-code.md), [Bill ID](docs/en/bill-id.md), [Keyboard Fixer](docs/en/keyboard-fixer.md), [Words to Number](docs/en/words-to-number.md), [Currency](docs/en/currency.md)), plus installation, [API stability policy](docs/en/api-stability.md), async-runtime notes, and framework integration recipes.
+
 ## Related packages
 
 Abzar deliberately stays narrow. Two companion packages cover adjacent ground:
@@ -125,7 +147,7 @@ See [`docs/en/related.md`](docs/en/related.md) for a longer comparison.
 | Zero runtime deps | Yes | — | Yes |
 | Typed result object (`isValid`/`errors`/`details`) | Yes | Partial | No (bool only) |
 | `JsonSerializable` result | Yes | n/a | No |
-| Structured error codes (roadmap) | Yes (`0.3`) | No | No |
+| Structured error codes | Yes | No | No |
 | Bank card / IBAN / phone / national-ID / legal-ID | Yes | Yes | Subset |
 | Number-to-words / time-ago / ordinals | Yes | Yes | No |
 | Slug / char normalize / digit convert | Yes | Partial | No |
@@ -137,7 +159,7 @@ Abzar stays framework-agnostic. Integration recipes for Laravel FormRequest, Sym
 
 ## Stability
 
-Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.1@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected.
+Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.3@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
 
 ## License
 

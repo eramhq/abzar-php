@@ -20,7 +20,8 @@ final class ValidationResult implements \JsonSerializable, \Stringable
         private readonly array $warnings = [],
         private readonly array $warningCodes = [],
         private readonly array $details = [],
-    ) {}
+    ) {
+    }
 
     public function isValid(): bool
     {

@@ -42,12 +42,6 @@ final class NationalId
             return ValidationResult::failure(ErrorCode::NATIONAL_ID_MIDDLE_ZEROS);
         }
 
-        $cityCodes = DataSources::nationalIdCityCodes();
-        $prefix = substr($input, 0, 3);
-        if (!isset($cityCodes[$prefix])) {
-            return ValidationResult::failure(ErrorCode::NATIONAL_ID_INVALID_PREFIX);
-        }
-
         $sum = 0;
         for ($i = 0; $i < 9; $i++) {
             $sum += (int) $input[$i] * (10 - $i);
@@ -66,7 +60,8 @@ final class NationalId
             return ValidationResult::failure(ErrorCode::NATIONAL_ID_INVALID_CHECKSUM);
         }
 
-        $cityData = $cityCodes[$prefix];
+        $prefix    = substr($input, 0, 3);
+        $cityData  = DataSources::nationalIdCityCodes()[$prefix] ?? ['city' => null, 'province' => null];
 
         return ValidationResult::success([
             'city_code' => $prefix,

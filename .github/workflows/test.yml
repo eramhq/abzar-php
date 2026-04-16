@@ -65,3 +65,52 @@ jobs:
 
       - name: Check code style
         run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+  bench:
+    name: Benchmarks (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, dom, xml
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run phpbench
+        run: vendor/bin/phpbench run --progress=none --report=default --output=json > phpbench.json
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpbench-results
+          path: phpbench.json
+
+  mutate:
+    name: Mutation testing (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up PHP
+        # Pinned to 8.2 — infection's coverage driver can be flaky on PHP 8.4+
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, dom, xml
+          coverage: xdebug
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run infection
+        run: vendor/bin/infection --threads=max --only-covered --min-msi=0 --no-progress --logger-github

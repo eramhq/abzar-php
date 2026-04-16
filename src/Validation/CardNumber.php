@@ -25,15 +25,18 @@ final class CardNumber
             return ValidationResult::failure(ErrorCode::CARD_NUMBER_WRONG_LENGTH);
         }
 
+        $bin   = substr($input, 0, 6);
+        $banks = DataSources::cardBanks();
+        if (!isset($banks[$bin])) {
+            return ValidationResult::failure(ErrorCode::CARD_NUMBER_INVALID_CHECKSUM);
+        }
+
         if (!self::luhn($input)) {
             return ValidationResult::failure(ErrorCode::CARD_NUMBER_INVALID_CHECKSUM);
         }
 
-        $bin  = substr($input, 0, 6);
-        $bank = DataSources::cardBanks()[$bin] ?? null;
-
         return ValidationResult::success([
-            'bank' => $bank,
+            'bank' => $banks[$bin],
             'bin'  => $bin,
         ]);
     }

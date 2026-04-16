@@ -20,10 +20,10 @@ final class BankTest extends TestCase
     {
         self::assertSame(Bank::MARKAZI, Bank::fromPersian('بانک مرکزی ایران'));
         self::assertSame(Bank::MARKAZI, Bank::fromPersian('بانک مرکزی جمهوری اسلامی ایران'));
-        self::assertSame(Bank::KOSAR,   Bank::fromPersian('موسسه کوثر'));
-        self::assertSame(Bank::KOSAR,   Bank::fromPersian('موسسه اعتباری کوثر'));
-        self::assertSame(Bank::NOOR,    Bank::fromPersian('موسسه نور'));
-        self::assertSame(Bank::NOOR,    Bank::fromPersian('موسسه اعتباری نور'));
+        self::assertSame(Bank::KOSAR, Bank::fromPersian('موسسه کوثر'));
+        self::assertSame(Bank::KOSAR, Bank::fromPersian('موسسه اعتباری کوثر'));
+        self::assertSame(Bank::NOOR, Bank::fromPersian('موسسه نور'));
+        self::assertSame(Bank::NOOR, Bank::fromPersian('موسسه اعتباری نور'));
     }
 
     public function test_unknown_returns_null(): void

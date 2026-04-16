@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Validation;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Validation\Bank;
 use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\Operator;
 use Eram\Abzar\Validation\Province;
 use Eram\Abzar\Validation\ValidationResult;
+use PHPUnit\Framework\TestCase;
 
 class ValidationResultTest extends TestCase
 {

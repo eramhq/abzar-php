@@ -32,7 +32,10 @@ final class PhoneNumber
         }
 
         if (preg_match('/^09\d{9}$/', $input)) {
-            return self::mobileResult($input);
+            $mobile = self::mobileResult($input);
+            if ($mobile !== null) {
+                return $mobile;
+            }
         }
 
         if (preg_match('/^0\d{10}$/', $input)) {
@@ -52,14 +55,19 @@ final class PhoneNumber
         return $result->isValid() ? $result->details()['normalized_local'] : null;
     }
 
-    private static function mobileResult(string $normalizedLocal): ValidationResult
+    private static function mobileResult(string $normalizedLocal): ?ValidationResult
     {
-        $prefix = substr($normalizedLocal, 1, 3);
+        $prefix    = substr($normalizedLocal, 1, 3);
+        $operators = DataSources::phoneOperators();
+
+        if (!isset($operators[$prefix])) {
+            return null;
+        }
 
         return ValidationResult::success([
             'normalized_local' => $normalizedLocal,
             'normalized_e164'  => self::toE164($normalizedLocal),
-            'operator'         => DataSources::phoneOperators()[$prefix] ?? null,
+            'operator'         => $operators[$prefix],
             'type'             => 'mobile',
         ]);
     }

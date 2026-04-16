@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Validation;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Validation\NationalId;
+use PHPUnit\Framework\TestCase;
 
 class NationalIdTest extends TestCase
 {
@@ -96,8 +98,8 @@ class NationalIdTest extends TestCase
 
     public function test_unknown_city_code(): void
     {
-        // Prefix 775 is in VALID_PREFIXES but not in CITY_CODES
-        // Need to construct a valid checksum for a 775 prefix
+        // Prefix 775 has no city/province entry — still valid by checksum,
+        // with null city and province (matches upstream persian-tools default).
         // 7750000001: sum = 7*10+7*9+5*8+0*7+0*6+0*5+0*4+0*3+0*2 = 70+63+40 = 173
         // 173 % 11 = 8, check = 11-8 = 3
         // 7750000003: let's verify sum = 70+63+40+0+0+0+0+0+0 = 173, 173%11 = 8, 11-8 = 3

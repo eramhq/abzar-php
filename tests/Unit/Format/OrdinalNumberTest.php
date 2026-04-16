@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Format;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Format\OrdinalNumber;
+use PHPUnit\Framework\TestCase;
 
 class OrdinalNumberTest extends TestCase
 {

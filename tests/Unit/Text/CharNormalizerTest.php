@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Text;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Text\CharNormalizer;
+use PHPUnit\Framework\TestCase;
 
 class CharNormalizerTest extends TestCase
 {
@@ -22,44 +24,44 @@ class CharNormalizerTest extends TestCase
     public function test_normalize_converts_arabic_yeh_to_persian(): void
     {
         // Arabic Yeh: ي (U+064A) → Persian Yeh: ی (U+06CC)
-        $this->assertSame("سلامی", $this->normalizer->normalize("سلامي"));
+        $this->assertSame('سلامی', $this->normalizer->normalize('سلامي'));
     }
 
     public function test_normalize_converts_arabic_kaf_to_persian(): void
     {
         // Arabic Kaf: ك (U+0643) → Persian Kaf: ک (U+06A9)
-        $this->assertSame("کتاب", $this->normalizer->normalize("كتاب"));
+        $this->assertSame('کتاب', $this->normalizer->normalize('كتاب'));
     }
 
     public function test_normalize_converts_arabic_digits_to_persian(): void
     {
         // Arabic digits U+0660–U+0669 → Persian digits U+06F0–U+06F9
-        $this->assertSame("۰۱۲", $this->normalizer->normalize("٠١٢"));
+        $this->assertSame('۰۱۲', $this->normalizer->normalize('٠١٢'));
     }
 
     public function test_normalize_converts_mixed_arabic_chars(): void
     {
-        $input    = "كتابي"; // Arabic Kaf + Arabic Yeh
-        $expected = "کتابی"; // Persian Kaf + Persian Yeh
+        $input    = 'كتابي'; // Arabic Kaf + Arabic Yeh
+        $expected = 'کتابی'; // Persian Kaf + Persian Yeh
         $this->assertSame($expected, $this->normalizer->normalize($input));
     }
 
     public function test_normalize_does_not_convert_teh_marbuta_by_default(): void
     {
-        $input = "جامعة"; // Arabic Teh Marbuta
+        $input = 'جامعة'; // Arabic Teh Marbuta
         $this->assertSame($input, $this->normalizer->normalize($input));
     }
 
     public function test_normalize_converts_teh_marbuta_when_enabled(): void
     {
-        $input    = "جامعة"; // Teh Marbuta
-        $expected = "جامعه"; // Persian Heh
+        $input    = 'جامعة'; // Teh Marbuta
+        $expected = 'جامعه'; // Persian Heh
         $this->assertSame($expected, $this->normalizerWithTehMarbuta->normalize($input));
     }
 
     public function test_normalize_is_idempotent(): void
     {
-        $input = "كتابي ٠١٢";
+        $input = 'كتابي ٠١٢';
         $first  = $this->normalizer->normalize($input);
         $second = $this->normalizer->normalize($first);
         $this->assertSame($first, $second);
@@ -67,7 +69,7 @@ class CharNormalizerTest extends TestCase
 
     public function test_normalize_leaves_persian_text_unchanged(): void
     {
-        $persian = "سلام کتابی ۰۱۲۳";
+        $persian = 'سلام کتابی ۰۱۲۳';
         $this->assertSame($persian, $this->normalizer->normalize($persian));
     }
 
@@ -80,7 +82,7 @@ class CharNormalizerTest extends TestCase
 
     public function test_normalize_content_plain_text(): void
     {
-        $this->assertSame("کتابی", $this->normalizer->normalizeContent("كتابي"));
+        $this->assertSame('کتابی', $this->normalizer->normalizeContent('كتابي'));
     }
 
     public function test_normalize_content_skips_html_attributes(): void
@@ -139,17 +141,17 @@ class CharNormalizerTest extends TestCase
 
     public function test_normalize_for_search_normalizes_arabic_chars(): void
     {
-        $this->assertSame("کتاب", $this->normalizer->normalizeForSearch("كتاب"));
+        $this->assertSame('کتاب', $this->normalizer->normalizeForSearch('كتاب'));
     }
 
     public function test_normalize_for_search_converts_persian_digits_to_english(): void
     {
-        $this->assertSame("123", $this->normalizer->normalizeForSearch("۱۲۳"));
+        $this->assertSame('123', $this->normalizer->normalizeForSearch('۱۲۳'));
     }
 
     public function test_normalize_for_search_converts_arabic_digits_to_english(): void
     {
-        $this->assertSame("456", $this->normalizer->normalizeForSearch("٤٥٦"));
+        $this->assertSame('456', $this->normalizer->normalizeForSearch('٤٥٦'));
     }
 
     // ── fold hamza ────────────────────────────────────────────────────
@@ -201,7 +203,7 @@ class CharNormalizerTest extends TestCase
     public function test_strip_tashkeel_removes_fatha(): void
     {
         $n = new CharNormalizer(stripTashkeel: true);
-        $this->assertSame("کتاب", $n->normalize("كِتَابَ"));
+        $this->assertSame('کتاب', $n->normalize('كِتَابَ'));
     }
 
     // ── strip kashida ─────────────────────────────────────────────────
@@ -210,7 +212,7 @@ class CharNormalizerTest extends TestCase
     {
         $n = new CharNormalizer(stripKashida: true);
         // ـ (U+0640) between chars
-        $this->assertSame("سلام", $n->normalize("سـلـام"));
+        $this->assertSame('سلام', $n->normalize('سـلـام'));
     }
 
     // ── strip bidi marks ──────────────────────────────────────────────
@@ -219,7 +221,7 @@ class CharNormalizerTest extends TestCase
     {
         $n = new CharNormalizer(stripBidiMarks: true);
         // U+200E LRM, U+200F RLM
-        $this->assertSame("0912", $n->normalize("\u{200E}0912\u{200F}"));
+        $this->assertSame('0912', $n->normalize("\u{200E}0912\u{200F}"));
     }
 
     // ── identity when all flags false ─────────────────────────────────

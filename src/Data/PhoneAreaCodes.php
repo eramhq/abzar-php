@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * @generated Iranian landline area-code → province map.
  * Source: ITU E.164 numbering plan for Iran (2024) + persian-tools reference.

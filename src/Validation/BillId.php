@@ -8,8 +8,12 @@ use Eram\Abzar\Internal\ErrorInput;
 
 /**
  * Bank utility bill ID ({@code شناسه قبض}) + payment ID ({@code شناسه پرداخت})
- * pair validator. Mod-11 weighting from persian-tools v5 / pec.ir; see
- * {@link https://github.com/persian-tools/persian-tools}.
+ * pair validator. Mod-11 weighting and payment cross-check verified against
+ * {@link https://github.com/persian-tools/persian-tools/blob/main/src/modules/bill/index.ts}
+ * on 2026-04-16.
+ *
+ * Unknown type-digits (0, 7) decode to {@code 'other'} rather than rejecting —
+ * a documented leniency over the upstream JS library.
  */
 final class BillId
 {
@@ -76,7 +80,7 @@ final class BillId
         $first         = (int) $paymentId[strlen($paymentId) - 2];
         $second        = (int) $paymentId[strlen($paymentId) - 1];
 
-        $expectedFirst  = self::mod11($billId . $paymentPrefix);
+        $expectedFirst  = self::mod11($paymentPrefix);
         $expectedSecond = self::mod11($billId . $paymentPrefix . (string) $first);
 
         return $expectedFirst === $first && $expectedSecond === $second;

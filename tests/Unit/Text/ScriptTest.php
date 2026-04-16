@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Eram\Abzar\Tests\Unit\Text;
 
-use PHPUnit\Framework\TestCase;
 use Eram\Abzar\Text\Script;
+use PHPUnit\Framework\TestCase;
 
 class ScriptTest extends TestCase
 {
@@ -41,7 +43,7 @@ class ScriptTest extends TestCase
 
     public function test_is_persian_with_zwnj(): void
     {
-        $this->assertTrue(Script::isPersian("می‌خواهم"));
+        $this->assertTrue(Script::isPersian('می‌خواهم'));
     }
 
     public function test_is_persian_arabic_exclusive_chars_rejected_in_basic(): void
