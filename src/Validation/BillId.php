@@ -17,8 +17,7 @@ use Eram\Abzar\Internal\ErrorInput;
  */
 final class BillId
 {
-    private const WEIGHTS     = [2, 3, 4, 5, 6, 7];
-    private const WEIGHTS_LEN = 6;
+    private const WEIGHTS = [2, 3, 4, 5, 6, 7];
 
     private const TYPES = [
         1 => 'water',
@@ -56,7 +55,7 @@ final class BillId
             return ValidationResult::failure(ErrorCode::BILL_ID_PAYMENT_MISMATCH);
         }
 
-        $typeDigit = (int) $billId[strlen($billId) - 2];
+        $typeDigit = (int) $billId[-2];
         $type      = self::TYPES[$typeDigit] ?? 'other';
 
         return ValidationResult::success([
@@ -68,17 +67,14 @@ final class BillId
 
     private static function checksumMatches(string $digits): bool
     {
-        $prefix   = substr($digits, 0, -1);
-        $check    = (int) $digits[strlen($digits) - 1];
-
-        return self::mod11($prefix) === $check;
+        return self::mod11(substr($digits, 0, -1)) === (int) substr($digits, -1);
     }
 
     private static function paymentMatches(string $billId, string $paymentId): bool
     {
         $paymentPrefix = substr($paymentId, 0, -2);
-        $first         = (int) $paymentId[strlen($paymentId) - 2];
-        $second        = (int) $paymentId[strlen($paymentId) - 1];
+        $first         = (int) $paymentId[-2];
+        $second        = (int) $paymentId[-1];
 
         $expectedFirst  = self::mod11($paymentPrefix);
         $expectedSecond = self::mod11($billId . $paymentPrefix . (string) $first);
@@ -88,10 +84,11 @@ final class BillId
 
     private static function mod11(string $digits): int
     {
-        $sum = 0;
-        $len = strlen($digits);
+        $sum        = 0;
+        $len        = strlen($digits);
+        $weightsLen = count(self::WEIGHTS);
         for ($i = 0; $i < $len; $i++) {
-            $sum += (int) $digits[$len - 1 - $i] * self::WEIGHTS[$i % self::WEIGHTS_LEN];
+            $sum += (int) $digits[$len - 1 - $i] * self::WEIGHTS[$i % $weightsLen];
         }
 
         $rem = $sum % 11;

@@ -21,8 +21,8 @@ final class NationalId
             return ValidationResult::failure(ErrorCode::NATIONAL_ID_EMPTY);
         }
 
-        // Left-pad to 10 digits for 8-9 digit inputs
-        if (strlen($input) >= 8 && strlen($input) < 10) {
+        $len = strlen($input);
+        if ($len === 8 || $len === 9) {
             $input = str_pad($input, 10, '0', STR_PAD_LEFT);
         }
 
