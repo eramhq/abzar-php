@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+### Fixed
+
+- `NumberToWords::convert()` no longer silently truncates floats with magnitude above `PHP_INT_MAX`. The float path now throws `AbzarFormatException` with `ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE`. The prior raw `\OverflowException` thrown from the scale-exhaustion branch is now the same `AbzarFormatException`, honoring the `catch (AbzarException $e)` contract.
+
+### Docs
+
+- Version pin in `README.md` stability section updated to `^0.4@beta`, matching the install instructions and API-stability page.
+
 ### Changed (breaking — 0.x)
 
 - **API shape refactor.** All seven validators (`NationalId`, `CardNumber`, `Iban`, `LegalId`, `PhoneNumber`, `PostalCode`, `BillId`) now expose `::from($input): static` and `::tryFrom($input): ?static` value-object constructors in addition to the existing `::validate(): ValidationResult`. Instances are `Stringable` + `JsonSerializable` with typed accessors (e.g. `$ni->city()`, `$card->bin()`, `$phone->isMobile()`).

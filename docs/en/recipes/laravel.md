@@ -66,9 +66,12 @@ public function rules(): array
 ```php
 // In AppServiceProvider::boot()
 Validator::extend('iranian_mobile', function ($attribute, $value, $parameters, $validator) {
-    return \Eram\Abzar\Validation\PhoneNumber::validate((string) $value)->isValid();
+    $phone = \Eram\Abzar\Validation\PhoneNumber::tryFrom((string) $value);
+    return $phone !== null && $phone->isMobile();
 }, 'شماره موبایل معتبر نیست.');
 ```
+
+For any-phone acceptance (mobile + landline), drop the `->isMobile()` check and rename the rule / message accordingly.
 
 Then: `'phone' => ['required', 'string', 'iranian_mobile']`.
 

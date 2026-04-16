@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Format;
 
+use Eram\Abzar\AbzarFormatException;
+use Eram\Abzar\Validation\ErrorCode;
+
 final class NumberToWords
 {
     private function __construct()
@@ -29,6 +32,10 @@ final class NumberToWords
         }
 
         if (is_float($number)) {
+            if ($number > PHP_INT_MAX) {
+                throw AbzarFormatException::forInput(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, (string) $number);
+            }
+
             $str = number_format($number, 10, '.', '');
             $parts = explode('.', $str);
             $integerPart = (int) $parts[0];
@@ -63,6 +70,7 @@ final class NumberToWords
             return 'صفر';
         }
 
+        $original = $number;
         $groups = [];
         while ($number > 0) {
             $groups[] = $number % 1000;
@@ -78,7 +86,7 @@ final class NumberToWords
             $groupText = self::convertGroup($groups[$i]);
             if ($i > 0) {
                 if (!isset(self::SCALES[$i])) {
-                    throw new \OverflowException('Number exceeds the largest supported Persian scale.');
+                    throw AbzarFormatException::forInput(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, (string) $original);
                 }
                 $groupText .= ' ' . self::SCALES[$i];
             }

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Format;
 
+use Eram\Abzar\AbzarException;
+use Eram\Abzar\AbzarFormatException;
 use Eram\Abzar\Format\NumberToWords;
+use Eram\Abzar\Validation\ErrorCode;
 use PHPUnit\Framework\TestCase;
 
 class NumberToWordsTest extends TestCase
@@ -114,5 +117,31 @@ class NumberToWordsTest extends TestCase
     public function test_quintillion(): void
     {
         $this->assertSame('یک کوینتیلیون', NumberToWords::convert(1_000_000_000_000_000_000));
+    }
+
+    public function test_throws_abzar_format_exception_for_float_above_int_max(): void
+    {
+        try {
+            NumberToWords::convert(1e20);
+            $this->fail('Expected AbzarFormatException was not thrown.');
+        } catch (AbzarFormatException $e) {
+            $this->assertSame(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, $e->errorCode());
+        }
+    }
+
+    public function test_overflow_is_catchable_via_abzar_exception(): void
+    {
+        $this->expectException(AbzarException::class);
+        NumberToWords::convert(1e20);
+    }
+
+    public function test_negative_float_above_int_max_also_throws(): void
+    {
+        try {
+            NumberToWords::convert(-1e20);
+            $this->fail('Expected AbzarFormatException was not thrown.');
+        } catch (AbzarFormatException $e) {
+            $this->assertSame(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, $e->errorCode());
+        }
     }
 }

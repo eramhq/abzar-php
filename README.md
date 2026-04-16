@@ -59,17 +59,16 @@ Requires PHP 8.1+. No runtime extensions beyond `mbstring`.
 
 ### Validation
 
-Three entry points per validator (same pattern as `BackedEnum`):
+Three entry points per validator (same pattern as `BackedEnum`), ordered by how most apps use them:
 
 ```php
 use Eram\Abzar\Validation\{NationalId, Iban, CardNumber, PhoneNumber};
 
-// 1. Value object on success — throws AbzarValidationException on failure.
-$ni = NationalId::from('0013542419');
-$ni->value();              // '0013542419'
-$ni->city();               // 'تهران مرکزی'
-$ni->province();           // 'تهران'
-$ni->cityCode();           // '001'
+// 1. ValidationResult for plain pass/fail checks with full error detail.
+$r = CardNumber::validate('6037 9912 3456 7893');
+$r->isValid();             // true
+$r->detail()->bank;        // 'بانک ملی ایران' (CardNumberDetails)
+$r->errorCodes();          // [] (empty on success)
 
 // 2. Null-returning variant.
 $phone = PhoneNumber::tryFrom('+989121234567');
@@ -77,11 +76,12 @@ $phone?->e164();           // '+989121234567'
 $phone?->operatorEnum();   // Operator::MCI
 $phone?->isMobile();       // true
 
-// 3. ValidationResult for plain pass/fail checks with full error detail.
-$r = CardNumber::validate('6037 9912 3456 7893');
-$r->isValid();             // true
-$r->detail()->bank;        // 'بانک ملی ایران' (CardNumberDetails)
-$r->errorCodes();          // [] (empty on success)
+// 3. Value object on success — throws AbzarValidationException on failure.
+$ni = NationalId::from('0013542419');
+$ni->value();              // '0013542419'
+$ni->city();               // 'تهران مرکزی'
+$ni->province();           // 'تهران'
+$ni->cityCode();           // '001'
 
 Iban::from('IR820540102680020817909002')->bankEnum();  // Bank::PARSIAN
 PhoneNumber::normalize('+989121234567');               // '09121234567'
@@ -173,7 +173,7 @@ Abzar stays framework-agnostic. Integration recipes for Laravel FormRequest, Sym
 
 ## Stability
 
-Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.3@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
+Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.4@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
 
 ## License
 

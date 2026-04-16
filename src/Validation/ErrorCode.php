@@ -47,6 +47,7 @@ enum ErrorCode: string
     case BILL_ID_PAYMENT_MISMATCH       = 'BILL_ID.PAYMENT_MISMATCH';
 
     case NUMBER_FORMATTER_INVALID       = 'NUMBER_FORMATTER.INVALID_FORMAT';
+    case NUMBER_TO_WORDS_OUT_OF_RANGE   = 'NUMBER_TO_WORDS.OUT_OF_RANGE';
     case ORDINAL_NUMBER_NON_POSITIVE    = 'ORDINAL_NUMBER.NON_POSITIVE';
     case ORDINAL_NUMBER_EMPTY_INPUT     = 'ORDINAL_NUMBER.EMPTY_INPUT';
     case TIME_AGO_INVALID_TIMESTAMP     = 'TIME_AGO.INVALID_TIMESTAMP';
@@ -88,6 +89,7 @@ enum ErrorCode: string
             self::BILL_ID_PAYMENT_MISMATCH       => 'شناسه پرداخت با شناسه قبض مطابقت ندارد',
 
             self::NUMBER_FORMATTER_INVALID       => 'مقدار ورودی عددی معتبر نیست',
+            self::NUMBER_TO_WORDS_OUT_OF_RANGE   => 'مقدار ورودی برای تبدیل به حروف خارج از محدوده پشتیبانی شده است',
             self::ORDINAL_NUMBER_NON_POSITIVE    => 'عدد ترتیبی باید بزرگ‌تر از صفر باشد',
             self::ORDINAL_NUMBER_EMPTY_INPUT     => 'ورودی نمی‌تواند خالی باشد',
             self::TIME_AGO_INVALID_TIMESTAMP     => 'تاریخ ورودی قابل تبدیل نیست',
