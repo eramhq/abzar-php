@@ -88,7 +88,7 @@ jobs:
         run: vendor/bin/phpbench run --progress=none --report=default --output=json > phpbench.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: phpbench-results
           path: phpbench.json
