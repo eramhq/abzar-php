@@ -4,22 +4,24 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+## [0.5.0-beta] — 2026-04-17
+
+First tagged release of the 0.4 / 0.5 line. Folds the untagged `[0.3.1-beta]` entries in as well — their fixes were never shipped standalone and reach consumers for the first time here.
+
 ### Added
 
+- **Value-object API.** All seven validators (`NationalId`, `CardNumber`, `Iban`, `LegalId`, `PhoneNumber`, `PostalCode`, `BillId`) expose `::from($input): static` and `::tryFrom($input): ?static` alongside the existing `::validate(): ValidationResult`. Instances are `Stringable` + `JsonSerializable` with typed accessors (e.g. `$ni->city()`, `$card->bin()`, `$phone->isMobile()`).
 - Display formatters on the three long-numeric value objects so UIs don't have to roll their own:
   - `CardNumber::formatted()` → `6037 9912 3456 7893` (4-4-4-4 grouped).
   - `CardNumber::masked()` → `6037 99** **** 7893` (PCI first-6 / last-4).
   - `PhoneNumber::formatted(bool $international = false)` → `0912 123 4567` / `+98 912 123 4567` (mobile), `021 8888 7777` / `+98 21 8888 7777` (landline — leading `0` of the area code dropped in intl form).
   - `Iban::formatted()` → `IR82 0540 1026 8002 0817 9090 02` (4-char groups + 2-char tail).
-- `::fake()` factories on the remaining four validators, completing the family alongside the existing `NationalId::fake()` / `CardNumber::fake()` / `LegalId::fake()`:
-  - `PhoneNumber::fake(?string $operatorPrefix = null): string` — valid mobile; optional 3-digit operator-prefix pin (matches the `CardNumber::fake(?bin)` shape).
+- `::fake()` factories across every validator for fixtures and tests (named `fake` — not `generate` — to discourage production use):
+  - `NationalId::fake(?string $cityCode = null): string`, `CardNumber::fake(?string $bin = null): string`, `LegalId::fake(): string`.
+  - `PhoneNumber::fake(?string $operatorPrefix = null): string` — valid mobile; optional 3-digit operator-prefix pin.
   - `Iban::fake(?string $bankCode = null): string` — valid `IR…` IBAN with ISO 13616 mod-97 check digits; optional 3-digit bank-code pin.
   - `PostalCode::fake(): string` — 10-digit code that satisfies all validator pattern rules (first/fifth ≠ 0, no 4-run).
   - `PlateNumber::fake(?PlateType $type = null): string` — canonical `NN[letter]NNN-NN`; passing a `PlateType` returns a letter mapped to that category. `PlateType::OTHER` throws (it represents unknown letters, not a real category).
-- `ValidationDetail` marker interface (`Eram\Abzar\Validation\Details\ValidationDetail`) implemented by every `*Details` DTO. `ValidationResult::detail()` now returns `?ValidationDetail` instead of `?\JsonSerializable`, so callers can narrow without unrelated `@var` annotations.
-- `LegalIdDetails` DTO (previously `LegalId` was the sole validator returning a bare string). `LegalId::validate()` now emits it through `ValidationResult::valid()` for symmetry with every other validator.
-- `AbzarEnvironmentException` — new concrete `AbzarException` subclass for runtime-prerequisite failures (e.g. `ext-intl` missing when opting into NFC normalization). Carries `ErrorCode::ENV_MISSING_EXT_INTL`.
-- `NationalId::fake(?string $cityCode = null): string`, `CardNumber::fake(?string $bin = null): string`, `LegalId::fake(): string` — valid-by-construction generators for fixtures and tests. Named `fake` (not `generate`) to discourage production use.
 - `NationalId::extractAll(string $text): list<NationalId>`, `CardNumber::extractAll(string $text): list<CardNumber>` — free-text extractors that pull out 10- or 16-digit runs and filter by validator.
 - `Eram\Abzar\Validation\PlateNumber` + `PlateNumberDetails` + `PlateType` — Iranian license plate parser (`NN[letter]NNN-NN`) with letter-derived type category and city-code → province lookup.
 - `Eram\Abzar\Text\PersianCollator` — thin `\Collator('fa_IR')` wrapper with `sort` / `sortBy` helpers. Requires `ext-intl`; throws `AbzarEnvironmentException` when missing.
@@ -27,10 +29,24 @@ All notable changes to this project are documented in this file. The format is l
 - `OrdinalNumber::toShort()` accepts a third `$suffix` parameter (default `ام`), so callers asking for English digits can opt into an English suffix instead of hybrid-script output like `43ام`.
 - `BillId::validatePair(string $billId, string $paymentId): ValidationResult` — pair-validation with cross-checksum. `BillId::validate()` is now single-field and returns details with `paymentId = null`.
 - `ValidationResult::isStrictlyValid(): bool` — `true` when the result is valid AND carries no warnings; the shared guard used by VO constructors. Distinguishes "can yield a VO" from the looser "passed validation" of `isValid()`.
+- `ValidationDetail` marker interface (`Eram\Abzar\Validation\Details\ValidationDetail`) implemented by every `*Details` DTO. `ValidationResult::detail()` now returns `?ValidationDetail` instead of `?\JsonSerializable`, so callers can narrow without unrelated `@var` annotations.
+- `LegalIdDetails` DTO (previously `LegalId` was the sole validator returning a bare string). `LegalId::validate()` now emits it through `ValidationResult::valid()` for symmetry with every other validator.
+- `AbzarEnvironmentException` — new concrete `AbzarException` subclass for runtime-prerequisite failures (e.g. `ext-intl` missing when opting into NFC normalization). Carries `ErrorCode::ENV_MISSING_EXT_INTL`.
+- `Eram\Abzar\Validation\BillType` — backed enum replacing the `BillId::TYPES` string map. Cases: `WATER`, `ELECTRIC`, `GAS`, `PHONE`, `MOBILE`, `TAX`, `SERVICES`, `PASSPORT`, `OTHER`. `BillIdDetails::$type` now holds this enum directly; `BillId::type()` returns `BillType`.
+- `Eram\Abzar\Validation\PhoneNumberType` — backed enum (`MOBILE` / `LANDLINE`) replacing raw strings on `PhoneNumberDetails::$type` / `PhoneNumber::type()`.
+- `PhoneNumberDetails::mobile()` / `::landline()` named constructors — the direct constructor is private; the two factories make mobile/landline variants structurally unambiguous.
+- Canonical input now carried on each detail DTO (`NationalIdDetails::$value`, `CardNumberDetails::$value`, `IbanDetails::$value`). Value objects read through to the DTO rather than storing a redundant second copy.
+- `PersianNumerals::SCALES` extended with `کوینتیلیون` (10¹⁸), covering the full `int` range up to `PHP_INT_MAX`. `WordsToNumber` lookup updated in lockstep.
 
 ### Changed (breaking — 0.x)
 
-- Value-object entry points (`::from()`, `::tryFrom()`, `::extractAll()`) now reject warning-bearing results across `CardNumber`, `PhoneNumber`, and `PlateNumber` (via the new `ValidationResult::isStrictlyValid()` guard). `validate()` still accepts these with warnings (unchanged scope decision) — the rejection applies only to APIs that return a VO, where the warning would otherwise be invisible past the VO boundary. Holding a `CardNumber` VO now guarantees `bank() !== null`; a `PhoneNumber` mobile VO guarantees `operator() !== null`; a `PlateNumber` VO guarantees `province() !== null` and `type() !== PlateType::OTHER`. `AbzarValidationException::fromResult()` accepts warning-only results and carries the warning's `ErrorCode`.
+- **`ValidationResult` factories renamed** to eliminate the old positional-details-vs-warnings ambiguity:
+  - `ValidationResult::success($details, $warnings)` → `ValidationResult::valid($detail?)` + `ValidationResult::validWithWarnings($warnings, $detail?)`.
+  - `ValidationResult::failure($errors, …)` → `ValidationResult::invalid($errors, $warnings?)`.
+- **Typed detail DTOs** replace `array<string, mixed>`. `ValidationResult::details(): array` is gone; `ValidationResult::detail(): ?ValidationDetail` returns a per-validator `readonly` DTO under `Eram\Abzar\Validation\Details\` (`NationalIdDetails`, `CardNumberDetails`, `IbanDetails`, `PhoneNumberDetails`, `BillIdDetails`, `PostalCodeDetails`, `PlateNumberDetails`, `LegalIdDetails`). `ValidationResult::bank() / operator() / province()` helpers were removed — access them via the value object (e.g. `$card->bankEnum()`) or DTO property.
+- **Single exception hierarchy.** Every library-raised exception now extends the new abstract `Eram\Abzar\AbzarException`, which carries an `errorCode(): ErrorCode`. Formatters throw `AbzarFormatException` (previously plain `\InvalidArgumentException`); VO constructors throw `AbzarValidationException` (new; also exposes the originating `ValidationResult`). `catch (AbzarException $e)` now covers every failure uniformly.
+- **Result-vs-throw policy documented.** `docs/en/api-stability.md` gained a "Result-vs-throw policy" section. Short version: validators return a result, formatters fail fast.
+- Value-object entry points (`::from()`, `::tryFrom()`, `::extractAll()`) reject warning-bearing results across `CardNumber`, `PhoneNumber`, and `PlateNumber` (via the new `ValidationResult::isStrictlyValid()` guard). `validate()` still accepts these with warnings (unchanged scope decision) — the rejection applies only to APIs that return a VO, where the warning would otherwise be invisible past the VO boundary. Holding a `CardNumber` VO now guarantees `bank() !== null`; a `PhoneNumber` mobile VO guarantees `operator() !== null`; a `PlateNumber` VO guarantees `province() !== null` and `type() !== PlateType::OTHER`. `AbzarValidationException::fromResult()` accepts warning-only results and carries the warning's `ErrorCode`.
 - `ValidationResult::__toString()` now surfaces warnings on valid-with-warnings results (previously always returned the literal `'valid'`, which was useless); unchanged for `valid()` (still `'valid'`) and for rejections (still joined error messages).
 - `CardNumber::validate()` no longer rejects Luhn-valid card numbers whose 6-digit BIN isn't in the bundled bank table. They pass with `bank: null` and a `CARD_NUMBER_UNKNOWN_BIN` warning — matching the existing `Iban` behaviour for unknown `bankCode`. All-zero (`0000000000000000`) is still rejected as a degenerate Luhn pass. `CardNumberDetails::$bank` and `CardNumber::bank()` are now `?string`.
 - `PhoneNumber::validate()` accepts mobile numbers whose `09xx` prefix isn't in the operator table — returns a valid result with `operator: null` and `PHONE_NUMBER_UNKNOWN_OPERATOR` warning. Covers MVNOs that aren't yet catalogued. Divergence from persian-tools is documented in the contract test.
@@ -46,33 +62,10 @@ All notable changes to this project are documented in this file. The format is l
 
 - `NumberToWords::convert()` no longer silently truncates floats with magnitude above `PHP_INT_MAX`. The float path now throws `AbzarFormatException` with `ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE`. The prior raw `\OverflowException` thrown from the scale-exhaustion branch is now the same `AbzarFormatException`, honoring the `catch (AbzarException $e)` contract.
 - `NumberToWords::convert()` now throws `AbzarFormatException` with `ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS` when a float carries more than `PHP_FLOAT_DIG` significant digits. IEEE-754 has already rounded at that point — we'd otherwise return a plausibly-wrong word.
+- `NumberToWords::convert()` now preserves leading zeros in the fractional part. `3.05` renders as `سه ممیز صفر پنج` (previously collapsed to `سه ممیز پنج`). Output is a **behavioural break** relative to 0.3.0-beta — acceptable under the documented `0.x` stability policy.
+- `WordsToNumber::parse()` accepts leading `صفر` tokens after `ممیز` and counts them as zero-padding, so round-tripping `3.05` through `NumberToWords` → `WordsToNumber` now yields `3.05` exactly. Previously these inputs returned `null`.
+- `ErrorCode::PHONE_NUMBER_INVALID_FORMAT` message no longer claims mobile-only. `PhoneNumber::validate()` has accepted landlines since 0.3.0-beta; the message is now `شماره تلفن باید یک شماره موبایل یا تلفن ثابت ایرانی معتبر باشد`. Error code value (`PHONE_NUMBER.INVALID_FORMAT`) is unchanged.
 - `BillId::validatePair()` no longer mislabels `payment_id` input errors as `bill_id` errors. Empty / short `payment_id` inputs now emit `ErrorCode::BILL_ID_PAYMENT_EMPTY` / `BILL_ID_PAYMENT_WRONG_LENGTH` with Persian messages that say `شناسه پرداخت` rather than `شناسه قبض`. **Breaking** for consumers asserting on the old `BILL_ID_EMPTY` / `BILL_ID_WRONG_LENGTH` codes for `payment_id` failures.
-
-### Docs
-
-- Version pin in `README.md` stability section updated to `^0.4@beta`, matching the install instructions and API-stability page.
-- README feature matrix and examples updated for `PlateNumber`, `PersianCollator`, `HalfSpaceFixer`, and the new `fake` / `extractAll` helpers.
-
-### Error-code additions
-
-`ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED`, `CARD_NUMBER_UNKNOWN_BIN`, `PHONE_NUMBER_UNKNOWN_OPERATOR`, `PLATE_NUMBER_EMPTY`, `PLATE_NUMBER_INVALID_FORMAT`, `PLATE_NUMBER_UNKNOWN_LETTER`, `PLATE_NUMBER_UNKNOWN_CITY_CODE`, `NUMBER_TO_WORDS_PRECISION_LOSS`, `ENV_MISSING_EXT_INTL`, `BILL_ID_PAYMENT_EMPTY`, `BILL_ID_PAYMENT_WRONG_LENGTH`.
-
-### Changed (breaking — 0.x)
-
-- **API shape refactor.** All seven validators (`NationalId`, `CardNumber`, `Iban`, `LegalId`, `PhoneNumber`, `PostalCode`, `BillId`) now expose `::from($input): static` and `::tryFrom($input): ?static` value-object constructors in addition to the existing `::validate(): ValidationResult`. Instances are `Stringable` + `JsonSerializable` with typed accessors (e.g. `$ni->city()`, `$card->bin()`, `$phone->isMobile()`).
-- **`ValidationResult` factories renamed** to eliminate the old positional-details-vs-warnings ambiguity:
-  - `ValidationResult::success($details, $warnings)` → `ValidationResult::valid($detail?)` + `ValidationResult::validWithWarnings($warnings, $detail?)`.
-  - `ValidationResult::failure($errors, …)` → `ValidationResult::invalid($errors, $warnings?)`.
-- **Typed detail DTOs** replace `array<string, mixed>`. `ValidationResult::details(): array` is gone; `ValidationResult::detail(): ?JsonSerializable` returns a per-validator `readonly` DTO under `Eram\Abzar\Validation\Details\` (`NationalIdDetails`, `CardNumberDetails`, `IbanDetails`, `PhoneNumberDetails`, `BillIdDetails`, `PostalCodeDetails`). `ValidationResult::bank() / operator() / province()` helpers were removed — access them via the value object (e.g. `$card->bankEnum()`) or DTO property.
-- **Single exception hierarchy.** Every library-raised exception now extends the new abstract `Eram\Abzar\AbzarException`, which carries an `errorCode(): ErrorCode`. Formatters throw `AbzarFormatException` (previously plain `\InvalidArgumentException`); VO constructors throw `AbzarValidationException` (new; also exposes the originating `ValidationResult`). `catch (AbzarException $e)` now covers every failure uniformly.
-- **Result-vs-throw policy documented.** `docs/en/api-stability.md` gained a "Result-vs-throw policy" section. Short version: validators return a result, formatters fail fast.
-
-### Added
-
-- `Eram\Abzar\Validation\BillType` — backed enum replacing the `BillId::TYPES` string map. Cases: `WATER`, `ELECTRIC`, `GAS`, `PHONE`, `MOBILE`, `TAX`, `SERVICES`, `PASSPORT`, `OTHER`. `BillIdDetails::$type` now holds this enum directly; `BillId::type()` returns `BillType`.
-- `Eram\Abzar\Validation\PhoneNumberType` — backed enum (`MOBILE` / `LANDLINE`) replacing raw strings on `PhoneNumberDetails::$type` / `PhoneNumber::type()`.
-- `PhoneNumberDetails::mobile()` / `::landline()` named constructors — the direct constructor is private; the two factories make mobile/landline variants structurally unambiguous.
-- Canonical input now carried on each detail DTO (`NationalIdDetails::$value`, `CardNumberDetails::$value`, `IbanDetails::$value`). Value objects read through to the DTO rather than storing a redundant second copy.
 
 ### Removed
 
@@ -80,23 +73,15 @@ All notable changes to this project are documented in this file. The format is l
 - `ValidationResult::bank()`, `::operator()`, `::province()` shortcut accessors — fetch from the value object or detail DTO instead.
 - Private `NationalId::canonicalize()` and `Iban::canonicalize()` — the canonical string now lives on the detail DTO, so no second normalization pass is needed on the `::from()` happy path.
 
-## [0.3.1-beta] — 2026-04-16
-
-### Fixed
-
-- `NumberToWords::convert()` now preserves leading zeros in the fractional part. `3.05` renders as `سه ممیز صفر پنج` (previously collapsed to `سه ممیز پنج`). Output is a **behavioural break** relative to 0.3.0-beta — acceptable under the documented `0.x` stability policy.
-- `WordsToNumber::parse()` accepts leading `صفر` tokens after `ممیز` and counts them as zero-padding, so round-tripping `3.05` through `NumberToWords` → `WordsToNumber` now yields `3.05` exactly. Previously these inputs returned `null`.
-- `ErrorCode::PHONE_NUMBER_INVALID_FORMAT` message no longer claims mobile-only. `PhoneNumber::validate()` has accepted landlines since 0.3.0-beta; the message is now `شماره تلفن باید یک شماره موبایل یا تلفن ثابت ایرانی معتبر باشد`. Error code value (`PHONE_NUMBER.INVALID_FORMAT`) is unchanged.
-
-### Added
-
-- `PersianNumerals::SCALES` extended with `کوینتیلیون` (10¹⁸), covering the full `int` range up to `PHP_INT_MAX`. `WordsToNumber` lookup updated in lockstep.
-- `NumberToWords::convert()` now throws `OverflowException` if a group lands past the largest known scale, instead of silently truncating.
-
 ### Docs
 
-- Installation and API-stability pages now recommend pinning `^0.3@beta`.
+- Version pin across `README.md`, `docs/en/installation.md`, and `docs/en/api-stability.md` updated to `^0.5@beta`.
+- README feature matrix and examples updated for `PlateNumber`, `PersianCollator`, `HalfSpaceFixer`, and the new `fake` / `extractAll` helpers.
 - `docs/en/related.md` no longer claims persian-tools parity tests are planned (they shipped in 0.3.0-beta) and no longer hedges the structured-error-codes row.
+
+### Error-code additions
+
+`ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED`, `CARD_NUMBER_UNKNOWN_BIN`, `PHONE_NUMBER_UNKNOWN_OPERATOR`, `PLATE_NUMBER_EMPTY`, `PLATE_NUMBER_INVALID_FORMAT`, `PLATE_NUMBER_UNKNOWN_LETTER`, `PLATE_NUMBER_UNKNOWN_CITY_CODE`, `NUMBER_TO_WORDS_PRECISION_LOSS`, `ENV_MISSING_EXT_INTL`, `BILL_ID_PAYMENT_EMPTY`, `BILL_ID_PAYMENT_WRONG_LENGTH`.
 
 ## [0.3.0-beta] — 2026-04-16
 
