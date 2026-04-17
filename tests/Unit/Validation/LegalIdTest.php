@@ -88,4 +88,12 @@ class LegalIdTest extends TestCase
     {
         $this->assertNull(LegalId::tryFrom(''));
     }
+
+    public function test_fake_returns_valid_id(): void
+    {
+        for ($i = 0; $i < 20; $i++) {
+            $id = LegalId::fake();
+            $this->assertTrue(LegalId::validate($id)->isValid(), "generated $id");
+        }
+    }
 }

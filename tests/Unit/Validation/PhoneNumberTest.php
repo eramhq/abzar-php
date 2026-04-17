@@ -6,6 +6,7 @@ namespace Eram\Abzar\Tests\Unit\Validation;
 
 use Eram\Abzar\AbzarValidationException;
 use Eram\Abzar\Validation\Details\PhoneNumberDetails;
+use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\Operator;
 use Eram\Abzar\Validation\PhoneNumber;
 use Eram\Abzar\Validation\PhoneNumberType;
@@ -96,10 +97,43 @@ class PhoneNumberTest extends TestCase
         $this->assertSame('رایتل', $detail->operator);
     }
 
-    public function test_unknown_mobile_prefix_rejected(): void
+    public function test_unknown_mobile_prefix_valid_with_warning(): void
     {
+        // 0940 structure is `09\d{9}` but 940 isn't in DataSources::phoneOperators().
+        // Accept as mobile with null operator + PHONE_NUMBER_UNKNOWN_OPERATOR warning.
         $result = PhoneNumber::validate('09401234567');
-        $this->assertFalse($result->isValid());
+        $this->assertTrue($result->isValid());
+        $this->assertSame([ErrorCode::PHONE_NUMBER_UNKNOWN_OPERATOR], $result->warningCodes());
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertNull($detail->operator);
+    }
+
+    public function test_landline_without_leading_zero(): void
+    {
+        // 10-digit landline, leading 0 stripped in round-tripping through integer columns.
+        $result = PhoneNumber::validate('2112345678');
+        $this->assertTrue($result->isValid());
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame(PhoneNumberType::LANDLINE, $detail->type);
+        $this->assertSame('02112345678', $detail->normalizedLocal);
+        $this->assertSame('021', $detail->areaCode);
+    }
+
+    public function test_landline_parenthesized_input(): void
+    {
+        $this->assertTrue(PhoneNumber::validate('(021) 1234-5678')->isValid());
+    }
+
+    public function test_landline_e164_parenthesized_input(): void
+    {
+        $this->assertTrue(PhoneNumber::validate('+98 (21) 1234-5678')->isValid());
+    }
+
+    public function test_mobile_dotted_e164_input(): void
+    {
+        $this->assertTrue(PhoneNumber::validate('+98.9121234567')->isValid());
     }
 
     public function test_too_short(): void

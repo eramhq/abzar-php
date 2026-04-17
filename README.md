@@ -31,10 +31,11 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 | `Validation` | `Iban` | `IR`-prefixed IBAN mod-97 check + bank lookup |
 | `Validation` | `PostalCode` | 10-digit Iranian postal code validator |
 | `Validation` | `BillId` | `شناسه قبض` / `شناسه پرداخت` mod-11 pair validator with bill-type decoding |
+| `Validation` | `PlateNumber` | Iranian license plate (`NN[letter]NNN-NN`) parser with letter-derived type + province lookup |
 | `Validation` | `ErrorCode` | Stable `DOMAIN.REASON` codes emitted by every validator + format exception |
-| `Validation` | `Bank` / `Operator` / `Province` | Typed enums with `fromPersian()` lookup and Arabic-char-tolerant matching |
+| `Validation` | `Bank` / `Operator` / `Province` / `PlateType` | Typed enums with `fromPersian()` lookup and Arabic-char-tolerant matching |
 | `Validation` | `ValidationResult` | Shared `{isValid, errors, errorCodes, warnings, detail}` return type (implements `JsonSerializable` / `Stringable`) |
-| `Validation\Details` | `NationalIdDetails` / `CardNumberDetails` / … | Typed readonly DTOs exposed via `ValidationResult::detail()` |
+| `Validation\Details` | `ValidationDetail` | Marker interface for the per-validator readonly DTOs returned from `ValidationResult::detail()` |
 | `Format` | `NumberFormatter` | Thousands-separator formatter with digit normalization |
 | `Format` | `NumberToWords` | Integer / float to Persian words (`۱۲۳۴` → `یک هزار و دویست و سی و چهار`) |
 | `Format` | `WordsToNumber` | Parse Persian number words back to `int` / `float` |
@@ -44,7 +45,9 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 | `Text` | `Script` | `isPersian` / `hasPersian` / `isArabic` / `hasArabic` detectors |
 | `Text` | `Slug` | Persian-aware slug (`سلام دنیا` → `سلام-دنیا`) |
 | `Text` | `CharNormalizer` | Arabic → Persian char + digit normalization, HTML-aware `normalizeContent()`, opt-in hamza / tashkeel / kashida / NFC flags |
-| `Text` | `KeyboardFixer` | Swap between English QWERTY and Persian keyboard layouts |
+| `Text` | `KeyboardFixer` | Swap between English QWERTY and Persian keyboard layouts, with a `detect()` heuristic |
+| `Text` | `PersianCollator` | `ext-intl`-backed `fa_IR` collator with `sort` / `sortBy` helpers |
+| `Text` | `HalfSpaceFixer` | Best-effort zero-width-non-joiner placement for compound-word affixes (`می‌روم`, `خانه‌ها`, `بزرگ‌ترین`) |
 | `Digits` | `DigitConverter` | `toPersian` / `toEnglish` / `toArabic` + HTML-aware `convertContent()` |
 
 ## Install
@@ -138,6 +141,46 @@ DigitConverter::toArabic('1234');                  // '١٢٣٤'
 // HTML-aware: leaves tags, scripts, styles, and attributes alone
 DigitConverter::convertContent('<a href="page-5">Item 5</a>');
 // '<a href="page-5">Item ۵</a>'
+```
+
+### Plate numbers
+
+```php
+use Eram\Abzar\Validation\PlateNumber;
+
+$plate = PlateNumber::from('12 ب 345 11');
+$plate->letter();     // 'ب'
+$plate->type()->value; // 'private'
+$plate->province();   // 'تهران'
+(string) $plate;      // '12ب345-11'
+```
+
+### Fixtures and extraction
+
+```php
+use Eram\Abzar\Validation\{NationalId, CardNumber, LegalId};
+
+// Valid-by-construction generators (tests / seed data only — may or may not be real)
+$id     = NationalId::fake();            // e.g. '0013542419'
+$card   = CardNumber::fake('603799');    // Luhn-valid card with pinned BIN
+$legal  = LegalId::fake();
+
+// Pull every valid ID out of free text (chat logs, OCR, scraped pages)
+$ids    = NationalId::extractAll('Customer 0013542419 and 1234567891 enrolled.');
+$cards  = CardNumber::extractAll('Paid via 6037 9912 3456 7893');
+```
+
+### Persian collation and half-space fixing
+
+```php
+use Eram\Abzar\Text\{PersianCollator, HalfSpaceFixer};
+
+$c = new PersianCollator();            // requires ext-intl
+$c->sort(['ج', 'ب', 'ا']);             // ['ا', 'ب', 'ج']
+
+HalfSpaceFixer::fix('می روم');          // 'می‌روم'  (ZWNJ between prefix and verb)
+HalfSpaceFixer::fix('خانه ها');         // 'خانه‌ها'
+HalfSpaceFixer::fix('بزرگ ترین');       // 'بزرگ‌ترین'
 ```
 
 ## Further reading

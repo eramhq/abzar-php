@@ -47,7 +47,7 @@ final class PhoneNumber implements \JsonSerializable, \Stringable
 
     public static function validate(string $input): ValidationResult
     {
-        $input = ErrorInput::digits($input, '()');
+        $input = ErrorInput::digits($input, '().');
 
         if ($input === '') {
             return ValidationResult::invalid(ErrorCode::PHONE_NUMBER_EMPTY);
@@ -61,13 +61,12 @@ final class PhoneNumber implements \JsonSerializable, \Stringable
             $input = '0' . substr($input, 2);
         } elseif (preg_match('/^9\d{9}$/', $input)) {
             $input = '0' . $input;
+        } elseif (strlen($input) === 10 && self::isKnownAreaCode('0' . substr($input, 0, 2))) {
+            $input = '0' . $input;
         }
 
         if (preg_match('/^09\d{9}$/', $input)) {
-            $mobile = self::mobileResult($input);
-            if ($mobile !== null) {
-                return $mobile;
-            }
+            return self::mobileResult($input);
         }
 
         if (preg_match('/^0\d{10}$/', $input)) {
@@ -166,20 +165,21 @@ final class PhoneNumber implements \JsonSerializable, \Stringable
         return $this->detail->jsonSerialize();
     }
 
-    private static function mobileResult(string $normalizedLocal): ?ValidationResult
+    private static function mobileResult(string $normalizedLocal): ValidationResult
     {
         $prefix    = substr($normalizedLocal, 1, 3);
         $operators = DataSources::phoneOperators();
+        $operator  = $operators[$prefix] ?? null;
 
-        if (!isset($operators[$prefix])) {
-            return null;
-        }
-
-        return ValidationResult::valid(PhoneNumberDetails::mobile(
+        $detail = PhoneNumberDetails::mobile(
             normalizedLocal: $normalizedLocal,
             normalizedE164:  self::toE164($normalizedLocal),
-            operator:        $operators[$prefix],
-        ));
+            operator:        $operator,
+        );
+
+        return $operator === null
+            ? ValidationResult::validWithWarnings(ErrorCode::PHONE_NUMBER_UNKNOWN_OPERATOR, $detail)
+            : ValidationResult::valid($detail);
     }
 
     private static function landlineResult(string $normalizedLocal): ?ValidationResult
@@ -198,6 +198,11 @@ final class PhoneNumber implements \JsonSerializable, \Stringable
             city:            $areaCodes[$areaCode]['city'],
             province:        $areaCodes[$areaCode]['province'],
         ));
+    }
+
+    private static function isKnownAreaCode(string $areaCode): bool
+    {
+        return isset(DataSources::phoneAreaCodes()[$areaCode]);
     }
 
     private static function toE164(string $normalizedLocal): string

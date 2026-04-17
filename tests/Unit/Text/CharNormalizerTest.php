@@ -235,15 +235,29 @@ class CharNormalizerTest extends TestCase
         $this->assertSame($input, $this->normalizer->normalize($input));
     }
 
+    // ── strip bidi marks: BOM, ZWJ ────────────────────────────────────
+
+    public function test_strip_bidi_marks_removes_bom(): void
+    {
+        $n = new CharNormalizer(stripBidiMarks: true);
+        $this->assertSame('سلام', $n->normalize("\u{FEFF}سلام"));
+    }
+
+    public function test_strip_bidi_marks_removes_zwj(): void
+    {
+        $n = new CharNormalizer(stripBidiMarks: true);
+        $this->assertSame('کتاب', $n->normalize("کتا\u{200D}ب"));
+    }
+
     // ── NFC flag guards against missing intl ──────────────────────────
 
     public function test_normalize_to_nfc_requires_ext_intl(): void
     {
         if (class_exists(\Normalizer::class)) {
-            $this->markTestSkipped('ext-intl is available; LogicException path only fires when it is missing.');
+            $this->markTestSkipped('ext-intl is available; the AbzarEnvironmentException path only fires when it is missing.');
         }
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(\Eram\Abzar\AbzarEnvironmentException::class);
         new CharNormalizer(normalizeToNfc: true);
     }
 }

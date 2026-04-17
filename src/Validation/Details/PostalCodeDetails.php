@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation\Details;
 
-final class PostalCodeDetails implements \JsonSerializable
+final class PostalCodeDetails implements ValidationDetail
 {
     public function __construct(
         public readonly string $postalCode,

@@ -83,10 +83,26 @@ class NationalIdTest extends TestCase
         $this->assertFalse($result->isValid());
     }
 
-    public function test_8_digit_input_padded(): void
+    public function test_8_digit_input_rejected_as_likely_truncated(): void
     {
+        // '13542419' is the 8-digit round-trip of '0013542419' through an integer
+        // column. We reject with guidance rather than silently padding.
         $result = NationalId::validate('13542419');
-        $this->assertTrue($result->isValid());
+        $this->assertFalse($result->isValid());
+        $this->assertSame([ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED], $result->errorCodes());
+    }
+
+    public function test_9_digit_input_rejected_as_likely_truncated(): void
+    {
+        $result = NationalId::validate('013542419');
+        $this->assertFalse($result->isValid());
+        $this->assertSame([ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED], $result->errorCodes());
+    }
+
+    public function test_padded_short_input_is_valid(): void
+    {
+        // After the caller pads per the error's guidance, validation succeeds.
+        $this->assertTrue(NationalId::validate(str_pad('13542419', 10, '0', STR_PAD_LEFT))->isValid());
     }
 
     public function test_unknown_city_code(): void
@@ -130,10 +146,14 @@ class NationalIdTest extends TestCase
         $this->assertSame('1234567891', $ni->value());
     }
 
-    public function test_from_pads_8_or_9_digit_input(): void
+    public function test_from_rejects_short_input(): void
     {
-        $ni = NationalId::from('13542419');
-        $this->assertSame('0013542419', $ni->value());
+        try {
+            NationalId::from('13542419');
+            $this->fail('Expected AbzarValidationException');
+        } catch (AbzarValidationException $e) {
+            $this->assertSame(ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED, $e->errorCode());
+        }
     }
 
     public function test_json_serialize(): void
@@ -142,5 +162,44 @@ class NationalIdTest extends TestCase
         $payload = $ni->jsonSerialize();
         $this->assertSame('0013542419', $payload['value']);
         $this->assertSame('001', $payload['city_code']);
+    }
+
+    public function test_fake_returns_valid_id(): void
+    {
+        for ($i = 0; $i < 20; $i++) {
+            $id = NationalId::fake();
+            $this->assertTrue(NationalId::validate($id)->isValid(), "generated $id");
+        }
+    }
+
+    public function test_fake_honors_city_code(): void
+    {
+        $id = NationalId::fake('001');
+        $this->assertSame('001', substr($id, 0, 3));
+        $this->assertTrue(NationalId::validate($id)->isValid());
+    }
+
+    public function test_extract_all_pulls_valid_ids_from_text(): void
+    {
+        $text = 'Customer 0013542419 and their spouse 1234567891 both registered.';
+        $hits = NationalId::extractAll($text);
+        $this->assertCount(2, $hits);
+        $this->assertSame('0013542419', $hits[0]->value());
+        $this->assertSame('1234567891', $hits[1]->value());
+    }
+
+    public function test_extract_all_skips_invalid_runs(): void
+    {
+        // Second "0000000000" is 10 digits but rejected as all-same; dropped.
+        $text = '0013542419 0000000000';
+        $hits = NationalId::extractAll($text);
+        $this->assertCount(1, $hits);
+    }
+
+    public function test_extract_all_handles_persian_digits(): void
+    {
+        $hits = NationalId::extractAll('مشتری ۰۰۱۳۵۴۲۴۱۹ ثبت شد');
+        $this->assertCount(1, $hits);
+        $this->assertSame('0013542419', $hits[0]->value());
     }
 }

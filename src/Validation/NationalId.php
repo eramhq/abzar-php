@@ -59,8 +59,11 @@ final class NationalId implements \JsonSerializable, \Stringable
         }
 
         $len = strlen($input);
-        if ($len === 8 || $len === 9) {
-            $input = str_pad($input, 10, '0', STR_PAD_LEFT);
+        if (($len === 8 || $len === 9) && ctype_digit($input)) {
+            // IDs with a leading zero commonly get truncated by integer round-trips
+            // (CSV, Excel, intval). Auto-padding would hide that upstream bug, so we
+            // reject and let the caller decide whether to str_pad before retrying.
+            return ValidationResult::invalid(ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED);
         }
 
         if (!preg_match('/^\d{10}$/', $input)) {
@@ -79,16 +82,7 @@ final class NationalId implements \JsonSerializable, \Stringable
             return ValidationResult::invalid(ErrorCode::NATIONAL_ID_MIDDLE_ZEROS);
         }
 
-        $sum = 0;
-        for ($i = 0; $i < 9; $i++) {
-            $sum += (int) $input[$i] * (10 - $i);
-        }
-
-        $remainder  = $sum % 11;
-        $checkDigit = (int) $input[9];
-        $valid      = $remainder < 2 ? $checkDigit === $remainder : $checkDigit === (11 - $remainder);
-
-        if (!$valid) {
+        if ((int) $input[9] !== self::checkDigit(substr($input, 0, 9))) {
             return ValidationResult::invalid(ErrorCode::NATIONAL_ID_INVALID_CHECKSUM);
         }
 
@@ -101,6 +95,73 @@ final class NationalId implements \JsonSerializable, \Stringable
             city:     $cityData['city'],
             province: $cityData['province'],
         ));
+    }
+
+    /**
+     * Generate a Luhn-valid Iranian national ID for fixtures or tests.
+     *
+     * Pass {@code $cityCode} to pin the 3-digit prefix to a specific city; the
+     * remaining 7 digits are random. Named {@code fake} (not {@code generate})
+     * to discourage accidental use in production — the returned ID is valid
+     * by construction but may or may not belong to a real person.
+     */
+    public static function fake(?string $cityCode = null): string
+    {
+        $cityCode ??= str_pad((string) random_int(1, 999), 3, '0', STR_PAD_LEFT);
+        if (!preg_match('/^\d{3}$/', $cityCode)) {
+            throw new \InvalidArgumentException('cityCode must be exactly 3 digits');
+        }
+
+        while (true) {
+            $body = $cityCode;
+            for ($i = 0; $i < 6; $i++) {
+                $body .= (string) random_int(0, 9);
+            }
+            if (substr($body, 3, 6) === '000000') {
+                continue;
+            }
+
+            $candidate = $body . self::checkDigit($body);
+            if (preg_match('/^(\d)\1{9}$/', $candidate) !== 1 && $candidate !== '0123456789') {
+                return $candidate;
+            }
+        }
+    }
+
+    /**
+     * Mod-11 weighted check digit for the 9-digit body of an Iranian national ID.
+     */
+    private static function checkDigit(string $nineDigits): int
+    {
+        $sum = 0;
+        for ($i = 0; $i < 9; $i++) {
+            $sum += (int) $nineDigits[$i] * (10 - $i);
+        }
+        $remainder = $sum % 11;
+
+        return $remainder < 2 ? $remainder : 11 - $remainder;
+    }
+
+    /**
+     * Scan free text for 10-digit runs and return each that parses as a valid
+     * national ID. Run order follows left-to-right appearance.
+     *
+     * @return list<self>
+     */
+    public static function extractAll(string $text): array
+    {
+        $english = \Eram\Abzar\Digits\DigitConverter::toEnglish($text);
+        preg_match_all('/(?<!\d)\d{10}(?!\d)/', $english, $matches);
+
+        $out = [];
+        foreach ($matches[0] as $candidate) {
+            $vo = self::tryFrom($candidate);
+            if ($vo !== null) {
+                $out[] = $vo;
+            }
+        }
+
+        return $out;
     }
 
     public function value(): string

@@ -144,4 +144,16 @@ class NumberToWordsTest extends TestCase
             $this->assertSame(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, $e->errorCode());
         }
     }
+
+    public function test_float_beyond_precision_throws(): void
+    {
+        try {
+            // More than PHP_FLOAT_DIG significant digits — IEEE-754 rounding
+            // means the converted word no longer matches what the caller typed.
+            NumberToWords::convert(1.234567890123456789);
+            $this->fail('Expected AbzarFormatException was not thrown.');
+        } catch (AbzarFormatException $e) {
+            $this->assertSame(ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS, $e->errorCode());
+        }
+    }
 }

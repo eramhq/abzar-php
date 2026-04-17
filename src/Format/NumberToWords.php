@@ -36,6 +36,15 @@ final class NumberToWords
                 throw AbzarFormatException::forInput(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, (string) $number);
             }
 
+            // PHP doubles carry ~PHP_FLOAT_DIG significant digits. When the caller
+            // hands us more than that, IEEE-754 has already rounded — what we'd
+            // convert is not what they typed. Refuse rather than return a
+            // plausibly-wrong word.
+            $rounded = (float) sprintf('%.' . PHP_FLOAT_DIG . 'g', $number);
+            if ($rounded !== $number) {
+                throw AbzarFormatException::forInput(ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS, (string) $number);
+            }
+
             $str = number_format($number, 10, '.', '');
             $parts = explode('.', $str);
             $integerPart = (int) $parts[0];

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Text;
 
+use Eram\Abzar\AbzarEnvironmentException;
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Validation\ErrorCode;
 
 final class CharNormalizer
 {
@@ -28,9 +30,9 @@ final class CharNormalizer
         bool $normalizeToNfc = false,
     ) {
         if ($normalizeToNfc && !class_exists(\Normalizer::class)) {
-            throw new \LogicException(
-                'CharNormalizer::$normalizeToNfc requires ext-intl. '
-                . 'Install the intl extension or unset the flag.'
+            throw AbzarEnvironmentException::missing(
+                ErrorCode::ENV_MISSING_EXT_INTL,
+                'CharNormalizer::$normalizeToNfc requires ext-intl. Install the intl extension or unset the flag.',
             );
         }
 
@@ -76,7 +78,9 @@ final class CharNormalizer
         }
 
         if ($this->stripBidiMarks) {
-            $text = (string) preg_replace('/[\x{200E}\x{200F}\x{202A}-\x{202E}]/u', '', $text);
+            // U+200D ZWJ and U+FEFF BOM travel in alongside the bidi controls
+            // when text is copied from Word / Office, so folded into one pass.
+            $text = (string) preg_replace('/[\x{200D}\x{200E}\x{200F}\x{202A}-\x{202E}\x{FEFF}]/u', '', $text);
         }
 
         if ($this->normalizeToNfc) {

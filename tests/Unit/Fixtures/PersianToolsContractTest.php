@@ -189,8 +189,9 @@ final class PersianToolsContractTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function invalidPhoneNumbers(): iterable
     {
-        // phoneNumber.spec.ts line 54 and line 98
-        yield '09802002580' => ['09802002580'];
+        // phoneNumber.spec.ts line 98. Note: persian-tools also rejects `09802002580`
+        // (unknown mobile prefix 980); abzar accepts it valid-with-warning via
+        // PHONE_NUMBER_UNKNOWN_OPERATOR — a documented divergence (see §2.3).
         yield '99999999999' => ['99999999999'];
     }
 
@@ -236,7 +237,7 @@ final class PersianToolsContractTest extends TestCase
      */
     public function test_bill_id_parity_valid(string $billId, string $paymentId): void
     {
-        self::assertTrue(BillId::validate($billId, $paymentId)->isValid(), "persian-tools accepts bill $billId/$paymentId");
+        self::assertTrue(BillId::validatePair($billId, $paymentId)->isValid(), "persian-tools accepts bill $billId/$paymentId");
     }
 
     /**
@@ -244,7 +245,7 @@ final class PersianToolsContractTest extends TestCase
      */
     public function test_bill_id_parity_invalid(string $billId, string $paymentId): void
     {
-        self::assertFalse(BillId::validate($billId, $paymentId)->isValid(), "persian-tools rejects bill $billId/$paymentId");
+        self::assertFalse(BillId::validatePair($billId, $paymentId)->isValid(), "persian-tools rejects bill $billId/$paymentId");
     }
 
     /** @return iterable<string, array{string, string}> */

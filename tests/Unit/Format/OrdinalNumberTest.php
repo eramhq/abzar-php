@@ -78,6 +78,18 @@ class OrdinalNumberTest extends TestCase
         $this->assertSame('۱ام', OrdinalNumber::toShort(1));
     }
 
+    public function test_to_short_english_digits_english_suffix(): void
+    {
+        // Callers asking for English digits get to pick a matching suffix rather
+        // than receive hybrid-script output like "43ام".
+        $this->assertSame('43rd', OrdinalNumber::toShort(43, 'english', 'rd'));
+    }
+
+    public function test_to_short_empty_suffix(): void
+    {
+        $this->assertSame('۴۳', OrdinalNumber::toShort(43, 'persian', ''));
+    }
+
     public function test_to_short_zero_throws(): void
     {
         $this->expectException(AbzarFormatException::class);

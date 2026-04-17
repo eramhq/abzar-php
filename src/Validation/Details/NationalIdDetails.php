@@ -13,7 +13,7 @@ use Eram\Abzar\Validation\Province;
  * {@code city} and {@code province} are {@code null} when the prefix is unassigned
  * or otherwise missing from the bundled lookup table.
  */
-final class NationalIdDetails implements \JsonSerializable
+final class NationalIdDetails implements ValidationDetail
 {
     public function __construct(
         public readonly string $value,

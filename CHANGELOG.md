@@ -4,13 +4,44 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+### Added
+
+- `ValidationDetail` marker interface (`Eram\Abzar\Validation\Details\ValidationDetail`) implemented by every `*Details` DTO. `ValidationResult::detail()` now returns `?ValidationDetail` instead of `?\JsonSerializable`, so callers can narrow without unrelated `@var` annotations.
+- `LegalIdDetails` DTO (previously `LegalId` was the sole validator returning a bare string). `LegalId::validate()` now emits it through `ValidationResult::valid()` for symmetry with every other validator.
+- `AbzarEnvironmentException` — new concrete `AbzarException` subclass for runtime-prerequisite failures (e.g. `ext-intl` missing when opting into NFC normalization). Carries `ErrorCode::ENV_MISSING_EXT_INTL`.
+- `NationalId::fake(?string $cityCode = null): string`, `CardNumber::fake(?string $bin = null): string`, `LegalId::fake(): string` — valid-by-construction generators for fixtures and tests. Named `fake` (not `generate`) to discourage production use.
+- `NationalId::extractAll(string $text): list<NationalId>`, `CardNumber::extractAll(string $text): list<CardNumber>` — free-text extractors that pull out 10- or 16-digit runs and filter by validator.
+- `Eram\Abzar\Validation\PlateNumber` + `PlateNumberDetails` + `PlateType` — Iranian license plate parser (`NN[letter]NNN-NN`) with letter-derived type category and city-code → province lookup.
+- `Eram\Abzar\Text\PersianCollator` — thin `\Collator('fa_IR')` wrapper with `sort` / `sortBy` helpers. Requires `ext-intl`; throws `AbzarEnvironmentException` when missing.
+- `Eram\Abzar\Text\HalfSpaceFixer` — best-effort zero-width non-joiner placement for common Persian affixes (`می`, `نمی`, `ها`, `تر`, `ترین`, `ام`, `ای`, `اید`, `اند`, …).
+- `OrdinalNumber::toShort()` accepts a third `$suffix` parameter (default `ام`), so callers asking for English digits can opt into an English suffix instead of hybrid-script output like `43ام`.
+- `BillId::validatePair(string $billId, string $paymentId): ValidationResult` — pair-validation with cross-checksum. `BillId::validate()` is now single-field and returns details with `paymentId = null`.
+
+### Changed (breaking — 0.x)
+
+- `CardNumber::validate()` no longer rejects Luhn-valid card numbers whose 6-digit BIN isn't in the bundled bank table. They pass with `bank: null` and a `CARD_NUMBER_UNKNOWN_BIN` warning — matching the existing `Iban` behaviour for unknown `bankCode`. All-zero (`0000000000000000`) is still rejected as a degenerate Luhn pass. `CardNumberDetails::$bank` and `CardNumber::bank()` are now `?string`.
+- `PhoneNumber::validate()` accepts mobile numbers whose `09xx` prefix isn't in the operator table — returns a valid result with `operator: null` and `PHONE_NUMBER_UNKNOWN_OPERATOR` warning. Covers MVNOs that aren't yet catalogued. Divergence from persian-tools is documented in the contract test.
+- `PhoneNumber::validate()` auto-prepends `0` to 10-digit landline inputs when the first two digits match a known area code (`2112345678` → `02112345678`) — CSV / Excel round-trips commonly drop the leading zero.
+- `PhoneNumber::validate()` also tolerates `.` in input (e.g. `+98.9121234567`) alongside the pre-existing spaces / dashes / parens handling.
+- `PhoneNumberDetails::mobile()` third parameter `$operator` is now `?string`.
+- `NationalId::validate()` no longer silently left-pads 8- or 9-digit input to 10. It rejects with the new `ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED` and an error message that points callers at `str_pad($input, 10, '0', STR_PAD_LEFT)`. Silent padding was hiding upstream `intval` / CSV bugs.
+- `BillId::validate(string, string)` split into `BillId::validate(string $billId)` (single-field) and `BillId::validatePair(string $billId, string $paymentId)`. `BillIdDetails::$paymentId` is now `?string`.
+- `CharNormalizer::$normalizeToNfc` without `ext-intl` throws `AbzarEnvironmentException` (rather than `\LogicException`), keeping the single-root-exception contract. Caught by `catch (AbzarException $e)`.
+- `CharNormalizer::$stripBidiMarks` now also strips U+200D (ZWJ) and U+FEFF (BOM) — both travel in alongside bidi control characters when text is copied from Word / Office.
+
 ### Fixed
 
 - `NumberToWords::convert()` no longer silently truncates floats with magnitude above `PHP_INT_MAX`. The float path now throws `AbzarFormatException` with `ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE`. The prior raw `\OverflowException` thrown from the scale-exhaustion branch is now the same `AbzarFormatException`, honoring the `catch (AbzarException $e)` contract.
+- `NumberToWords::convert()` now throws `AbzarFormatException` with `ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS` when a float carries more than `PHP_FLOAT_DIG` significant digits. IEEE-754 has already rounded at that point — we'd otherwise return a plausibly-wrong word.
 
 ### Docs
 
 - Version pin in `README.md` stability section updated to `^0.4@beta`, matching the install instructions and API-stability page.
+- README feature matrix and examples updated for `PlateNumber`, `PersianCollator`, `HalfSpaceFixer`, and the new `fake` / `extractAll` helpers.
+
+### Error-code additions
+
+`ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED`, `CARD_NUMBER_UNKNOWN_BIN`, `PHONE_NUMBER_UNKNOWN_OPERATOR`, `PLATE_NUMBER_EMPTY`, `PLATE_NUMBER_INVALID_FORMAT`, `PLATE_NUMBER_UNKNOWN_LETTER`, `PLATE_NUMBER_UNKNOWN_CITY_CODE`, `NUMBER_TO_WORDS_PRECISION_LOSS`, `ENV_MISSING_EXT_INTL`.
 
 ### Changed (breaking — 0.x)
 

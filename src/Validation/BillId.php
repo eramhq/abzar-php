@@ -9,10 +9,15 @@ use Eram\Abzar\Internal\ErrorInput;
 use Eram\Abzar\Validation\Details\BillIdDetails;
 
 /**
- * Bank utility bill ID ({@code شناسه قبض}) + payment ID ({@code شناسه پرداخت})
- * pair validator. Mod-11 weighting and payment cross-check verified against
- * {@link https://github.com/persian-tools/persian-tools/blob/main/src/modules/bill/index.ts}
+ * Bank utility bill ID ({@code شناسه قبض}) validator plus the optional
+ * {@code شناسه پرداخت} cross-checksum. Mod-11 weighting and payment cross-check
+ * verified against {@link https://github.com/persian-tools/persian-tools/blob/main/src/modules/bill/index.ts}
  * on 2026-04-16.
+ *
+ * Two entry points for the {@code ::validate} surface:
+ *  * {@see self::validate()} — single-field: just the bill ID. Many banking
+ *    systems store only the bill ID and surface the payment ID elsewhere.
+ *  * {@see self::validatePair()} — both halves, with cross-checksum.
  *
  * Unknown type-digits (0, 7) decode to {@see BillType::OTHER} rather than
  * rejecting — a documented leniency over the upstream JS library.
@@ -31,7 +36,7 @@ final class BillId implements \JsonSerializable, \Stringable
      */
     public static function from(string $billId, string $paymentId): self
     {
-        $result = self::validate($billId, $paymentId);
+        $result = self::validatePair($billId, $paymentId);
         if (!$result->isValid()) {
             throw AbzarValidationException::fromResult($result);
         }
@@ -44,7 +49,7 @@ final class BillId implements \JsonSerializable, \Stringable
 
     public static function tryFrom(string $billId, string $paymentId): ?self
     {
-        $result = self::validate($billId, $paymentId);
+        $result = self::validatePair($billId, $paymentId);
         if (!$result->isValid()) {
             return null;
         }
@@ -55,16 +60,15 @@ final class BillId implements \JsonSerializable, \Stringable
         return new self($detail);
     }
 
-    public static function validate(string $billId, string $paymentId): ValidationResult
+    public static function validate(string $billId): ValidationResult
     {
-        $billId    = ErrorInput::digits($billId);
-        $paymentId = ErrorInput::digits($paymentId);
+        $billId = ErrorInput::digits($billId);
 
-        if ($billId === '' || $paymentId === '') {
+        if ($billId === '') {
             return ValidationResult::invalid(ErrorCode::BILL_ID_EMPTY);
         }
 
-        if (!preg_match('/^\d{6,18}$/', $billId) || !preg_match('/^\d{6,18}$/', $paymentId)) {
+        if (!preg_match('/^\d{6,18}$/', $billId)) {
             return ValidationResult::invalid(ErrorCode::BILL_ID_WRONG_LENGTH);
         }
 
@@ -72,14 +76,41 @@ final class BillId implements \JsonSerializable, \Stringable
             return ValidationResult::invalid(ErrorCode::BILL_ID_INVALID_CHECKSUM);
         }
 
-        if (!self::paymentMatches($billId, $paymentId)) {
+        return ValidationResult::valid(new BillIdDetails(
+            billId:    $billId,
+            paymentId: null,
+            type:      BillType::fromTypeDigit((int) $billId[-2]),
+        ));
+    }
+
+    public static function validatePair(string $billId, string $paymentId): ValidationResult
+    {
+        $paymentId = ErrorInput::digits($paymentId);
+
+        $result = self::validate($billId);
+        if (!$result->isValid()) {
+            return $result;
+        }
+
+        if ($paymentId === '') {
+            return ValidationResult::invalid(ErrorCode::BILL_ID_EMPTY);
+        }
+
+        if (!preg_match('/^\d{6,18}$/', $paymentId)) {
+            return ValidationResult::invalid(ErrorCode::BILL_ID_WRONG_LENGTH);
+        }
+
+        /** @var BillIdDetails $billDetail */
+        $billDetail = $result->detail();
+
+        if (!self::paymentMatches($billDetail->billId, $paymentId)) {
             return ValidationResult::invalid(ErrorCode::BILL_ID_PAYMENT_MISMATCH);
         }
 
         return ValidationResult::valid(new BillIdDetails(
-            billId:    $billId,
+            billId:    $billDetail->billId,
             paymentId: $paymentId,
-            type:      BillType::fromTypeDigit((int) $billId[-2]),
+            type:      $billDetail->type,
         ));
     }
 
@@ -88,7 +119,7 @@ final class BillId implements \JsonSerializable, \Stringable
         return $this->detail->billId;
     }
 
-    public function paymentId(): string
+    public function paymentId(): ?string
     {
         return $this->detail->paymentId;
     }
@@ -109,7 +140,7 @@ final class BillId implements \JsonSerializable, \Stringable
     }
 
     /**
-     * @return array{bill_id: string, payment_id: string, type: string}
+     * @return array{bill_id: string, payment_id: ?string, type: string}
      */
     public function jsonSerialize(): array
     {

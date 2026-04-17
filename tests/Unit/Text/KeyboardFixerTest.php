@@ -53,4 +53,31 @@ final class KeyboardFixerTest extends TestCase
     {
         self::assertSame('0123456789', KeyboardFixer::enToFa('0123456789'));
     }
+
+    // ── detect() ──────────────────────────────────────────────────────
+
+    public function test_detect_fingerprints_salam_typed_on_en_layout(): void
+    {
+        self::assertTrue(KeyboardFixer::detect('sghl'));
+    }
+
+    public function test_detect_does_not_fire_on_normal_english(): void
+    {
+        self::assertFalse(KeyboardFixer::detect('hello world'));
+    }
+
+    public function test_detect_false_on_persian_input(): void
+    {
+        self::assertFalse(KeyboardFixer::detect('سلام'));
+    }
+
+    public function test_detect_false_on_empty(): void
+    {
+        self::assertFalse(KeyboardFixer::detect(''));
+    }
+
+    public function test_detect_false_on_single_letter(): void
+    {
+        self::assertFalse(KeyboardFixer::detect('a'));
+    }
 }

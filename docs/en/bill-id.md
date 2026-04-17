@@ -1,16 +1,25 @@
 # Bill ID
 
-`Eram\Abzar\Validation\BillId` validates the Iranian bank-utility bill-ID (`شناسه قبض`) + payment-ID (`شناسه پرداخت`) pair.
+`Eram\Abzar\Validation\BillId` validates the Iranian bank-utility bill-ID (`شناسه قبض`), optionally paired with its payment-ID (`شناسه پرداخت`).
 
 ```php
 use Eram\Abzar\Validation\BillId;
 use Eram\Abzar\Validation\BillType;
 
+// Single-field: many systems store only the bill ID.
+$r = BillId::validate($billId);
+$r->isValid();
+$r->detail()?->type;                 // BillType enum; paymentId is null
+
+// Pair validation + VO construction.
 $bill = BillId::tryFrom($billId, $paymentId);
 if ($bill !== null) {
     $type = $bill->type();           // BillType enum (WATER, ELECTRIC, GAS, PHONE, MOBILE, TAX, SERVICES, PASSPORT, OTHER)
     $typeString = $type->value;      // 'water' | 'electric' | ...
 }
+
+// Same cross-checksum as ::from / ::tryFrom, without constructing a VO.
+BillId::validatePair($billId, $paymentId)->isValid();
 ```
 
 ## Algorithm

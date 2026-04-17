@@ -14,7 +14,7 @@ use Eram\Abzar\Validation\Province;
  * Construct via {@see self::mobile()} or {@see self::landline()} — the direct
  * constructor is private to keep the mobile/landline variants unambiguous.
  */
-final class PhoneNumberDetails implements \JsonSerializable
+final class PhoneNumberDetails implements ValidationDetail
 {
     private function __construct(
         public readonly PhoneNumberType $type,
@@ -27,7 +27,7 @@ final class PhoneNumberDetails implements \JsonSerializable
     ) {
     }
 
-    public static function mobile(string $normalizedLocal, string $normalizedE164, string $operator): self
+    public static function mobile(string $normalizedLocal, string $normalizedE164, ?string $operator): self
     {
         return new self(
             type:            PhoneNumberType::MOBILE,

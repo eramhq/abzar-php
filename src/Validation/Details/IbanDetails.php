@@ -6,7 +6,7 @@ namespace Eram\Abzar\Validation\Details;
 
 use Eram\Abzar\Validation\Bank;
 
-final class IbanDetails implements \JsonSerializable
+final class IbanDetails implements ValidationDetail
 {
     public function __construct(
         public readonly string $value,

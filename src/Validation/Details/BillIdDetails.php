@@ -6,17 +6,22 @@ namespace Eram\Abzar\Validation\Details;
 
 use Eram\Abzar\Validation\BillType;
 
-final class BillIdDetails implements \JsonSerializable
+/**
+ * Parsed details for a valid bill ID. {@code paymentId} is {@code null} when
+ * the DTO was produced by the single-field {@see \Eram\Abzar\Validation\BillId::validate()};
+ * populated by {@see \Eram\Abzar\Validation\BillId::validatePair()} / {@code ::from()}.
+ */
+final class BillIdDetails implements ValidationDetail
 {
     public function __construct(
         public readonly string $billId,
-        public readonly string $paymentId,
+        public readonly ?string $paymentId,
         public readonly BillType $type,
     ) {
     }
 
     /**
-     * @return array{bill_id: string, payment_id: string, type: string}
+     * @return array{bill_id: string, payment_id: ?string, type: string}
      */
     public function jsonSerialize(): array
     {

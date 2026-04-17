@@ -8,6 +8,7 @@ use Eram\Abzar\AbzarValidationException;
 use Eram\Abzar\Validation\Bank;
 use Eram\Abzar\Validation\CardNumber;
 use Eram\Abzar\Validation\Details\CardNumberDetails;
+use Eram\Abzar\Validation\ErrorCode;
 use PHPUnit\Framework\TestCase;
 
 class CardNumberTest extends TestCase
@@ -46,11 +47,16 @@ class CardNumberTest extends TestCase
         $this->assertSame('بانک ملی ایران', $detail->bank);
     }
 
-    public function test_unknown_bin_rejected(): void
+    public function test_unknown_bin_valid_with_warning(): void
     {
-        // BIN not in the table — now rejected as invalid rather than accepted with null.
+        // Luhn-valid but BIN 123456 is not in the table — accepted with a warning
+        // and bank: null, mirroring Iban's unknown-bankCode handling.
         $result = CardNumber::validate('1234567890123452');
-        $this->assertFalse($result->isValid());
+        $this->assertTrue($result->isValid());
+        $this->assertSame([ErrorCode::CARD_NUMBER_UNKNOWN_BIN], $result->warningCodes());
+        $detail = $result->detail();
+        $this->assertInstanceOf(CardNumberDetails::class, $detail);
+        $this->assertNull($detail->bank);
     }
 
     public function test_from_returns_value_object(): void
@@ -100,5 +106,29 @@ class CardNumberTest extends TestCase
     {
         $result = CardNumber::validate('');
         $this->assertFalse($result->isValid());
+    }
+
+    public function test_fake_returns_valid_card(): void
+    {
+        for ($i = 0; $i < 20; $i++) {
+            $card = CardNumber::fake();
+            $this->assertTrue(CardNumber::validate($card)->isValid(), "generated $card");
+        }
+    }
+
+    public function test_fake_honors_bin(): void
+    {
+        $card = CardNumber::fake('603799');
+        $this->assertSame('603799', substr($card, 0, 6));
+        $this->assertTrue(CardNumber::validate($card)->isValid());
+    }
+
+    public function test_extract_all_pulls_valid_cards_from_text(): void
+    {
+        $text = 'Paid via 6037991234567893 last week; reserve card 6037 9912 3456 7893 failed.';
+        $hits = CardNumber::extractAll($text);
+        $this->assertCount(2, $hits);
+        $this->assertSame('6037991234567893', $hits[0]->value());
+        $this->assertSame('6037991234567893', $hits[1]->value());
     }
 }

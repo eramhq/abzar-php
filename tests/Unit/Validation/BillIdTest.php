@@ -12,16 +12,16 @@ use PHPUnit\Framework\TestCase;
 
 final class BillIdTest extends TestCase
 {
-    public function test_empty_inputs_fail(): void
+    public function test_empty_input_fails(): void
     {
-        $result = BillId::validate('', '');
+        $result = BillId::validate('');
         self::assertFalse($result->isValid());
         self::assertSame([ErrorCode::BILL_ID_EMPTY], $result->errorCodes());
     }
 
-    public function test_short_inputs_fail(): void
+    public function test_short_input_fails(): void
     {
-        $result = BillId::validate('12', '12');
+        $result = BillId::validate('12');
         self::assertFalse($result->isValid());
         self::assertSame([ErrorCode::BILL_ID_WRONG_LENGTH], $result->errorCodes());
     }
@@ -29,9 +29,20 @@ final class BillIdTest extends TestCase
     public function test_bill_id_checksum_mismatch_fails(): void
     {
         // Deliberately invalid last digit.
-        $result = BillId::validate('1234567899', '123456');
+        $result = BillId::validate('1234567899');
         self::assertFalse($result->isValid());
         self::assertSame([ErrorCode::BILL_ID_INVALID_CHECKSUM], $result->errorCodes());
+    }
+
+    public function test_single_field_validate_populates_detail_without_payment_id(): void
+    {
+        $result = BillId::validate('7748317800142');
+        self::assertTrue($result->isValid());
+        $detail = $result->detail();
+        self::assertInstanceOf(BillIdDetails::class, $detail);
+        self::assertSame('7748317800142', $detail->billId);
+        self::assertNull($detail->paymentId);
+        self::assertSame(BillType::PHONE, $detail->type);
     }
 
     /**
@@ -41,11 +52,12 @@ final class BillIdTest extends TestCase
      */
     public function test_upstream_valid_pairs_pass(string $billId, string $paymentId, BillType $type): void
     {
-        $result = BillId::validate($billId, $paymentId);
+        $result = BillId::validatePair($billId, $paymentId);
         self::assertTrue($result->isValid(), 'errors: ' . implode('; ', $result->errors()));
         $detail = $result->detail();
         self::assertInstanceOf(BillIdDetails::class, $detail);
         self::assertSame($type, $detail->type);
+        self::assertSame($paymentId, $detail->paymentId);
     }
 
     /**
@@ -62,7 +74,7 @@ final class BillIdTest extends TestCase
      */
     public function test_upstream_invalid_pairs_fail(string $billId, string $paymentId): void
     {
-        $result = BillId::validate($billId, $paymentId);
+        $result = BillId::validatePair($billId, $paymentId);
         self::assertFalse($result->isValid());
     }
 
@@ -79,9 +91,16 @@ final class BillIdTest extends TestCase
     public function test_payment_id_mismatch_fails(): void
     {
         // Upstream valid bill, wrong payment-check digits.
-        $result = BillId::validate('7748317800142', '1770199');
+        $result = BillId::validatePair('7748317800142', '1770199');
         self::assertFalse($result->isValid());
         self::assertSame([ErrorCode::BILL_ID_PAYMENT_MISMATCH], $result->errorCodes());
+    }
+
+    public function test_validate_pair_rejects_empty_payment_id(): void
+    {
+        $result = BillId::validatePair('7748317800142', '');
+        self::assertFalse($result->isValid());
+        self::assertSame([ErrorCode::BILL_ID_EMPTY], $result->errorCodes());
     }
 
     public function test_type_decoding_for_constructed_pair(): void
@@ -95,7 +114,7 @@ final class BillIdTest extends TestCase
         $second        = self::mod11($billId . $paymentPrefix . (string) $first);
         $paymentId     = $paymentPrefix . $first . $second;
 
-        $result = BillId::validate($billId, $paymentId);
+        $result = BillId::validatePair($billId, $paymentId);
         self::assertTrue($result->isValid(), 'errors: ' . implode('; ', $result->errors()));
         $detail = $result->detail();
         self::assertInstanceOf(BillIdDetails::class, $detail);
@@ -115,7 +134,7 @@ final class BillIdTest extends TestCase
         $second        = self::mod11($billId . $paymentPrefix . (string) $first);
         $paymentId     = $paymentPrefix . $first . $second;
 
-        $result = BillId::validate($billId, $paymentId);
+        $result = BillId::validatePair($billId, $paymentId);
         self::assertTrue($result->isValid());
         $detail = $result->detail();
         self::assertInstanceOf(BillIdDetails::class, $detail);

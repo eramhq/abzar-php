@@ -25,7 +25,7 @@ final class OrdinalNumber
         return self::addSuffix($word);
     }
 
-    public static function toShort(int $n, string $digits = 'persian'): string
+    public static function toShort(int $n, string $digits = 'persian', string $suffix = 'ام'): string
     {
         if ($n < 1) {
             throw AbzarFormatException::forInput(ErrorCode::ORDINAL_NUMBER_NON_POSITIVE, (string) $n);
@@ -37,7 +37,7 @@ final class OrdinalNumber
             $str = DigitConverter::toPersian($str);
         }
 
-        return $str . 'ام';
+        return $str . $suffix;
     }
 
     public static function addSuffix(string $persianWord): string

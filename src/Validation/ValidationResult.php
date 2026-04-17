@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
+use Eram\Abzar\Validation\Details\ValidationDetail;
+
 /**
  * Outcome of a {@code ::validate()} call — always returned, never thrown.
  *
@@ -12,8 +14,9 @@ namespace Eram\Abzar\Validation;
  *  * {@see self::validWithWarnings()} — success but with non-fatal warnings.
  *  * {@see self::invalid()} — rejection, with one or more {@see ErrorCode}s.
  *
- * Detail payloads are per-validator {@code readonly} DTOs under
- * {@see \Eram\Abzar\Validation\Details}. Call {@see self::detail()} to access.
+ * Detail payloads are per-validator {@code readonly} DTOs implementing
+ * {@see ValidationDetail} under {@see \Eram\Abzar\Validation\Details}.
+ * Call {@see self::detail()} to access.
  */
 final class ValidationResult implements \JsonSerializable, \Stringable
 {
@@ -24,12 +27,12 @@ final class ValidationResult implements \JsonSerializable, \Stringable
      * @param list<?ErrorCode>   $warningCodes
      */
     private function __construct(
-        private readonly bool           $valid,
-        private readonly array          $errors = [],
-        private readonly array          $errorCodes = [],
-        private readonly array          $warnings = [],
-        private readonly array          $warningCodes = [],
-        private readonly ?\JsonSerializable $detail = null,
+        private readonly bool              $valid,
+        private readonly array             $errors = [],
+        private readonly array             $errorCodes = [],
+        private readonly array             $warnings = [],
+        private readonly array             $warningCodes = [],
+        private readonly ?ValidationDetail $detail = null,
     ) {
     }
 
@@ -70,7 +73,7 @@ final class ValidationResult implements \JsonSerializable, \Stringable
         return self::pruneNulls($this->warningCodes);
     }
 
-    public function detail(): ?\JsonSerializable
+    public function detail(): ?ValidationDetail
     {
         return $this->detail;
     }
@@ -78,7 +81,7 @@ final class ValidationResult implements \JsonSerializable, \Stringable
     /**
      * Successful validation.
      */
-    public static function valid(?\JsonSerializable $detail = null): self
+    public static function valid(?ValidationDetail $detail = null): self
     {
         return new self(valid: true, detail: $detail);
     }
@@ -90,7 +93,7 @@ final class ValidationResult implements \JsonSerializable, \Stringable
      */
     public static function validWithWarnings(
         string|ErrorCode|array $warnings,
-        ?\JsonSerializable $detail = null,
+        ?ValidationDetail $detail = null,
     ): self {
         [$msgs, $codes] = self::resolve($warnings);
 
@@ -129,7 +132,7 @@ final class ValidationResult implements \JsonSerializable, \Stringable
      *     valid: bool,
      *     errors: list<string>,
      *     error_codes: list<string>,
-     *     detail: ?\JsonSerializable,
+     *     detail: ?ValidationDetail,
      *     warnings?: list<string>,
      *     warning_codes?: list<string>
      * }
