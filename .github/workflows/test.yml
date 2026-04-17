@@ -85,13 +85,13 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Run phpbench
-        run: vendor/bin/phpbench run --progress=none --report=default --output=json > phpbench-results.json
+        run: vendor/bin/phpbench run --progress=none --report=default --dump-file=phpbench-results.xml
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v7
         with:
           name: phpbench-results
-          path: phpbench-results.json
+          path: phpbench-results.xml
 
   mutate:
     name: Mutation testing (advisory)

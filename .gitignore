@@ -4,7 +4,7 @@
 /.php-cs-fixer.cache
 /build/
 /coverage/
-/phpbench-results.json
+/phpbench-results.xml
 .DS_Store
 .idea/
 .vscode/
