@@ -17,12 +17,16 @@ final class PhoneNumber implements \JsonSerializable, \Stringable
     }
 
     /**
+     * A {@code PhoneNumber} VO always represents a number with a resolved
+     * operator (mobile) or known area code (landline) — warning-bearing results
+     * are rejected here. Use {@see self::validate()} for full-info pass/fail.
+     *
      * @throws AbzarValidationException
      */
     public static function from(string $input): self
     {
         $result = self::validate($input);
-        if (!$result->isValid()) {
+        if (!$result->isStrictlyValid()) {
             throw AbzarValidationException::fromResult($result);
         }
 
@@ -35,7 +39,7 @@ final class PhoneNumber implements \JsonSerializable, \Stringable
     public static function tryFrom(string $input): ?self
     {
         $result = self::validate($input);
-        if (!$result->isValid()) {
+        if (!$result->isStrictlyValid()) {
             return null;
         }
 

@@ -18,7 +18,7 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 >
 > Error-code values are stable API surface as of `0.3` — renaming a case is a breaking change.
 
-> **Exception hierarchy.** Every thrown exception extends `Eram\Abzar\AbzarException` (abstract; carries `errorCode(): ErrorCode`). Two concrete subclasses: `AbzarValidationException` (thrown by `::from()`) and `AbzarFormatException` (thrown by formatters). Catch the base to handle every library failure uniformly.
+> **Exception hierarchy.** Every thrown exception extends `Eram\Abzar\AbzarException` (abstract; carries `errorCode(): ErrorCode`). Three concrete subclasses: `AbzarValidationException` (thrown by `::from()`), `AbzarFormatException` (thrown by formatters), and `AbzarEnvironmentException` (thrown when an optional extension like `ext-intl` is missing at runtime). Catch the base to handle every library failure uniformly.
 
 ## Feature matrix
 

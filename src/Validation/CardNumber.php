@@ -17,12 +17,16 @@ final class CardNumber implements \JsonSerializable, \Stringable
     }
 
     /**
+     * A {@code CardNumber} VO always represents a fully validated Iranian card
+     * with a resolved bank — warning-bearing results (e.g. unknown BIN) are
+     * rejected here. Use {@see self::validate()} for full-info pass/fail.
+     *
      * @throws AbzarValidationException
      */
     public static function from(string $input): self
     {
         $result = self::validate($input);
-        if (!$result->isValid()) {
+        if (!$result->isStrictlyValid()) {
             throw AbzarValidationException::fromResult($result);
         }
 
@@ -35,7 +39,7 @@ final class CardNumber implements \JsonSerializable, \Stringable
     public static function tryFrom(string $input): ?self
     {
         $result = self::validate($input);
-        if (!$result->isValid()) {
+        if (!$result->isStrictlyValid()) {
             return null;
         }
 
@@ -107,7 +111,9 @@ final class CardNumber implements \JsonSerializable, \Stringable
 
     /**
      * Scan free text for 16-digit runs (optionally spaced / dashed) and return
-     * each that parses as a valid card. Run order follows left-to-right.
+     * each that parses as a valid card. Run order follows left-to-right. Only
+     * cards with a bundled BIN are returned — unknown-BIN Luhn-valid candidates
+     * are dropped (same guarantee as {@see self::from()}).
      *
      * @return list<self>
      */

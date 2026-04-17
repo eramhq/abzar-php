@@ -57,4 +57,10 @@ final class HalfSpaceFixerTest extends TestCase
         $already = "می\u{200C}روم";
         $this->assertSame($already, HalfSpaceFixer::fix($already));
     }
+
+    public function test_mi_before_noun_glues_by_design(): void
+    {
+        // Locks the intentional broadness of می/نمی — see HalfSpaceFixer docblock before tightening.
+        $this->assertSame("این می\u{200C}کتاب است", HalfSpaceFixer::fix('این می کتاب است'));
+    }
 }

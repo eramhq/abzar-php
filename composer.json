@@ -34,7 +34,7 @@
     },
     "suggest": {
         "eramhq/daynum": "Jalali / Shamsi calendar utilities (date parsing, month names, conversions) — companion to abzar.",
-        "ext-intl": "Required only for CharNormalizer::normalizeToNfc (Unicode NFC normalization); everything else is pure PHP."
+        "ext-intl": "Required for PersianCollator and CharNormalizer::normalizeToNfc (Unicode NFC normalization); everything else is pure PHP."
     },
     "autoload": {
         "psr-4": {

@@ -90,6 +90,29 @@ class ValidationResultTest extends TestCase
         $this->assertSame('one; two', (string) $result);
     }
 
+    public function test_stringable_valid_with_warnings_joins_warnings(): void
+    {
+        $result = ValidationResult::validWithWarnings(['caveat one', 'caveat two']);
+        $this->assertSame('caveat one; caveat two', (string) $result);
+    }
+
+    public function test_is_strictly_valid_true_on_plain_valid(): void
+    {
+        $this->assertTrue(ValidationResult::valid()->isStrictlyValid());
+    }
+
+    public function test_is_strictly_valid_false_on_warning_bearing(): void
+    {
+        $result = ValidationResult::validWithWarnings(ErrorCode::CARD_NUMBER_UNKNOWN_BIN);
+        $this->assertTrue($result->isValid());
+        $this->assertFalse($result->isStrictlyValid());
+    }
+
+    public function test_is_strictly_valid_false_on_invalid(): void
+    {
+        $this->assertFalse(ValidationResult::invalid('boom')->isStrictlyValid());
+    }
+
     public function test_invalid_accepts_error_code(): void
     {
         $result = ValidationResult::invalid(ErrorCode::CARD_NUMBER_EMPTY);

@@ -17,8 +17,8 @@ use Eram\Abzar\Validation\NationalId;
 
 $result = NationalId::validate('...');
 var_export($result->isValid());
-var_export($result->errors());
-var_export($result->details());
+var_export($result->errorCodes());
+var_export($result->detail());
 ```
 
 **Expected**

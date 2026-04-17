@@ -215,6 +215,21 @@ class PhoneNumberTest extends TestCase
         $this->assertNull(PhoneNumber::tryFrom(''));
     }
 
+    public function test_from_throws_on_unknown_operator(): void
+    {
+        try {
+            PhoneNumber::from('09401234567');
+            $this->fail('expected AbzarValidationException for unknown operator');
+        } catch (AbzarValidationException $e) {
+            $this->assertSame(ErrorCode::PHONE_NUMBER_UNKNOWN_OPERATOR, $e->errorCode());
+        }
+    }
+
+    public function test_try_from_null_on_unknown_operator(): void
+    {
+        $this->assertNull(PhoneNumber::tryFrom('09401234567'));
+    }
+
     public function test_from_landline(): void
     {
         $phone = PhoneNumber::from('02112345678');

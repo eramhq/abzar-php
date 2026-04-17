@@ -86,12 +86,17 @@ final class PlateNumber implements \JsonSerializable, \Stringable
     }
 
     /**
+     * A {@code PlateNumber} VO always represents a plate with a mapped letter
+     * type and known province — warning-bearing results (unknown letter or
+     * city code) are rejected here. Use {@see self::validate()} for full-info
+     * pass/fail.
+     *
      * @throws AbzarValidationException
      */
     public static function from(string $input): self
     {
         $result = self::validate($input);
-        if (!$result->isValid()) {
+        if (!$result->isStrictlyValid()) {
             throw AbzarValidationException::fromResult($result);
         }
 
@@ -104,7 +109,7 @@ final class PlateNumber implements \JsonSerializable, \Stringable
     public static function tryFrom(string $input): ?self
     {
         $result = self::validate($input);
-        if (!$result->isValid()) {
+        if (!$result->isStrictlyValid()) {
             return null;
         }
 

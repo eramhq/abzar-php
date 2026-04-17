@@ -29,8 +29,9 @@ final class AbzarValidationException extends AbzarException
 
     public static function fromResult(ValidationResult $result): self
     {
-        $codes = $result->errorCodes();
-        $code  = $codes[0] ?? null;
+        $code = $result->errorCodes()[0]
+             ?? $result->warningCodes()[0]
+             ?? null;
 
         if ($code === null) {
             throw new \LogicException(

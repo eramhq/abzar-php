@@ -12,7 +12,7 @@ From `1.0.0` onward, the commitments below apply.
 
 Abzar draws a deliberate line between *domain* failures and *caller-contract* failures:
 
-- **Validators** (`NationalId`, `CardNumber`, `Iban`, `LegalId`, `PhoneNumber`, `PostalCode`, `BillId`) treat invalid input as their normal domain. They expose three entry points:
+- **Validators** (`NationalId`, `CardNumber`, `Iban`, `LegalId`, `PhoneNumber`, `PostalCode`, `BillId`, `PlateNumber`) treat invalid input as their normal domain. They expose three entry points:
   - `::validate($input): ValidationResult` — returns a result object for pass/fail checks.
   - `::from($input): static` — throws `AbzarValidationException` on failure; returns a value-object handle on success.
   - `::tryFrom($input): ?static` — returns a value-object handle or `null`.
@@ -37,16 +37,17 @@ try {
 - **Public method signatures**: parameter types, return types, and method names.
 - **`ValidationResult` public shape**:
   - `isValid(): bool`
+  - `isStrictlyValid(): bool` — valid AND no warnings; the guard used by VO constructors.
   - `errors(): list<string>`
   - `errorCodes(): list<ErrorCode>`
   - `warnings(): list<string>`
   - `warningCodes(): list<ErrorCode>`
-  - `detail(): ?JsonSerializable` — typed per-validator DTO (`Eram\Abzar\Validation\Details\*`)
+  - `detail(): ?ValidationDetail` — typed per-validator DTO (`Eram\Abzar\Validation\Details\*`; `ValidationDetail` extends `JsonSerializable`)
   - `jsonSerialize()` output shape.
 - **Value-object accessors** (`->value()`, `->city()`, `->bin()`, etc.) on each validator class.
 - **Detail DTO property names** (`$cityCode`, `$bin`, `$bankCode`, `$normalizedLocal`, …). These are public readonly properties under `Eram\Abzar\Validation\Details\`.
 - **`Eram\Abzar\Validation\ErrorCode`** — the backing string value for each case is API surface from `0.3` onward. Renaming or dropping a case is a breaking change. New cases may be added in minor releases.
-- **`Eram\Abzar\AbzarException` hierarchy**: the abstract root and the two concrete classes (`AbzarValidationException`, `AbzarFormatException`) are stable.
+- **`Eram\Abzar\AbzarException` hierarchy**: the abstract root and the three concrete classes are stable — `AbzarValidationException` (thrown by validator `::from()` constructors), `AbzarFormatException` (thrown by formatters), and `AbzarEnvironmentException` (thrown when an optional runtime prerequisite such as `ext-intl` is missing).
 - **Input-accepting conventions**: Persian / Arabic / English digits are accepted interchangeably across all validators and formatters.
 
 ## Explicitly unstable

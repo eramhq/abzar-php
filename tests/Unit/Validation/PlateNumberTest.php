@@ -98,6 +98,36 @@ final class PlateNumberTest extends TestCase
         $this->assertNull(PlateNumber::tryFrom(''));
     }
 
+    public function test_from_throws_on_unknown_letter(): void
+    {
+        try {
+            PlateNumber::from('12ح345-11');
+            $this->fail('expected AbzarValidationException for unknown letter');
+        } catch (AbzarValidationException $e) {
+            $this->assertSame(ErrorCode::PLATE_NUMBER_UNKNOWN_LETTER, $e->errorCode());
+        }
+    }
+
+    public function test_try_from_null_on_unknown_letter(): void
+    {
+        $this->assertNull(PlateNumber::tryFrom('12ح345-11'));
+    }
+
+    public function test_from_throws_on_unknown_city_code(): void
+    {
+        try {
+            PlateNumber::from('12ب345-99');
+            $this->fail('expected AbzarValidationException for unknown city code');
+        } catch (AbzarValidationException $e) {
+            $this->assertSame(ErrorCode::PLATE_NUMBER_UNKNOWN_CITY_CODE, $e->errorCode());
+        }
+    }
+
+    public function test_try_from_null_on_unknown_city_code(): void
+    {
+        $this->assertNull(PlateNumber::tryFrom('12ب345-99'));
+    }
+
     public function test_stringable_canonical_form(): void
     {
         $plate = PlateNumber::from('12 ب 345 11');
