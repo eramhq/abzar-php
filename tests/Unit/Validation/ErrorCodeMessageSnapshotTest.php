@@ -46,6 +46,9 @@ final class ErrorCodeMessageSnapshotTest extends TestCase
         yield 'legal-id middle zeros'     => [ErrorCode::LEGAL_ID_MIDDLE_ZEROS,         'شناسه حقوقی نامعتبر است'];
         yield 'legal-id checksum'         => [ErrorCode::LEGAL_ID_INVALID_CHECKSUM,     'شناسه حقوقی نامعتبر است'];
 
+        yield 'bill-id payment empty'     => [ErrorCode::BILL_ID_PAYMENT_EMPTY,         'شناسه پرداخت نمی‌تواند خالی باشد'];
+        yield 'bill-id payment length'    => [ErrorCode::BILL_ID_PAYMENT_WRONG_LENGTH,  'شناسه پرداخت باید حداقل ۶ رقم باشد'];
+
         yield 'number formatter invalid'  => [ErrorCode::NUMBER_FORMATTER_INVALID,      'مقدار ورودی عددی معتبر نیست'];
         yield 'number precision loss'     => [ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS, 'دقت عدد اعشاری از محدوده شناور PHP بیشتر است؛ مقدار را به‌صورت رشته ارسال کنید'];
         yield 'ordinal non positive'      => [ErrorCode::ORDINAL_NUMBER_NON_POSITIVE,   'عدد ترتیبی باید بزرگ‌تر از صفر باشد'];

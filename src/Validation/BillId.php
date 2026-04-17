@@ -93,11 +93,11 @@ final class BillId implements \JsonSerializable, \Stringable
         }
 
         if ($paymentId === '') {
-            return ValidationResult::invalid(ErrorCode::BILL_ID_EMPTY);
+            return ValidationResult::invalid(ErrorCode::BILL_ID_PAYMENT_EMPTY);
         }
 
         if (!preg_match('/^\d{6,18}$/', $paymentId)) {
-            return ValidationResult::invalid(ErrorCode::BILL_ID_WRONG_LENGTH);
+            return ValidationResult::invalid(ErrorCode::BILL_ID_PAYMENT_WRONG_LENGTH);
         }
 
         /** @var BillIdDetails $billDetail */

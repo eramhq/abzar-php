@@ -90,6 +90,8 @@ Iban::from('IR820540102680020817909002')->bankEnum();  // Bank::PARSIAN
 PhoneNumber::normalize('+989121234567');               // '09121234567'
 ```
 
+> **`isValid()` vs `isStrictlyValid()`.** `validate()` can return `true` with a non-fatal warning when the input parses cleanly but an optional lookup fails (unknown card BIN, unknown mobile-operator prefix). `isValid()` does not reject these. For strict acceptance — form submissions, payment flows — use `from()` / `tryFrom()` (which reject warning-bearing results) or call `isStrictlyValid()` explicitly. The warning path is documented per validator under `docs/en/`.
+
 ### Formatting
 
 ```php

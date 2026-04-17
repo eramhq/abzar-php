@@ -100,7 +100,14 @@ final class BillIdTest extends TestCase
     {
         $result = BillId::validatePair('7748317800142', '');
         self::assertFalse($result->isValid());
-        self::assertSame([ErrorCode::BILL_ID_EMPTY], $result->errorCodes());
+        self::assertSame([ErrorCode::BILL_ID_PAYMENT_EMPTY], $result->errorCodes());
+    }
+
+    public function test_validate_pair_rejects_short_payment_id(): void
+    {
+        $result = BillId::validatePair('7748317800142', '12');
+        self::assertFalse($result->isValid());
+        self::assertSame([ErrorCode::BILL_ID_PAYMENT_WRONG_LENGTH], $result->errorCodes());
     }
 
     public function test_type_decoding_for_constructed_pair(): void

@@ -48,6 +48,8 @@ enum ErrorCode: string
     case BILL_ID_WRONG_LENGTH           = 'BILL_ID.WRONG_LENGTH';
     case BILL_ID_INVALID_CHECKSUM       = 'BILL_ID.INVALID_CHECKSUM';
     case BILL_ID_PAYMENT_MISMATCH       = 'BILL_ID.PAYMENT_MISMATCH';
+    case BILL_ID_PAYMENT_EMPTY          = 'BILL_ID.PAYMENT_EMPTY';
+    case BILL_ID_PAYMENT_WRONG_LENGTH   = 'BILL_ID.PAYMENT_WRONG_LENGTH';
 
     case PLATE_NUMBER_EMPTY             = 'PLATE_NUMBER.EMPTY';
     case PLATE_NUMBER_INVALID_FORMAT    = 'PLATE_NUMBER.INVALID_FORMAT';
@@ -101,6 +103,8 @@ enum ErrorCode: string
             self::BILL_ID_WRONG_LENGTH           => 'شناسه قبض باید حداقل ۶ رقم باشد',
             self::BILL_ID_INVALID_CHECKSUM       => 'شناسه قبض نامعتبر است',
             self::BILL_ID_PAYMENT_MISMATCH       => 'شناسه پرداخت با شناسه قبض مطابقت ندارد',
+            self::BILL_ID_PAYMENT_EMPTY          => 'شناسه پرداخت نمی‌تواند خالی باشد',
+            self::BILL_ID_PAYMENT_WRONG_LENGTH   => 'شناسه پرداخت باید حداقل ۶ رقم باشد',
 
             self::PLATE_NUMBER_EMPTY             => 'شماره پلاک نمی‌تواند خالی باشد',
             self::PLATE_NUMBER_INVALID_FORMAT    => 'قالب شماره پلاک نامعتبر است',

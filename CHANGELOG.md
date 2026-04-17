@@ -46,6 +46,7 @@ All notable changes to this project are documented in this file. The format is l
 
 - `NumberToWords::convert()` no longer silently truncates floats with magnitude above `PHP_INT_MAX`. The float path now throws `AbzarFormatException` with `ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE`. The prior raw `\OverflowException` thrown from the scale-exhaustion branch is now the same `AbzarFormatException`, honoring the `catch (AbzarException $e)` contract.
 - `NumberToWords::convert()` now throws `AbzarFormatException` with `ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS` when a float carries more than `PHP_FLOAT_DIG` significant digits. IEEE-754 has already rounded at that point — we'd otherwise return a plausibly-wrong word.
+- `BillId::validatePair()` no longer mislabels `payment_id` input errors as `bill_id` errors. Empty / short `payment_id` inputs now emit `ErrorCode::BILL_ID_PAYMENT_EMPTY` / `BILL_ID_PAYMENT_WRONG_LENGTH` with Persian messages that say `شناسه پرداخت` rather than `شناسه قبض`. **Breaking** for consumers asserting on the old `BILL_ID_EMPTY` / `BILL_ID_WRONG_LENGTH` codes for `payment_id` failures.
 
 ### Docs
 
@@ -54,7 +55,7 @@ All notable changes to this project are documented in this file. The format is l
 
 ### Error-code additions
 
-`ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED`, `CARD_NUMBER_UNKNOWN_BIN`, `PHONE_NUMBER_UNKNOWN_OPERATOR`, `PLATE_NUMBER_EMPTY`, `PLATE_NUMBER_INVALID_FORMAT`, `PLATE_NUMBER_UNKNOWN_LETTER`, `PLATE_NUMBER_UNKNOWN_CITY_CODE`, `NUMBER_TO_WORDS_PRECISION_LOSS`, `ENV_MISSING_EXT_INTL`.
+`ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED`, `CARD_NUMBER_UNKNOWN_BIN`, `PHONE_NUMBER_UNKNOWN_OPERATOR`, `PLATE_NUMBER_EMPTY`, `PLATE_NUMBER_INVALID_FORMAT`, `PLATE_NUMBER_UNKNOWN_LETTER`, `PLATE_NUMBER_UNKNOWN_CITY_CODE`, `NUMBER_TO_WORDS_PRECISION_LOSS`, `ENV_MISSING_EXT_INTL`, `BILL_ID_PAYMENT_EMPTY`, `BILL_ID_PAYMENT_WRONG_LENGTH`.
 
 ### Changed (breaking — 0.x)
 

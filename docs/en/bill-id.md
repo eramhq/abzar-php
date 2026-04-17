@@ -33,9 +33,11 @@ The weighting vector is `[2, 3, 4, 5, 6, 7]` repeated from the rightmost digit.
 
 | Code | When |
 |---|---|
-| `BILL_ID.EMPTY` | Either input is empty |
-| `BILL_ID.WRONG_LENGTH` | Either input is outside 6–18 digits |
+| `BILL_ID.EMPTY` | `bill_id` is empty |
+| `BILL_ID.WRONG_LENGTH` | `bill_id` is outside 6–18 digits |
 | `BILL_ID.INVALID_CHECKSUM` | `bill_id` last digit does not match its mod-11 checksum |
+| `BILL_ID.PAYMENT_EMPTY` | `payment_id` is empty (pair validation only) |
+| `BILL_ID.PAYMENT_WRONG_LENGTH` | `payment_id` is outside 6–18 digits |
 | `BILL_ID.PAYMENT_MISMATCH` | `payment_id` cross-checksum does not match `bill_id` |
 
 ## Type decoding
