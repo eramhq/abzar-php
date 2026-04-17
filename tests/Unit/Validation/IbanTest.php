@@ -124,4 +124,33 @@ class IbanTest extends TestCase
         $result = Iban::validate('DE820540102680020817909002');
         $this->assertSame([ErrorCode::IBAN_MISSING_PREFIX], $result->errorCodes());
     }
+
+    public function test_formatted_four_char_groups_with_two_tail(): void
+    {
+        $iban = Iban::from('IR820540102680020817909002');
+        $this->assertSame('IR82 0540 1026 8002 0817 9090 02', $iban->formatted());
+    }
+
+    public function test_fake_returns_valid_iban(): void
+    {
+        for ($i = 0; $i < 100; $i++) {
+            $iban = Iban::fake();
+            $this->assertTrue(Iban::validate($iban)->isValid(), "generated $iban");
+            $this->assertSame('IR', substr($iban, 0, 2));
+            $this->assertSame(26, strlen($iban));
+        }
+    }
+
+    public function test_fake_honors_bank_code(): void
+    {
+        $iban = Iban::fake('054');
+        $this->assertSame('054', substr($iban, 4, 3));
+        $this->assertTrue(Iban::validate($iban)->isValid());
+    }
+
+    public function test_fake_rejects_non_three_digit_bank_code(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Iban::fake('12');
+    }
 }

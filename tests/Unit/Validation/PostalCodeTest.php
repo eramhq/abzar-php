@@ -84,4 +84,12 @@ final class PostalCodeTest extends TestCase
         self::assertFalse($result->isValid());
         self::assertSame([ErrorCode::POSTAL_CODE_INVALID_PATTERN], $result->errorCodes());
     }
+
+    public function test_fake_returns_valid_postal_code(): void
+    {
+        for ($i = 0; $i < 100; $i++) {
+            $code = PostalCode::fake();
+            self::assertTrue(PostalCode::validate($code)->isValid(), "generated $code");
+        }
+    }
 }

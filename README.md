@@ -155,15 +155,32 @@ $plate->province();   // 'تهران'
 (string) $plate;      // '12ب345-11'
 ```
 
+### Display formatters
+
+```php
+use Eram\Abzar\Validation\{CardNumber, PhoneNumber, Iban};
+
+CardNumber::from('6037991234567893')->formatted();       // '6037 9912 3456 7893'
+CardNumber::from('6037991234567893')->masked();          // '6037 99** **** 7893'
+PhoneNumber::from('09121234567')->formatted();           // '0912 123 4567'
+PhoneNumber::from('09121234567')->formatted(true);       // '+98 912 123 4567'
+PhoneNumber::from('02188887777')->formatted();           // '021 8888 7777'
+Iban::from('IR820540102680020817909002')->formatted();   // 'IR82 0540 1026 8002 0817 9090 02'
+```
+
 ### Fixtures and extraction
 
 ```php
-use Eram\Abzar\Validation\{NationalId, CardNumber, LegalId};
+use Eram\Abzar\Validation\{NationalId, CardNumber, LegalId, PhoneNumber, Iban, PostalCode, PlateNumber, PlateType};
 
 // Valid-by-construction generators (tests / seed data only — may or may not be real)
 $id     = NationalId::fake();            // e.g. '0013542419'
 $card   = CardNumber::fake('603799');    // Luhn-valid card with pinned BIN
 $legal  = LegalId::fake();
+$phone  = PhoneNumber::fake();           // e.g. '09121234567' (or pin operator: fake('912'))
+$iban   = Iban::fake();                  // e.g. 'IR82054…' (or pin bank code: fake('054'))
+$postal = PostalCode::fake();
+$plate  = PlateNumber::fake(PlateType::TAXI); // pin category, or fake() for any
 
 // Pull every valid ID out of free text (chat logs, OCR, scraped pages)
 $ids    = NationalId::extractAll('Customer 0013542419 and 1234567891 enrolled.');

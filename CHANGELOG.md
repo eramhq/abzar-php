@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file. The format is l
 
 ### Added
 
+- Display formatters on the three long-numeric value objects so UIs don't have to roll their own:
+  - `CardNumber::formatted()` → `6037 9912 3456 7893` (4-4-4-4 grouped).
+  - `CardNumber::masked()` → `6037 99** **** 7893` (PCI first-6 / last-4).
+  - `PhoneNumber::formatted(bool $international = false)` → `0912 123 4567` / `+98 912 123 4567` (mobile), `021 8888 7777` / `+98 21 8888 7777` (landline — leading `0` of the area code dropped in intl form).
+  - `Iban::formatted()` → `IR82 0540 1026 8002 0817 9090 02` (4-char groups + 2-char tail).
+- `::fake()` factories on the remaining four validators, completing the family alongside the existing `NationalId::fake()` / `CardNumber::fake()` / `LegalId::fake()`:
+  - `PhoneNumber::fake(?string $operatorPrefix = null): string` — valid mobile; optional 3-digit operator-prefix pin (matches the `CardNumber::fake(?bin)` shape).
+  - `Iban::fake(?string $bankCode = null): string` — valid `IR…` IBAN with ISO 13616 mod-97 check digits; optional 3-digit bank-code pin.
+  - `PostalCode::fake(): string` — 10-digit code that satisfies all validator pattern rules (first/fifth ≠ 0, no 4-run).
+  - `PlateNumber::fake(?PlateType $type = null): string` — canonical `NN[letter]NNN-NN`; passing a `PlateType` returns a letter mapped to that category. `PlateType::OTHER` throws (it represents unknown letters, not a real category).
 - `ValidationDetail` marker interface (`Eram\Abzar\Validation\Details\ValidationDetail`) implemented by every `*Details` DTO. `ValidationResult::detail()` now returns `?ValidationDetail` instead of `?\JsonSerializable`, so callers can narrow without unrelated `@var` annotations.
 - `LegalIdDetails` DTO (previously `LegalId` was the sole validator returning a bare string). `LegalId::validate()` now emits it through `ValidationResult::valid()` for symmetry with every other validator.
 - `AbzarEnvironmentException` — new concrete `AbzarException` subclass for runtime-prerequisite failures (e.g. `ext-intl` missing when opting into NFC normalization). Carries `ErrorCode::ENV_MISSING_EXT_INTL`.

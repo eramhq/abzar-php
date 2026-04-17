@@ -103,4 +103,32 @@ final class PlateNumberTest extends TestCase
         $plate = PlateNumber::from('12 ب 345 11');
         $this->assertSame('12ب345-11', (string) $plate);
     }
+
+    public function test_fake_returns_valid_plate(): void
+    {
+        for ($i = 0; $i < 100; $i++) {
+            $plate  = PlateNumber::fake();
+            $result = PlateNumber::validate($plate);
+            $this->assertTrue($result->isValid(), "generated $plate");
+            $detail = $result->detail();
+            $this->assertInstanceOf(PlateNumberDetails::class, $detail);
+            $this->assertNotSame(PlateType::OTHER, $detail->type);
+        }
+    }
+
+    public function test_fake_honors_pinned_type(): void
+    {
+        for ($i = 0; $i < 20; $i++) {
+            $plate  = PlateNumber::fake(PlateType::TAXI);
+            $detail = PlateNumber::validate($plate)->detail();
+            $this->assertInstanceOf(PlateNumberDetails::class, $detail);
+            $this->assertSame(PlateType::TAXI, $detail->type);
+        }
+    }
+
+    public function test_fake_rejects_plate_type_other(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        PlateNumber::fake(PlateType::OTHER);
+    }
 }

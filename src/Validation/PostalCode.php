@@ -70,6 +70,31 @@ final class PostalCode implements \JsonSerializable, \Stringable
         ));
     }
 
+    /**
+     * Generate a valid 10-digit Iranian postal code for fixtures or tests.
+     * Retries until the random digits satisfy the validator's pattern rules
+     * (first digit ≠ 0, fifth digit ≠ 0, no run of 4+ identical digits).
+     * Named {@code fake} to discourage production use — the code is valid by
+     * construction but may not correspond to a real address.
+     */
+    public static function fake(): string
+    {
+        while (true) {
+            $code = (string) random_int(1, 9);
+            for ($i = 1; $i < 4; $i++) {
+                $code .= (string) random_int(0, 9);
+            }
+            $code .= (string) random_int(1, 9);
+            for ($i = 5; $i < 10; $i++) {
+                $code .= (string) random_int(0, 9);
+            }
+
+            if (!preg_match('/(\d)\1{3}/', $code)) {
+                return $code;
+            }
+        }
+    }
+
     public function value(): string
     {
         return $this->detail->postalCode;

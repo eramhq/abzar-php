@@ -133,6 +133,26 @@ final class CardNumber implements \JsonSerializable, \Stringable
         return $this->detail->value;
     }
 
+    /**
+     * PCI-style masked form: first 6 + last 4 shown, middle 6 replaced with
+     * {@code *}, grouped in 4s (e.g. {@code 6037 99** **** 7893}).
+     */
+    public function masked(): string
+    {
+        $v      = $this->detail->value;
+        $masked = substr($v, 0, 6) . '******' . substr($v, 12, 4);
+
+        return implode(' ', str_split($masked, 4));
+    }
+
+    /**
+     * 4-4-4-4 grouped display (e.g. {@code 6037 9912 3456 7893}).
+     */
+    public function formatted(): string
+    {
+        return implode(' ', str_split($this->detail->value, 4));
+    }
+
     public function bin(): string
     {
         return $this->detail->bin;

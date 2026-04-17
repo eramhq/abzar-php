@@ -155,6 +155,46 @@ final class PlateNumber implements \JsonSerializable, \Stringable
             : ValidationResult::validWithWarnings($warnings, $detail);
     }
 
+    /**
+     * Generate a valid Iranian plate in canonical {@code NN[letter]NNN-NN} form
+     * for fixtures or tests. With {@code $type = null}, the letter and city
+     * code are picked uniformly at random from the known tables. Passing a
+     * {@see PlateType} pins the category to a letter mapped to that type
+     * (e.g. {@code PlateType::TAXI} returns a plate with {@code ت}).
+     * {@see PlateType::OTHER} is rejected — it represents unknown letters,
+     * not a real category. Named {@code fake} to discourage production use.
+     */
+    public static function fake(?PlateType $type = null): string
+    {
+        if ($type === PlateType::OTHER) {
+            throw new \InvalidArgumentException(
+                'PlateType::OTHER cannot be pinned; it represents unknown letters, not a plate category',
+            );
+        }
+
+        if ($type === null) {
+            $letters = array_keys(self::LETTER_TYPES);
+        } else {
+            $letters = [];
+            foreach (self::LETTER_TYPES as $l => $t) {
+                if ($t === $type) {
+                    $letters[] = $l;
+                }
+            }
+            if ($letters === []) {
+                throw new \InvalidArgumentException('No letter mapped to PlateType::' . $type->name);
+            }
+        }
+
+        $letter     = $letters[array_rand($letters)];
+        $cityCodes  = array_keys(self::CITY_PROVINCE);
+        $cityCode   = (string) $cityCodes[array_rand($cityCodes)];
+        $twoDigit   = str_pad((string) random_int(0, 99), 2, '0', STR_PAD_LEFT);
+        $threeDigit = str_pad((string) random_int(0, 999), 3, '0', STR_PAD_LEFT);
+
+        return $twoDigit . $letter . $threeDigit . '-' . $cityCode;
+    }
+
     public function twoDigit(): string
     {
         return $this->detail->twoDigit;

@@ -222,4 +222,53 @@ class PhoneNumberTest extends TestCase
         $this->assertSame('021', $phone->areaCode());
         $this->assertSame('تهران', $phone->province());
     }
+
+    public function test_formatted_mobile_local(): void
+    {
+        $phone = PhoneNumber::from('09121234567');
+        $this->assertSame('0912 123 4567', $phone->formatted());
+    }
+
+    public function test_formatted_mobile_international(): void
+    {
+        $phone = PhoneNumber::from('09121234567');
+        $this->assertSame('+98 912 123 4567', $phone->formatted(true));
+    }
+
+    public function test_formatted_landline_local(): void
+    {
+        $phone = PhoneNumber::from('02188887777');
+        $this->assertSame('021 8888 7777', $phone->formatted());
+    }
+
+    public function test_formatted_landline_international_drops_leading_area_zero(): void
+    {
+        $phone = PhoneNumber::from('02188887777');
+        $this->assertSame('+98 21 8888 7777', $phone->formatted(true));
+    }
+
+    public function test_fake_returns_valid_mobile(): void
+    {
+        for ($i = 0; $i < 100; $i++) {
+            $number = PhoneNumber::fake();
+            $result = PhoneNumber::validate($number);
+            $this->assertTrue($result->isValid(), "generated $number");
+            $detail = $result->detail();
+            $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+            $this->assertSame(PhoneNumberType::MOBILE, $detail->type);
+        }
+    }
+
+    public function test_fake_honors_operator_prefix(): void
+    {
+        $number = PhoneNumber::fake('912');
+        $this->assertSame('0912', substr($number, 0, 4));
+        $this->assertTrue(PhoneNumber::validate($number)->isValid());
+    }
+
+    public function test_fake_rejects_non_three_digit_prefix(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        PhoneNumber::fake('12');
+    }
 }

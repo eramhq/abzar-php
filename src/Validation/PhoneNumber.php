@@ -92,6 +92,33 @@ final class PhoneNumber implements \JsonSerializable, \Stringable
         return $detail->normalizedLocal;
     }
 
+    /**
+     * Generate a valid Iranian mobile number ({@code 09xxxxxxxxx}) for fixtures
+     * or tests. Pass {@code $operatorPrefix} to pin the 3-digit operator prefix
+     * (e.g. {@code '912'}); otherwise a random known prefix from
+     * {@see DataSources::phoneOperators()} is chosen. Named {@code fake} to
+     * discourage production use — the number is valid by construction but may
+     * not belong to a real subscriber.
+     */
+    public static function fake(?string $operatorPrefix = null): string
+    {
+        if ($operatorPrefix === null) {
+            $prefixes       = array_keys(DataSources::phoneOperators());
+            $operatorPrefix = (string) $prefixes[array_rand($prefixes)];
+        }
+
+        if (!preg_match('/^\d{3}$/', $operatorPrefix)) {
+            throw new \InvalidArgumentException('operatorPrefix must be exactly 3 digits');
+        }
+
+        $body = '0' . $operatorPrefix;
+        for ($i = 0; $i < 7; $i++) {
+            $body .= (string) random_int(0, 9);
+        }
+
+        return $body;
+    }
+
     public function value(): string
     {
         return $this->detail->normalizedLocal;
@@ -100,6 +127,32 @@ final class PhoneNumber implements \JsonSerializable, \Stringable
     public function e164(): string
     {
         return $this->detail->normalizedE164;
+    }
+
+    /**
+     * Human-readable display form. Mobile local {@code 0912 123 4567}, mobile
+     * intl {@code +98 912 123 4567}; landline local {@code 021 8888 7777},
+     * landline intl {@code +98 21 8888 7777} (leading {@code 0} of the area
+     * code is dropped).
+     */
+    public function formatted(bool $international = false): string
+    {
+        $local = $this->detail->normalizedLocal;
+
+        if ($this->isMobile()) {
+            $display = substr($local, 0, 4)
+                . ' ' . substr($local, 4, 3)
+                . ' ' . substr($local, 7, 4);
+
+            return $international ? '+98 ' . substr($display, 1) : $display;
+        }
+
+        $area = substr($local, 0, 3);
+        $rest = substr($local, 3, 4) . ' ' . substr($local, 7, 4);
+
+        return $international
+            ? '+98 ' . substr($area, 1) . ' ' . $rest
+            : $area . ' ' . $rest;
     }
 
     public function type(): PhoneNumberType

@@ -79,9 +79,49 @@ final class Iban implements \JsonSerializable, \Stringable
         ));
     }
 
+    /**
+     * Generate a valid Iranian IBAN ({@code IR} + 24 digits) for fixtures or
+     * tests. Pass {@code $bankCode} to pin the 3-digit bank code; otherwise a
+     * random known code from {@see DataSources::ibanBanks()} is chosen. Check
+     * digits are computed via the ISO 13616 mod-97 algorithm so the result
+     * round-trips through {@see self::validate()}. Named {@code fake} to
+     * discourage production use — the IBAN is valid by construction but may
+     * not correspond to a real account.
+     */
+    public static function fake(?string $bankCode = null): string
+    {
+        if ($bankCode === null) {
+            $codes     = array_keys(DataSources::ibanBanks());
+            $bankCode  = (string) $codes[array_rand($codes)];
+        }
+
+        if (!preg_match('/^\d{3}$/', $bankCode)) {
+            throw new \InvalidArgumentException('bankCode must be exactly 3 digits');
+        }
+
+        $account = '';
+        for ($i = 0; $i < 19; $i++) {
+            $account .= (string) random_int(0, 9);
+        }
+
+        $remainder = self::mod97Remainder('IR00' . $bankCode . $account);
+        $check     = str_pad((string) (98 - $remainder), 2, '0', STR_PAD_LEFT);
+
+        return 'IR' . $check . $bankCode . $account;
+    }
+
     public function value(): string
     {
         return $this->detail->value;
+    }
+
+    /**
+     * 4-char grouped display (e.g. {@code IR82 0540 1026 8002 0817 9090 02}).
+     * Final group is the 2-char tail.
+     */
+    public function formatted(): string
+    {
+        return implode(' ', str_split($this->detail->value, 4));
     }
 
     public function bankCode(): string
@@ -119,6 +159,16 @@ final class Iban implements \JsonSerializable, \Stringable
 
     private static function mod97(string $iban): bool
     {
+        return self::mod97Remainder($iban) === 1;
+    }
+
+    /**
+     * ISO 13616 rearrangement + digit-by-digit mod 97. Check digits pass when
+     * the result is {@code 1}; to compute check digits for a new IBAN, run the
+     * placeholder ({@code IR00…}) through this and subtract from {@code 98}.
+     */
+    private static function mod97Remainder(string $iban): int
+    {
         $rearranged = substr($iban, 4) . substr($iban, 0, 4);
 
         $numeric = '';
@@ -133,6 +183,6 @@ final class Iban implements \JsonSerializable, \Stringable
             $remainder = (string) ((int) $remainder % 97);
         }
 
-        return (int) $remainder === 1;
+        return (int) $remainder;
     }
 }

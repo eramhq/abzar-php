@@ -131,4 +131,16 @@ class CardNumberTest extends TestCase
         $this->assertSame('6037991234567893', $hits[0]->value());
         $this->assertSame('6037991234567893', $hits[1]->value());
     }
+
+    public function test_formatted_groups_in_four(): void
+    {
+        $card = CardNumber::from('6037991234567893');
+        $this->assertSame('6037 9912 3456 7893', $card->formatted());
+    }
+
+    public function test_masked_preserves_first_six_and_last_four(): void
+    {
+        $card = CardNumber::from('6037991234567893');
+        $this->assertSame('6037 99** **** 7893', $card->masked());
+    }
 }
