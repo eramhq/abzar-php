@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Text;
 
-use Eram\Abzar\Exception\EnvironmentException;
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Exception\EnvironmentException;
 use Eram\Abzar\Validation\ErrorCode;
 
 final class CharNormalizer

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
-use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Validation\Details\LegalIdDetails;
 
 final class LegalId implements \JsonSerializable, \Stringable

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
-use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Data\DataSources;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Internal\ErrorInput;
 use Eram\Abzar\Validation\Details\CardNumberDetails;
 

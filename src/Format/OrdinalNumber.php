@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Format;
 
-use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Validation\ErrorCode;
 
 final class OrdinalNumber
