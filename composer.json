@@ -1,5 +1,6 @@
 {
     "name": "eram/abzar",
+    "version": "0.6.0-beta",
     "description": "Zero-runtime-dependency Persian (Farsi) utility toolkit for PHP 8.1+: validators (national ID, IBAN, bank card, phone), formatters (number-to-words, time-ago, ordinals), text utilities (slug, script detection, char normalization), and digit conversion.",
     "type": "library",
     "license": "MIT",

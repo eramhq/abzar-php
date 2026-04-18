@@ -63,6 +63,8 @@ enum ErrorCode: string
     case ORDINAL_NUMBER_EMPTY_INPUT     = 'ORDINAL_NUMBER.EMPTY_INPUT';
     case TIME_AGO_INVALID_TIMESTAMP     = 'TIME_AGO.INVALID_TIMESTAMP';
 
+    case AMOUNT_NEGATIVE                = 'AMOUNT.NEGATIVE';
+
     case ENV_MISSING_EXT_INTL           = 'ENV.MISSING_EXT_INTL';
 
     public function message(): string
@@ -117,6 +119,8 @@ enum ErrorCode: string
             self::ORDINAL_NUMBER_NON_POSITIVE    => 'عدد ترتیبی باید بزرگ‌تر از صفر باشد',
             self::ORDINAL_NUMBER_EMPTY_INPUT     => 'ورودی نمی‌تواند خالی باشد',
             self::TIME_AGO_INVALID_TIMESTAMP     => 'تاریخ ورودی قابل تبدیل نیست',
+
+            self::AMOUNT_NEGATIVE                => 'مبلغ نمی‌تواند منفی باشد',
 
             self::ENV_MISSING_EXT_INTL           => 'این قابلیت به افزونهٔ ext-intl نیاز دارد',
         };

@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Eram\Abzar\Format;
+namespace Eram\Abzar\Money;
 
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Format\NumberFormatter;
 
 /**
  * Toman / Rial formatter — a thin opinionated wrapper over
@@ -19,7 +20,7 @@ final class Currency
 
     public static function format(
         int|float|string $amount,
-        CurrencyUnit $unit = CurrencyUnit::TOMAN,
+        Unit $unit = Unit::TOMAN,
         bool $persianDigits = true,
         bool $withUnit = true,
         string $separator = '،',
@@ -39,14 +40,14 @@ final class Currency
 
     public static function convert(
         int|float $amount,
-        CurrencyUnit $from,
-        CurrencyUnit $to,
+        Unit $from,
+        Unit $to,
     ): int|float {
         if ($from === $to) {
             return $amount;
         }
 
-        if ($from === CurrencyUnit::TOMAN && $to === CurrencyUnit::RIAL) {
+        if ($from === Unit::TOMAN && $to === Unit::RIAL) {
             return is_int($amount) ? $amount * 10 : $amount * 10.0;
         }
 

@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+## [0.6.0-beta] — 2026-04-18
+
+### Added
+
+- **`Eram\Abzar\Money\Amount`** — immutable value object for Iranian currency amounts. Stored internally as Rials to eliminate the Rial/Toman ×10 confusion. Factories `::fromRials()` / `::fromToman()`; accessors `->inRials()` / `->inToman()`; arithmetic `->add()` / `->subtract()`; comparisons `->equals()` / `->greaterThan()` / `->lessThan()` / `->isZero()`; `Stringable` returns rials. Negative construction throws `AbzarFormatException` with `ErrorCode::AMOUNT_NEGATIVE`. Pair with `Money\Currency` for display formatting. Ported from `eram/pardakht` and `eram/ersal` to end their duplicated copies.
+- `ErrorCode::AMOUNT_NEGATIVE` — emitted when an `Amount` is constructed with a negative rial value.
+
+### Changed
+
+- **BC break:** moved `Eram\Abzar\Format\Currency` → `Eram\Abzar\Money\Currency` and renamed `Eram\Abzar\Format\CurrencyUnit` → `Eram\Abzar\Money\Unit`. Centralises the Rial/Toman domain (formatter, enum, `Amount` VO) under a single `Money\` namespace. Update `use` statements; public method signatures are unchanged.
+
 ## [0.5.0-beta] — 2026-04-17
 
 First tagged release of the 0.4 / 0.5 line. Folds the untagged `[0.3.1-beta]` entries in as well — their fixes were never shipped standalone and reach consumers for the first time here.
@@ -102,7 +113,7 @@ First tagged release. Supersedes the untagged `[0.1.0-beta]` draft that never re
 - `Eram\Abzar\Validation\BillId` — `شناسه قبض` / `شناسه پرداخت` mod-11 validator with bill-type decoding. Algorithm verified against [persian-tools@25a2dc9](https://github.com/persian-tools/persian-tools/blob/25a2dc9f22444b78bf16f6c48bda6727688e8552/src/modules/bill/index.ts).
 - `Eram\Abzar\Text\KeyboardFixer` — swap between English QWERTY and Persian keyboard layouts.
 - `Eram\Abzar\Format\WordsToNumber` — parse Persian number words back to `int|float|null`. Shares the `PersianNumerals` table with `NumberToWords`.
-- `Eram\Abzar\Format\Currency` + `CurrencyUnit` — Toman / Rial formatter and converter.
+- `Eram\Abzar\Format\Currency` + `CurrencyUnit` — Toman / Rial formatter and converter. _(Moved to `Eram\Abzar\Money\Currency` + `Money\Unit` in 0.6.)_
 - `CharNormalizer` opt-in flags (all default `false`): `foldHamza`, `stripTashkeel`, `stripKashida`, `stripBidiMarks`, `normalizeToNfc` (requires `ext-intl`).
 - `Eram\Abzar\Text\HtmlSegmenter` — internal helper that splits HTML into tag vs. text segments, shared by `CharNormalizer::normalizeContent()` and `DigitConverter::convertContent()`. HTML comments are now uniformly preserved by both.
 - `Slug::generate()` accepts an optional `CharNormalizer` argument, so callers can pass a custom-configured normalizer (e.g. `tehMarbuta: true`) without hitting a shared default-config cache.

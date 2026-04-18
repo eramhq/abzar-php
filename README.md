@@ -41,7 +41,8 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 | `Format` | `WordsToNumber` | Parse Persian number words back to `int` / `float` |
 | `Format` | `OrdinalNumber` | Persian ordinals: `toWord(3)` → `سوم`, `toShort(43)` → `۴۳ام` |
 | `Format` | `TimeAgo` | Fuzzy relative time in Persian (`۵ دقیقه پیش`, `حدود ۳ روز پیش`) |
-| `Format` | `Currency` / `CurrencyUnit` | Toman / Rial formatter and converter |
+| `Money` | `Amount` | Immutable Iranian-currency value object; stores rials internally, factories / accessors for both units |
+| `Money` | `Currency` / `Unit` | Toman / Rial formatter and ×10 / ÷10 converter |
 | `Text` | `Script` | `isPersian` / `hasPersian` / `isArabic` / `hasArabic` detectors |
 | `Text` | `Slug` | Persian-aware slug (`سلام دنیا` → `سلام-دنیا`) |
 | `Text` | `CharNormalizer` | Arabic → Persian char + digit normalization, HTML-aware `normalizeContent()`, opt-in hamza / tashkeel / kashida / NFC flags |

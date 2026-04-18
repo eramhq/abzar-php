@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Eram\Abzar\Tests\Unit\Format;
+namespace Eram\Abzar\Tests\Unit\Money;
 
-use Eram\Abzar\Format\Currency;
-use Eram\Abzar\Format\CurrencyUnit;
+use Eram\Abzar\Money\Currency;
+use Eram\Abzar\Money\Unit;
 use PHPUnit\Framework\TestCase;
 
 final class CurrencyTest extends TestCase
@@ -19,7 +19,7 @@ final class CurrencyTest extends TestCase
     {
         self::assertSame(
             '12,340 ریال',
-            Currency::format(12340, CurrencyUnit::RIAL, persianDigits: false, separator: ','),
+            Currency::format(12340, Unit::RIAL, persianDigits: false, separator: ','),
         );
     }
 
@@ -45,21 +45,21 @@ final class CurrencyTest extends TestCase
 
     public function test_convert_toman_to_rial(): void
     {
-        self::assertSame(12340, Currency::convert(1234, CurrencyUnit::TOMAN, CurrencyUnit::RIAL));
+        self::assertSame(12340, Currency::convert(1234, Unit::TOMAN, Unit::RIAL));
     }
 
     public function test_convert_rial_to_toman_integer(): void
     {
-        self::assertSame(1234, Currency::convert(12340, CurrencyUnit::RIAL, CurrencyUnit::TOMAN));
+        self::assertSame(1234, Currency::convert(12340, Unit::RIAL, Unit::TOMAN));
     }
 
     public function test_convert_rial_to_toman_non_multiple_yields_float(): void
     {
-        self::assertSame(123.5, Currency::convert(1235, CurrencyUnit::RIAL, CurrencyUnit::TOMAN));
+        self::assertSame(123.5, Currency::convert(1235, Unit::RIAL, Unit::TOMAN));
     }
 
     public function test_convert_same_unit_identity(): void
     {
-        self::assertSame(42, Currency::convert(42, CurrencyUnit::TOMAN, CurrencyUnit::TOMAN));
+        self::assertSame(42, Currency::convert(42, Unit::TOMAN, Unit::TOMAN));
     }
 }
