@@ -14,11 +14,11 @@ Abzar draws a deliberate line between *domain* failures and *caller-contract* fa
 
 - **Validators** (`NationalId`, `CardNumber`, `Iban`, `LegalId`, `PhoneNumber`, `PostalCode`, `BillId`, `PlateNumber`) treat invalid input as their normal domain. They expose three entry points:
   - `::validate($input): ValidationResult` — returns a result object for pass/fail checks.
-  - `::from($input): static` — throws `AbzarValidationException` on failure; returns a value-object handle on success.
+  - `::from($input): static` — throws `ValidationException` on failure; returns a value-object handle on success.
   - `::tryFrom($input): ?static` — returns a value-object handle or `null`.
-- **Formatters** (`NumberFormatter`, `OrdinalNumber`, `TimeAgo`, `Currency`, …) fail fast. Bad input is a programmer error — a sane caller already holds a sanitized value. They throw `AbzarFormatException`.
+- **Formatters** (`NumberFormatter`, `OrdinalNumber`, `TimeAgo`, `Currency`, …) fail fast. Bad input is a programmer error — a sane caller already holds a sanitized value. They throw `FormatException`.
 
-Both exception types extend the abstract `Eram\Abzar\AbzarException`, which carries an `errorCode(): ErrorCode`. Catch the base class to handle every library failure uniformly:
+Both exception types extend the abstract `Eram\Abzar\Exception\AbzarException`, which carries an `errorCode(): ErrorCode`. Catch the base class to handle every library failure uniformly:
 
 ```php
 try {
@@ -29,7 +29,7 @@ try {
 }
 ```
 
-`AbzarValidationException` additionally exposes `result(): ValidationResult` for callers that want the full error list.
+`ValidationException` additionally exposes `result(): ValidationResult` for callers that want the full error list.
 
 ## Stable (BC-protected)
 
@@ -47,7 +47,7 @@ try {
 - **Value-object accessors** (`->value()`, `->city()`, `->bin()`, etc.) on each validator class.
 - **Detail DTO property names** (`$cityCode`, `$bin`, `$bankCode`, `$normalizedLocal`, …). These are public readonly properties under `Eram\Abzar\Validation\Details\`.
 - **`Eram\Abzar\Validation\ErrorCode`** — the backing string value for each case is API surface from `0.3` onward. Renaming or dropping a case is a breaking change. New cases may be added in minor releases.
-- **`Eram\Abzar\AbzarException` hierarchy**: the abstract root and the three concrete classes are stable — `AbzarValidationException` (thrown by validator `::from()` constructors), `AbzarFormatException` (thrown by formatters), and `AbzarEnvironmentException` (thrown when an optional runtime prerequisite such as `ext-intl` is missing).
+- **`Eram\Abzar\Exception\AbzarException` hierarchy**: the abstract root and the three concrete classes are stable — `ValidationException` (thrown by validator `::from()` constructors), `FormatException` (thrown by formatters), and `EnvironmentException` (thrown when an optional runtime prerequisite such as `ext-intl` is missing).
 - **Input-accepting conventions**: Persian / Arabic / English digits are accepted interchangeably across all validators and formatters.
 
 ## Explicitly unstable

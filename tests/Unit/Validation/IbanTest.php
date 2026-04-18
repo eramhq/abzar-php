@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Validation;
 
-use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Validation\Details\IbanDetails;
 use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\Iban;
@@ -104,7 +104,7 @@ class IbanTest extends TestCase
 
     public function test_from_throws_on_invalid(): void
     {
-        $this->expectException(AbzarValidationException::class);
+        $this->expectException(ValidationException::class);
         Iban::from('IR820540102680020817909003');
     }
 

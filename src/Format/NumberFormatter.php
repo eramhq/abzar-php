@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Format;
 
-use Eram\Abzar\AbzarFormatException;
+use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Digits\DigitConverter;
 use Eram\Abzar\Validation\ErrorCode;
 
@@ -24,7 +24,7 @@ final class NumberFormatter
         $numberStr = (string) $number;
 
         if (!preg_match('/^-?\d+(\.\d+)?$/', $numberStr)) {
-            throw AbzarFormatException::forInput(ErrorCode::NUMBER_FORMATTER_INVALID, $numberStr, 32);
+            throw FormatException::forInput(ErrorCode::NUMBER_FORMATTER_INVALID, $numberStr, 32);
         }
 
         $negative = str_starts_with($numberStr, '-');

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
-use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Digits\DigitConverter;
 use Eram\Abzar\Validation\Details\IbanDetails;
@@ -17,13 +17,13 @@ final class Iban implements \JsonSerializable, \Stringable
     }
 
     /**
-     * @throws AbzarValidationException
+     * @throws ValidationException
      */
     public static function from(string $input): self
     {
         $result = self::validate($input);
         if (!$result->isValid()) {
-            throw AbzarValidationException::fromResult($result);
+            throw ValidationException::fromResult($result);
         }
 
         /** @var IbanDetails $detail */

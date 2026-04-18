@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Text;
 
-use Eram\Abzar\AbzarEnvironmentException;
+use Eram\Abzar\Exception\EnvironmentException;
 use Eram\Abzar\Validation\ErrorCode;
 
 /**
@@ -14,7 +14,7 @@ use Eram\Abzar\Validation\ErrorCode;
  * Persian strings the obvious way produces obviously wrong results.
  *
  * This class requires {@code ext-intl}. Every entry point raises
- * {@see AbzarEnvironmentException} (with {@see ErrorCode::ENV_MISSING_EXT_INTL})
+ * {@see EnvironmentException} (with {@see ErrorCode::ENV_MISSING_EXT_INTL})
  * at construction when the extension is missing.
  */
 final class PersianCollator
@@ -24,7 +24,7 @@ final class PersianCollator
     public function __construct(string $locale = 'fa_IR')
     {
         if (!class_exists(\Collator::class)) {
-            throw AbzarEnvironmentException::missing(
+            throw EnvironmentException::missing(
                 ErrorCode::ENV_MISSING_EXT_INTL,
                 'PersianCollator requires ext-intl. Install the intl extension.',
             );

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Format;
 
-use Eram\Abzar\AbzarFormatException;
+use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Validation\ErrorCode;
 
 final class NumberToWords
@@ -33,7 +33,7 @@ final class NumberToWords
 
         if (is_float($number)) {
             if ($number > PHP_INT_MAX) {
-                throw AbzarFormatException::forInput(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, (string) $number);
+                throw FormatException::forInput(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, (string) $number);
             }
 
             // PHP doubles carry ~PHP_FLOAT_DIG significant digits. When the caller
@@ -42,7 +42,7 @@ final class NumberToWords
             // plausibly-wrong word.
             $rounded = (float) sprintf('%.' . PHP_FLOAT_DIG . 'g', $number);
             if ($rounded !== $number) {
-                throw AbzarFormatException::forInput(ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS, (string) $number);
+                throw FormatException::forInput(ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS, (string) $number);
             }
 
             $str = number_format($number, 10, '.', '');
@@ -95,7 +95,7 @@ final class NumberToWords
             $groupText = self::convertGroup($groups[$i]);
             if ($i > 0) {
                 if (!isset(self::SCALES[$i])) {
-                    throw AbzarFormatException::forInput(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, (string) $original);
+                    throw FormatException::forInput(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, (string) $original);
                 }
                 $groupText .= ' ' . self::SCALES[$i];
             }

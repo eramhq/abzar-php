@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Validation;
 
-use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Validation\Details\PhoneNumberDetails;
 use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\Operator;
@@ -206,7 +206,7 @@ class PhoneNumberTest extends TestCase
 
     public function test_from_throws_on_invalid(): void
     {
-        $this->expectException(AbzarValidationException::class);
+        $this->expectException(ValidationException::class);
         PhoneNumber::from('invalid');
     }
 
@@ -219,8 +219,8 @@ class PhoneNumberTest extends TestCase
     {
         try {
             PhoneNumber::from('09401234567');
-            $this->fail('expected AbzarValidationException for unknown operator');
-        } catch (AbzarValidationException $e) {
+            $this->fail('expected ValidationException for unknown operator');
+        } catch (ValidationException $e) {
             $this->assertSame(ErrorCode::PHONE_NUMBER_UNKNOWN_OPERATOR, $e->errorCode());
         }
     }

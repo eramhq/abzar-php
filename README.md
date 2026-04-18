@@ -18,7 +18,7 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 >
 > Error-code values are stable API surface as of `0.3` — renaming a case is a breaking change.
 
-> **Exception hierarchy.** Every thrown exception extends `Eram\Abzar\AbzarException` (abstract; carries `errorCode(): ErrorCode`). Three concrete subclasses: `AbzarValidationException` (thrown by `::from()`), `AbzarFormatException` (thrown by formatters), and `AbzarEnvironmentException` (thrown when an optional extension like `ext-intl` is missing at runtime). Catch the base to handle every library failure uniformly.
+> **Exception hierarchy.** Every thrown exception extends `Eram\Abzar\Exception\AbzarException` (abstract; carries `errorCode(): ErrorCode`). Three concrete subclasses: `ValidationException` (thrown by `::from()`), `FormatException` (thrown by formatters), and `EnvironmentException` (thrown when an optional extension like `ext-intl` is missing at runtime). Catch the base to handle every library failure uniformly.
 
 ## Feature matrix
 
@@ -80,7 +80,7 @@ $phone?->e164();           // '+989121234567'
 $phone?->operatorEnum();   // Operator::MCI
 $phone?->isMobile();       // true
 
-// 3. Value object on success — throws AbzarValidationException on failure.
+// 3. Value object on success — throws ValidationException on failure.
 $ni = NationalId::from('0013542419');
 $ni->value();              // '0013542419'
 $ni->city();               // 'تهران مرکزی'

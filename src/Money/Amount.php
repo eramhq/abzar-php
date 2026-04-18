@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Money;
 
-use Eram\Abzar\AbzarFormatException;
+use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Validation\ErrorCode;
 
 /**
@@ -24,7 +24,7 @@ final class Amount
         private readonly int $rials,
     ) {
         if ($rials < 0) {
-            throw AbzarFormatException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $rials);
+            throw FormatException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $rials);
         }
     }
 

@@ -254,10 +254,10 @@ class CharNormalizerTest extends TestCase
     public function test_normalize_to_nfc_requires_ext_intl(): void
     {
         if (class_exists(\Normalizer::class)) {
-            $this->markTestSkipped('ext-intl is available; the AbzarEnvironmentException path only fires when it is missing.');
+            $this->markTestSkipped('ext-intl is available; the EnvironmentException path only fires when it is missing.');
         }
 
-        $this->expectException(\Eram\Abzar\AbzarEnvironmentException::class);
+        $this->expectException(\Eram\Abzar\Exception\EnvironmentException::class);
         new CharNormalizer(normalizeToNfc: true);
     }
 }

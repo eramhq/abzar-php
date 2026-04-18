@@ -80,7 +80,7 @@ class LegalIdTest extends TestCase
 
     public function test_from_throws_on_invalid(): void
     {
-        $this->expectException(\Eram\Abzar\AbzarValidationException::class);
+        $this->expectException(\Eram\Abzar\Exception\ValidationException::class);
         LegalId::from('10380284792');
     }
 

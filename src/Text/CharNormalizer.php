@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Text;
 
-use Eram\Abzar\AbzarEnvironmentException;
+use Eram\Abzar\Exception\EnvironmentException;
 use Eram\Abzar\Digits\DigitConverter;
 use Eram\Abzar\Validation\ErrorCode;
 
@@ -30,7 +30,7 @@ final class CharNormalizer
         bool $normalizeToNfc = false,
     ) {
         if ($normalizeToNfc && !class_exists(\Normalizer::class)) {
-            throw AbzarEnvironmentException::missing(
+            throw EnvironmentException::missing(
                 ErrorCode::ENV_MISSING_EXT_INTL,
                 'CharNormalizer::$normalizeToNfc requires ext-intl. Install the intl extension or unset the flag.',
             );

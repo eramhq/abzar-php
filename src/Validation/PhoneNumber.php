@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
-use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Internal\ErrorInput;
 use Eram\Abzar\Validation\Details\PhoneNumberDetails;
@@ -21,13 +21,13 @@ final class PhoneNumber implements \JsonSerializable, \Stringable
      * operator (mobile) or known area code (landline) — warning-bearing results
      * are rejected here. Use {@see self::validate()} for full-info pass/fail.
      *
-     * @throws AbzarValidationException
+     * @throws ValidationException
      */
     public static function from(string $input): self
     {
         $result = self::validate($input);
         if (!$result->isStrictlyValid()) {
-            throw AbzarValidationException::fromResult($result);
+            throw ValidationException::fromResult($result);
         }
 
         /** @var PhoneNumberDetails $detail */

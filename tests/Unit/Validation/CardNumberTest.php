@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Validation;
 
-use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Validation\Bank;
 use Eram\Abzar\Validation\CardNumber;
 use Eram\Abzar\Validation\Details\CardNumberDetails;
@@ -69,7 +69,7 @@ class CardNumberTest extends TestCase
 
     public function test_from_throws_on_invalid(): void
     {
-        $this->expectException(AbzarValidationException::class);
+        $this->expectException(ValidationException::class);
         CardNumber::from('6219861234567890');
     }
 
@@ -82,8 +82,8 @@ class CardNumberTest extends TestCase
     {
         try {
             CardNumber::from('1234567890123452');
-            $this->fail('expected AbzarValidationException for unknown BIN');
-        } catch (AbzarValidationException $e) {
+            $this->fail('expected ValidationException for unknown BIN');
+        } catch (ValidationException $e) {
             $this->assertSame(ErrorCode::CARD_NUMBER_UNKNOWN_BIN, $e->errorCode());
         }
     }

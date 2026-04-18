@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Money;
 
-use Eram\Abzar\AbzarFormatException;
+use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Money\Amount;
 use Eram\Abzar\Validation\ErrorCode;
 use PHPUnit\Framework\Attributes\Test;
@@ -42,11 +42,11 @@ final class AmountTest extends TestCase
     #[Test]
     public function throws_on_negative_amount(): void
     {
-        $this->expectException(AbzarFormatException::class);
+        $this->expectException(FormatException::class);
 
         try {
             Amount::fromRials(-100);
-        } catch (AbzarFormatException $e) {
+        } catch (FormatException $e) {
             $this->assertSame(ErrorCode::AMOUNT_NEGATIVE, $e->errorCode());
             throw $e;
         }
@@ -87,7 +87,7 @@ final class AmountTest extends TestCase
     #[Test]
     public function subtract_below_zero_throws(): void
     {
-        $this->expectException(AbzarFormatException::class);
+        $this->expectException(FormatException::class);
 
         $a = Amount::fromToman(10_000);
         $b = Amount::fromToman(20_000);

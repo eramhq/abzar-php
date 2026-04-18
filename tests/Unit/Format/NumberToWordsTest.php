@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Format;
 
-use Eram\Abzar\AbzarException;
-use Eram\Abzar\AbzarFormatException;
+use Eram\Abzar\Exception\AbzarException;
+use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Format\NumberToWords;
 use Eram\Abzar\Validation\ErrorCode;
 use PHPUnit\Framework\TestCase;
@@ -123,8 +123,8 @@ class NumberToWordsTest extends TestCase
     {
         try {
             NumberToWords::convert(1e20);
-            $this->fail('Expected AbzarFormatException was not thrown.');
-        } catch (AbzarFormatException $e) {
+            $this->fail('Expected FormatException was not thrown.');
+        } catch (FormatException $e) {
             $this->assertSame(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, $e->errorCode());
         }
     }
@@ -139,8 +139,8 @@ class NumberToWordsTest extends TestCase
     {
         try {
             NumberToWords::convert(-1e20);
-            $this->fail('Expected AbzarFormatException was not thrown.');
-        } catch (AbzarFormatException $e) {
+            $this->fail('Expected FormatException was not thrown.');
+        } catch (FormatException $e) {
             $this->assertSame(ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE, $e->errorCode());
         }
     }
@@ -151,8 +151,8 @@ class NumberToWordsTest extends TestCase
             // More than PHP_FLOAT_DIG significant digits — IEEE-754 rounding
             // means the converted word no longer matches what the caller typed.
             NumberToWords::convert(1.234567890123456789);
-            $this->fail('Expected AbzarFormatException was not thrown.');
-        } catch (AbzarFormatException $e) {
+            $this->fail('Expected FormatException was not thrown.');
+        } catch (FormatException $e) {
             $this->assertSame(ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS, $e->errorCode());
         }
     }

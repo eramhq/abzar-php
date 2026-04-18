@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Validation;
 
-use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Validation\Details\NationalIdDetails;
 use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\NationalId;
@@ -127,8 +127,8 @@ class NationalIdTest extends TestCase
     {
         try {
             NationalId::from('0000000000');
-            $this->fail('Expected AbzarValidationException');
-        } catch (AbzarValidationException $e) {
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
             $this->assertSame(ErrorCode::NATIONAL_ID_ALL_SAME_DIGITS, $e->errorCode());
             $this->assertFalse($e->result()->isValid());
         }
@@ -150,8 +150,8 @@ class NationalIdTest extends TestCase
     {
         try {
             NationalId::from('13542419');
-            $this->fail('Expected AbzarValidationException');
-        } catch (AbzarValidationException $e) {
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
             $this->assertSame(ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED, $e->errorCode());
         }
     }

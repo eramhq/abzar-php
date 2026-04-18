@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Eram\Abzar;
+namespace Eram\Abzar\Exception;
 
 use Eram\Abzar\Validation\ErrorCode;
 
@@ -12,7 +12,7 @@ use Eram\Abzar\Validation\ErrorCode;
  * without {@code ext-intl}. Carries the canonical {@see ErrorCode} so it can
  * be caught uniformly via {@see AbzarException}.
  */
-final class AbzarEnvironmentException extends AbzarException
+final class EnvironmentException extends AbzarException
 {
     public static function missing(ErrorCode $code, string $detail): self
     {
