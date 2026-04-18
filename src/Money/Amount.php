@@ -45,7 +45,7 @@ final class Amount
 
     public function inToman(): int
     {
-        return (int) ($this->rials / 10);
+        return intdiv($this->rials, 10);
     }
 
     public function equals(self $other): bool

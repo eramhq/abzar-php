@@ -7,13 +7,11 @@ namespace Eram\Abzar\Tests\Unit\Money;
 use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Money\Amount;
 use Eram\Abzar\Validation\ErrorCode;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class AmountTest extends TestCase
 {
-    #[Test]
-    public function creates_from_rials(): void
+    public function test_creates_from_rials(): void
     {
         $amount = Amount::fromRials(500_000);
 
@@ -21,8 +19,7 @@ final class AmountTest extends TestCase
         $this->assertSame(50_000, $amount->inToman());
     }
 
-    #[Test]
-    public function creates_from_toman(): void
+    public function test_creates_from_toman(): void
     {
         $amount = Amount::fromToman(50_000);
 
@@ -30,17 +27,17 @@ final class AmountTest extends TestCase
         $this->assertSame(50_000, $amount->inToman());
     }
 
-    #[Test]
-    public function toman_and_rials_are_interchangeable(): void
+    public function test_from_toman_yields_exact_ten_rials_per_toman(): void
     {
-        $fromRials = Amount::fromRials(500_000);
-        $fromToman = Amount::fromToman(50_000);
-
-        $this->assertTrue($fromRials->equals($fromToman));
+        $this->assertSame(10, Amount::fromToman(1)->inRials());
     }
 
-    #[Test]
-    public function throws_on_negative_amount(): void
+    public function test_in_toman_truncates_when_rials_not_multiple_of_ten(): void
+    {
+        $this->assertSame(1, Amount::fromRials(15)->inToman());
+    }
+
+    public function test_throws_on_negative_amount(): void
     {
         $this->expectException(FormatException::class);
 
@@ -52,8 +49,7 @@ final class AmountTest extends TestCase
         }
     }
 
-    #[Test]
-    public function zero_amount(): void
+    public function test_zero_amount(): void
     {
         $amount = Amount::fromRials(0);
 
@@ -62,8 +58,7 @@ final class AmountTest extends TestCase
         $this->assertSame(0, $amount->inToman());
     }
 
-    #[Test]
-    public function adds_amounts(): void
+    public function test_adds_amounts(): void
     {
         $a = Amount::fromToman(10_000);
         $b = Amount::fromToman(20_000);
@@ -73,8 +68,7 @@ final class AmountTest extends TestCase
         $this->assertSame(30_000, $sum->inToman());
     }
 
-    #[Test]
-    public function subtracts_amounts(): void
+    public function test_subtracts_amounts(): void
     {
         $a = Amount::fromToman(30_000);
         $b = Amount::fromToman(10_000);
@@ -84,19 +78,22 @@ final class AmountTest extends TestCase
         $this->assertSame(20_000, $diff->inToman());
     }
 
-    #[Test]
-    public function subtract_below_zero_throws(): void
+    public function test_subtract_below_zero_throws(): void
     {
         $this->expectException(FormatException::class);
 
         $a = Amount::fromToman(10_000);
         $b = Amount::fromToman(20_000);
 
-        $a->subtract($b);
+        try {
+            $a->subtract($b);
+        } catch (FormatException $e) {
+            $this->assertSame(ErrorCode::AMOUNT_NEGATIVE, $e->errorCode());
+            throw $e;
+        }
     }
 
-    #[Test]
-    public function comparison_methods(): void
+    public function test_comparison_methods(): void
     {
         $small = Amount::fromToman(10_000);
         $large = Amount::fromToman(20_000);
@@ -108,8 +105,7 @@ final class AmountTest extends TestCase
         $this->assertFalse($large->lessThan($small));
     }
 
-    #[Test]
-    public function equality(): void
+    public function test_equality(): void
     {
         $a = Amount::fromRials(100);
         $b = Amount::fromRials(100);
@@ -119,8 +115,7 @@ final class AmountTest extends TestCase
         $this->assertFalse($a->equals($c));
     }
 
-    #[Test]
-    public function immutability(): void
+    public function test_immutability(): void
     {
         $original = Amount::fromToman(10_000);
         $added    = $original->add(Amount::fromToman(5_000));
@@ -129,8 +124,7 @@ final class AmountTest extends TestCase
         $this->assertSame(15_000, $added->inToman());
     }
 
-    #[Test]
-    public function to_string_returns_rials(): void
+    public function test_to_string_returns_rials(): void
     {
         $amount = Amount::fromToman(50_000);
 
