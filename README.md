@@ -113,6 +113,18 @@ OrdinalNumber::toShort(43);                       // '۴۳ام'
 TimeAgo::format(time() - 300);                    // '۵ دقیقه پیش'
 ```
 
+### Money
+
+```php
+use Eram\Abzar\Money\Amount;
+use Eram\Abzar\Money\Currency;
+
+$price = Amount::fromToman(50_000);
+$price->inRials();                                 // 500000  (no ×10 confusion)
+Currency::format($price->inToman());               // '۵۰،۰۰۰ تومان'
+$price->add(Amount::fromToman(5_000))->inToman();  // 55000
+```
+
 ### Text
 
 ```php

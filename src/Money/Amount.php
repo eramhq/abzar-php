@@ -16,9 +16,11 @@ use Eram\Abzar\Validation\ErrorCode;
  * new instances.
  *
  * For display formatting (Persian digits, thousand separators, unit suffix)
- * pair with {@see \Eram\Abzar\Money\Currency}.
+ * pair with {@see \Eram\Abzar\Money\Currency}. Persian / Arabic digit strings
+ * are a Validation-layer concern — normalize upstream via
+ * {@see \Eram\Abzar\Digits\DigitConverter} before constructing.
  */
-final class Amount
+final class Amount implements \JsonSerializable
 {
     private function __construct(
         private readonly int $rials,
@@ -28,11 +30,17 @@ final class Amount
         }
     }
 
+    /**
+     * @throws FormatException
+     */
     public static function fromRials(int $rials): self
     {
         return new self($rials);
     }
 
+    /**
+     * @throws FormatException
+     */
     public static function fromToman(int $toman): self
     {
         return new self($toman * 10);
@@ -63,6 +71,9 @@ final class Amount
         return new self($this->rials + $other->rials);
     }
 
+    /**
+     * @throws FormatException when the result would be negative.
+     */
     public function subtract(self $other): self
     {
         return new self($this->rials - $other->rials);
@@ -81,5 +92,13 @@ final class Amount
     public function __toString(): string
     {
         return (string) $this->rials;
+    }
+
+    /**
+     * @return array{rials: int}
+     */
+    public function jsonSerialize(): array
+    {
+        return ['rials' => $this->rials];
     }
 }
