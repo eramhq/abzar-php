@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Eram\Abzar\Format;
+namespace Eram\Abzar\Money;
 
-enum CurrencyUnit: string
+enum Unit: string
 {
     case TOMAN = 'toman';
     case RIAL  = 'rial';

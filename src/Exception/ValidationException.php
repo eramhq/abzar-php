@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Eram\Abzar;
+namespace Eram\Abzar\Exception;
 
 use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\ValidationResult;
@@ -12,7 +12,7 @@ use Eram\Abzar\Validation\ValidationResult;
  * rejects its input. The underlying {@see ValidationResult} is exposed for
  * callers that want the full error list.
  */
-final class AbzarValidationException extends AbzarException
+final class ValidationException extends AbzarException
 {
     public function __construct(
         private readonly ValidationResult $result,
@@ -35,7 +35,7 @@ final class AbzarValidationException extends AbzarException
 
         if ($code === null) {
             throw new \LogicException(
-                'AbzarValidationException cannot be constructed from a ValidationResult without at least one ErrorCode.'
+                'ValidationException cannot be constructed from a ValidationResult without at least one ErrorCode.'
             );
         }
 

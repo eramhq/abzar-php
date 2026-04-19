@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+## [0.6.0-beta] — 2026-04-18
+
+### Added
+
+- **`Eram\Abzar\Money\Amount`** — immutable value object for Iranian currency amounts. Stored internally as Rials to eliminate the Rial/Toman ×10 confusion. Factories `::fromRials()` / `::fromToman()`; accessors `->inRials()` / `->inToman()`; arithmetic `->add()` / `->subtract()`; comparisons `->equals()` / `->greaterThan()` / `->lessThan()` / `->isZero()`; `JsonSerializable` emits `{"rials": N}`. Deliberately not `Stringable` — callers must pick `inRials()` / `inToman()` / `Money\Currency::format()` so the unit is always explicit. Negative construction throws `FormatException` with `ErrorCode::AMOUNT_NEGATIVE`. Pair with `Money\Currency` for display formatting. Ported from `eram/pardakht` and `eram/ersal` to end their duplicated copies.
+- `ErrorCode::AMOUNT_NEGATIVE` — emitted when an `Amount` is constructed with a negative rial value.
+
+### Changed
+
+- **BC break:** moved `Eram\Abzar\Format\Currency` → `Eram\Abzar\Money\Currency` and renamed `Eram\Abzar\Format\CurrencyUnit` → `Eram\Abzar\Money\Unit`. Centralises the Rial/Toman domain (formatter, enum, `Amount` VO) under a single `Money\` namespace. Update `use` statements; public method signatures are unchanged.
+- **BC break:** exceptions moved from top-level `Eram\Abzar\` to `Eram\Abzar\Exception\`, and the concrete subclasses lost their `Abzar` prefix:
+  - `Eram\Abzar\AbzarException` → `Eram\Abzar\Exception\AbzarException` (base kept the prefix to avoid shadowing PHP's `\Exception`)
+  - `Eram\Abzar\AbzarFormatException` → `Eram\Abzar\Exception\FormatException`
+  - `Eram\Abzar\AbzarValidationException` → `Eram\Abzar\Exception\ValidationException`
+  - `Eram\Abzar\AbzarEnvironmentException` → `Eram\Abzar\Exception\EnvironmentException`
+  - Behaviour, constructors, and static factories are unchanged — only `use` statements and class references.
+
 ## [0.5.0-beta] — 2026-04-17
 
 First tagged release of the 0.4 / 0.5 line. Folds the untagged `[0.3.1-beta]` entries in as well — their fixes were never shipped standalone and reach consumers for the first time here.
@@ -24,14 +41,14 @@ First tagged release of the 0.4 / 0.5 line. Folds the untagged `[0.3.1-beta]` en
   - `PlateNumber::fake(?PlateType $type = null): string` — canonical `NN[letter]NNN-NN`; passing a `PlateType` returns a letter mapped to that category. `PlateType::OTHER` throws (it represents unknown letters, not a real category).
 - `NationalId::extractAll(string $text): list<NationalId>`, `CardNumber::extractAll(string $text): list<CardNumber>` — free-text extractors that pull out 10- or 16-digit runs and filter by validator.
 - `Eram\Abzar\Validation\PlateNumber` + `PlateNumberDetails` + `PlateType` — Iranian license plate parser (`NN[letter]NNN-NN`) with letter-derived type category and city-code → province lookup.
-- `Eram\Abzar\Text\PersianCollator` — thin `\Collator('fa_IR')` wrapper with `sort` / `sortBy` helpers. Requires `ext-intl`; throws `AbzarEnvironmentException` when missing.
+- `Eram\Abzar\Text\PersianCollator` — thin `\Collator('fa_IR')` wrapper with `sort` / `sortBy` helpers. Requires `ext-intl`; throws `EnvironmentException` when missing.
 - `Eram\Abzar\Text\HalfSpaceFixer` — best-effort zero-width non-joiner placement for common Persian affixes (`می`, `نمی`, `ها`, `تر`, `ترین`, `ام`, `ای`, `اید`, `اند`, …).
 - `OrdinalNumber::toShort()` accepts a third `$suffix` parameter (default `ام`), so callers asking for English digits can opt into an English suffix instead of hybrid-script output like `43ام`.
 - `BillId::validatePair(string $billId, string $paymentId): ValidationResult` — pair-validation with cross-checksum. `BillId::validate()` is now single-field and returns details with `paymentId = null`.
 - `ValidationResult::isStrictlyValid(): bool` — `true` when the result is valid AND carries no warnings; the shared guard used by VO constructors. Distinguishes "can yield a VO" from the looser "passed validation" of `isValid()`.
 - `ValidationDetail` marker interface (`Eram\Abzar\Validation\Details\ValidationDetail`) implemented by every `*Details` DTO. `ValidationResult::detail()` now returns `?ValidationDetail` instead of `?\JsonSerializable`, so callers can narrow without unrelated `@var` annotations.
 - `LegalIdDetails` DTO (previously `LegalId` was the sole validator returning a bare string). `LegalId::validate()` now emits it through `ValidationResult::valid()` for symmetry with every other validator.
-- `AbzarEnvironmentException` — new concrete `AbzarException` subclass for runtime-prerequisite failures (e.g. `ext-intl` missing when opting into NFC normalization). Carries `ErrorCode::ENV_MISSING_EXT_INTL`.
+- `EnvironmentException` — new concrete `AbzarException` subclass for runtime-prerequisite failures (e.g. `ext-intl` missing when opting into NFC normalization). Carries `ErrorCode::ENV_MISSING_EXT_INTL`.
 - `Eram\Abzar\Validation\BillType` — backed enum replacing the `BillId::TYPES` string map. Cases: `WATER`, `ELECTRIC`, `GAS`, `PHONE`, `MOBILE`, `TAX`, `SERVICES`, `PASSPORT`, `OTHER`. `BillIdDetails::$type` now holds this enum directly; `BillId::type()` returns `BillType`.
 - `Eram\Abzar\Validation\PhoneNumberType` — backed enum (`MOBILE` / `LANDLINE`) replacing raw strings on `PhoneNumberDetails::$type` / `PhoneNumber::type()`.
 - `PhoneNumberDetails::mobile()` / `::landline()` named constructors — the direct constructor is private; the two factories make mobile/landline variants structurally unambiguous.
@@ -44,9 +61,9 @@ First tagged release of the 0.4 / 0.5 line. Folds the untagged `[0.3.1-beta]` en
   - `ValidationResult::success($details, $warnings)` → `ValidationResult::valid($detail?)` + `ValidationResult::validWithWarnings($warnings, $detail?)`.
   - `ValidationResult::failure($errors, …)` → `ValidationResult::invalid($errors, $warnings?)`.
 - **Typed detail DTOs** replace `array<string, mixed>`. `ValidationResult::details(): array` is gone; `ValidationResult::detail(): ?ValidationDetail` returns a per-validator `readonly` DTO under `Eram\Abzar\Validation\Details\` (`NationalIdDetails`, `CardNumberDetails`, `IbanDetails`, `PhoneNumberDetails`, `BillIdDetails`, `PostalCodeDetails`, `PlateNumberDetails`, `LegalIdDetails`). `ValidationResult::bank() / operator() / province()` helpers were removed — access them via the value object (e.g. `$card->bankEnum()`) or DTO property.
-- **Single exception hierarchy.** Every library-raised exception now extends the new abstract `Eram\Abzar\AbzarException`, which carries an `errorCode(): ErrorCode`. Formatters throw `AbzarFormatException` (previously plain `\InvalidArgumentException`); VO constructors throw `AbzarValidationException` (new; also exposes the originating `ValidationResult`). `catch (AbzarException $e)` now covers every failure uniformly.
+- **Single exception hierarchy.** Every library-raised exception now extends the new abstract `Eram\Abzar\Exception\AbzarException`, which carries an `errorCode(): ErrorCode`. Formatters throw `FormatException` (previously plain `\InvalidArgumentException`); VO constructors throw `ValidationException` (new; also exposes the originating `ValidationResult`). `catch (AbzarException $e)` now covers every failure uniformly.
 - **Result-vs-throw policy documented.** `docs/en/api-stability.md` gained a "Result-vs-throw policy" section. Short version: validators return a result, formatters fail fast.
-- Value-object entry points (`::from()`, `::tryFrom()`, `::extractAll()`) reject warning-bearing results across `CardNumber`, `PhoneNumber`, and `PlateNumber` (via the new `ValidationResult::isStrictlyValid()` guard). `validate()` still accepts these with warnings (unchanged scope decision) — the rejection applies only to APIs that return a VO, where the warning would otherwise be invisible past the VO boundary. Holding a `CardNumber` VO now guarantees `bank() !== null`; a `PhoneNumber` mobile VO guarantees `operator() !== null`; a `PlateNumber` VO guarantees `province() !== null` and `type() !== PlateType::OTHER`. `AbzarValidationException::fromResult()` accepts warning-only results and carries the warning's `ErrorCode`.
+- Value-object entry points (`::from()`, `::tryFrom()`, `::extractAll()`) reject warning-bearing results across `CardNumber`, `PhoneNumber`, and `PlateNumber` (via the new `ValidationResult::isStrictlyValid()` guard). `validate()` still accepts these with warnings (unchanged scope decision) — the rejection applies only to APIs that return a VO, where the warning would otherwise be invisible past the VO boundary. Holding a `CardNumber` VO now guarantees `bank() !== null`; a `PhoneNumber` mobile VO guarantees `operator() !== null`; a `PlateNumber` VO guarantees `province() !== null` and `type() !== PlateType::OTHER`. `ValidationException::fromResult()` accepts warning-only results and carries the warning's `ErrorCode`.
 - `ValidationResult::__toString()` now surfaces warnings on valid-with-warnings results (previously always returned the literal `'valid'`, which was useless); unchanged for `valid()` (still `'valid'`) and for rejections (still joined error messages).
 - `CardNumber::validate()` no longer rejects Luhn-valid card numbers whose 6-digit BIN isn't in the bundled bank table. They pass with `bank: null` and a `CARD_NUMBER_UNKNOWN_BIN` warning — matching the existing `Iban` behaviour for unknown `bankCode`. All-zero (`0000000000000000`) is still rejected as a degenerate Luhn pass. `CardNumberDetails::$bank` and `CardNumber::bank()` are now `?string`.
 - `PhoneNumber::validate()` accepts mobile numbers whose `09xx` prefix isn't in the operator table — returns a valid result with `operator: null` and `PHONE_NUMBER_UNKNOWN_OPERATOR` warning. Covers MVNOs that aren't yet catalogued. Divergence from persian-tools is documented in the contract test.
@@ -55,13 +72,13 @@ First tagged release of the 0.4 / 0.5 line. Folds the untagged `[0.3.1-beta]` en
 - `PhoneNumberDetails::mobile()` third parameter `$operator` is now `?string`.
 - `NationalId::validate()` no longer silently left-pads 8- or 9-digit input to 10. It rejects with the new `ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED` and an error message that points callers at `str_pad($input, 10, '0', STR_PAD_LEFT)`. Silent padding was hiding upstream `intval` / CSV bugs.
 - `BillId::validate(string, string)` split into `BillId::validate(string $billId)` (single-field) and `BillId::validatePair(string $billId, string $paymentId)`. `BillIdDetails::$paymentId` is now `?string`.
-- `CharNormalizer::$normalizeToNfc` without `ext-intl` throws `AbzarEnvironmentException` (rather than `\LogicException`), keeping the single-root-exception contract. Caught by `catch (AbzarException $e)`.
+- `CharNormalizer::$normalizeToNfc` without `ext-intl` throws `EnvironmentException` (rather than `\LogicException`), keeping the single-root-exception contract. Caught by `catch (AbzarException $e)`.
 - `CharNormalizer::$stripBidiMarks` now also strips U+200D (ZWJ) and U+FEFF (BOM) — both travel in alongside bidi control characters when text is copied from Word / Office.
 
 ### Fixed
 
-- `NumberToWords::convert()` no longer silently truncates floats with magnitude above `PHP_INT_MAX`. The float path now throws `AbzarFormatException` with `ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE`. The prior raw `\OverflowException` thrown from the scale-exhaustion branch is now the same `AbzarFormatException`, honoring the `catch (AbzarException $e)` contract.
-- `NumberToWords::convert()` now throws `AbzarFormatException` with `ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS` when a float carries more than `PHP_FLOAT_DIG` significant digits. IEEE-754 has already rounded at that point — we'd otherwise return a plausibly-wrong word.
+- `NumberToWords::convert()` no longer silently truncates floats with magnitude above `PHP_INT_MAX`. The float path now throws `FormatException` with `ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE`. The prior raw `\OverflowException` thrown from the scale-exhaustion branch is now the same `FormatException`, honoring the `catch (AbzarException $e)` contract.
+- `NumberToWords::convert()` now throws `FormatException` with `ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS` when a float carries more than `PHP_FLOAT_DIG` significant digits. IEEE-754 has already rounded at that point — we'd otherwise return a plausibly-wrong word.
 - `NumberToWords::convert()` now preserves leading zeros in the fractional part. `3.05` renders as `سه ممیز صفر پنج` (previously collapsed to `سه ممیز پنج`). Output is a **behavioural break** relative to 0.3.0-beta — acceptable under the documented `0.x` stability policy.
 - `WordsToNumber::parse()` accepts leading `صفر` tokens after `ممیز` and counts them as zero-padding, so round-tripping `3.05` through `NumberToWords` → `WordsToNumber` now yields `3.05` exactly. Previously these inputs returned `null`.
 - `ErrorCode::PHONE_NUMBER_INVALID_FORMAT` message no longer claims mobile-only. `PhoneNumber::validate()` has accepted landlines since 0.3.0-beta; the message is now `شماره تلفن باید یک شماره موبایل یا تلفن ثابت ایرانی معتبر باشد`. Error code value (`PHONE_NUMBER.INVALID_FORMAT`) is unchanged.
@@ -102,7 +119,7 @@ First tagged release. Supersedes the untagged `[0.1.0-beta]` draft that never re
 - `Eram\Abzar\Validation\BillId` — `شناسه قبض` / `شناسه پرداخت` mod-11 validator with bill-type decoding. Algorithm verified against [persian-tools@25a2dc9](https://github.com/persian-tools/persian-tools/blob/25a2dc9f22444b78bf16f6c48bda6727688e8552/src/modules/bill/index.ts).
 - `Eram\Abzar\Text\KeyboardFixer` — swap between English QWERTY and Persian keyboard layouts.
 - `Eram\Abzar\Format\WordsToNumber` — parse Persian number words back to `int|float|null`. Shares the `PersianNumerals` table with `NumberToWords`.
-- `Eram\Abzar\Format\Currency` + `CurrencyUnit` — Toman / Rial formatter and converter.
+- `Eram\Abzar\Format\Currency` + `CurrencyUnit` — Toman / Rial formatter and converter. _(Moved to `Eram\Abzar\Money\Currency` + `Money\Unit` in 0.6.)_
 - `CharNormalizer` opt-in flags (all default `false`): `foldHamza`, `stripTashkeel`, `stripKashida`, `stripBidiMarks`, `normalizeToNfc` (requires `ext-intl`).
 - `Eram\Abzar\Text\HtmlSegmenter` — internal helper that splits HTML into tag vs. text segments, shared by `CharNormalizer::normalizeContent()` and `DigitConverter::convertContent()`. HTML comments are now uniformly preserved by both.
 - `Slug::generate()` accepts an optional `CharNormalizer` argument, so callers can pass a custom-configured normalizer (e.g. `tehMarbuta: true`) without hitting a shared default-config cache.

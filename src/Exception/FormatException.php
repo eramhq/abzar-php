@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Eram\Abzar;
+namespace Eram\Abzar\Exception;
 
 use Eram\Abzar\Internal\ErrorInput;
 use Eram\Abzar\Validation\ErrorCode;
@@ -12,7 +12,7 @@ use Eram\Abzar\Validation\ErrorCode;
  * (see {@code docs/en/api-stability.md}) — they expect a caller that already
  * holds a valid value and therefore raise rather than return.
  */
-final class AbzarFormatException extends AbzarException
+final class FormatException extends AbzarException
 {
     public static function forInput(ErrorCode $code, string $input, int $maxLen = 64): self
     {

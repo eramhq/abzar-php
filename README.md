@@ -18,7 +18,7 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 >
 > Error-code values are stable API surface as of `0.3` — renaming a case is a breaking change.
 
-> **Exception hierarchy.** Every thrown exception extends `Eram\Abzar\AbzarException` (abstract; carries `errorCode(): ErrorCode`). Three concrete subclasses: `AbzarValidationException` (thrown by `::from()`), `AbzarFormatException` (thrown by formatters), and `AbzarEnvironmentException` (thrown when an optional extension like `ext-intl` is missing at runtime). Catch the base to handle every library failure uniformly.
+> **Exception hierarchy.** Every thrown exception extends `Eram\Abzar\Exception\AbzarException` (abstract; carries `errorCode(): ErrorCode`). Three concrete subclasses: `ValidationException` (thrown by `::from()`), `FormatException` (thrown by formatters), and `EnvironmentException` (thrown when an optional extension like `ext-intl` is missing at runtime). Catch the base to handle every library failure uniformly.
 
 ## Feature matrix
 
@@ -41,7 +41,8 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 | `Format` | `WordsToNumber` | Parse Persian number words back to `int` / `float` |
 | `Format` | `OrdinalNumber` | Persian ordinals: `toWord(3)` → `سوم`, `toShort(43)` → `۴۳ام` |
 | `Format` | `TimeAgo` | Fuzzy relative time in Persian (`۵ دقیقه پیش`, `حدود ۳ روز پیش`) |
-| `Format` | `Currency` / `CurrencyUnit` | Toman / Rial formatter and converter |
+| `Money` | `Amount` | Immutable Iranian-currency value object; stores rials internally, factories / accessors for both units |
+| `Money` | `Currency` / `Unit` | Toman / Rial formatter and ×10 / ÷10 converter |
 | `Text` | `Script` | `isPersian` / `hasPersian` / `isArabic` / `hasArabic` detectors |
 | `Text` | `Slug` | Persian-aware slug (`سلام دنیا` → `سلام-دنیا`) |
 | `Text` | `CharNormalizer` | Arabic → Persian char + digit normalization, HTML-aware `normalizeContent()`, opt-in hamza / tashkeel / kashida / NFC flags |
@@ -79,7 +80,7 @@ $phone?->e164();           // '+989121234567'
 $phone?->operatorEnum();   // Operator::MCI
 $phone?->isMobile();       // true
 
-// 3. Value object on success — throws AbzarValidationException on failure.
+// 3. Value object on success — throws ValidationException on failure.
 $ni = NationalId::from('0013542419');
 $ni->value();              // '0013542419'
 $ni->city();               // 'تهران مرکزی'
@@ -110,6 +111,18 @@ OrdinalNumber::toWord(43);                        // 'چهل و سوم'
 OrdinalNumber::toShort(43);                       // '۴۳ام'
 
 TimeAgo::format(time() - 300);                    // '۵ دقیقه پیش'
+```
+
+### Money
+
+```php
+use Eram\Abzar\Money\Amount;
+use Eram\Abzar\Money\Currency;
+
+$price = Amount::fromToman(50_000);
+$price->inRials();                                 // 500000  (no ×10 confusion)
+Currency::format($price->inToman());               // '۵۰،۰۰۰ تومان'
+$price->add(Amount::fromToman(5_000))->inToman();  // 55000
 ```
 
 ### Text

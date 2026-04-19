@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
-use Eram\Abzar\AbzarValidationException;
 use Eram\Abzar\Data\DataSources;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Internal\ErrorInput;
 use Eram\Abzar\Validation\Details\NationalIdDetails;
 
@@ -22,13 +22,13 @@ final class NationalId implements \JsonSerializable, \Stringable
     }
 
     /**
-     * @throws AbzarValidationException when the input is not a valid national ID.
+     * @throws ValidationException when the input is not a valid national ID.
      */
     public static function from(string $input): self
     {
         $result = self::validate($input);
         if (!$result->isValid()) {
-            throw AbzarValidationException::fromResult($result);
+            throw ValidationException::fromResult($result);
         }
 
         /** @var NationalIdDetails $detail */

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Eram\Abzar;
+namespace Eram\Abzar\Exception;
 
 use Eram\Abzar\Validation\ErrorCode;
 

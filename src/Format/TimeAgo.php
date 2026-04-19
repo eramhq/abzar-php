@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Format;
 
-use Eram\Abzar\AbzarFormatException;
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Validation\ErrorCode;
 
 final class TimeAgo
@@ -88,7 +88,7 @@ final class TimeAgo
         $parsed = strtotime($timestamp);
 
         if ($parsed === false) {
-            throw AbzarFormatException::forInput(ErrorCode::TIME_AGO_INVALID_TIMESTAMP, $timestamp);
+            throw FormatException::forInput(ErrorCode::TIME_AGO_INVALID_TIMESTAMP, $timestamp);
         }
 
         return $parsed;

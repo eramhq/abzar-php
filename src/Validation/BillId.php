@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
-use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Internal\ErrorInput;
 use Eram\Abzar\Validation\Details\BillIdDetails;
 
@@ -32,13 +32,13 @@ final class BillId implements \JsonSerializable, \Stringable
     }
 
     /**
-     * @throws AbzarValidationException
+     * @throws ValidationException
      */
     public static function from(string $billId, string $paymentId): self
     {
         $result = self::validatePair($billId, $paymentId);
         if (!$result->isValid()) {
-            throw AbzarValidationException::fromResult($result);
+            throw ValidationException::fromResult($result);
         }
 
         /** @var BillIdDetails $detail */

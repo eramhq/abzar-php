@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Format;
 
-use Eram\Abzar\AbzarFormatException;
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Exception\FormatException;
 use Eram\Abzar\Validation\ErrorCode;
 
 final class OrdinalNumber
@@ -17,7 +17,7 @@ final class OrdinalNumber
     public static function toWord(int $n): string
     {
         if ($n < 1) {
-            throw AbzarFormatException::forInput(ErrorCode::ORDINAL_NUMBER_NON_POSITIVE, (string) $n);
+            throw FormatException::forInput(ErrorCode::ORDINAL_NUMBER_NON_POSITIVE, (string) $n);
         }
 
         $word = NumberToWords::convert($n);
@@ -28,7 +28,7 @@ final class OrdinalNumber
     public static function toShort(int $n, string $digits = 'persian', string $suffix = 'ام'): string
     {
         if ($n < 1) {
-            throw AbzarFormatException::forInput(ErrorCode::ORDINAL_NUMBER_NON_POSITIVE, (string) $n);
+            throw FormatException::forInput(ErrorCode::ORDINAL_NUMBER_NON_POSITIVE, (string) $n);
         }
 
         $str = (string) $n;
@@ -45,7 +45,7 @@ final class OrdinalNumber
         $word = trim($persianWord);
 
         if ($word === '') {
-            throw AbzarFormatException::forInput(ErrorCode::ORDINAL_NUMBER_EMPTY_INPUT, $persianWord);
+            throw FormatException::forInput(ErrorCode::ORDINAL_NUMBER_EMPTY_INPUT, $persianWord);
         }
 
         if (str_ends_with($word, 'سه')) {

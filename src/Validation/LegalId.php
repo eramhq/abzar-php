@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
-use Eram\Abzar\AbzarValidationException;
 use Eram\Abzar\Digits\DigitConverter;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Validation\Details\LegalIdDetails;
 
 final class LegalId implements \JsonSerializable, \Stringable
@@ -18,13 +18,13 @@ final class LegalId implements \JsonSerializable, \Stringable
     }
 
     /**
-     * @throws AbzarValidationException
+     * @throws ValidationException
      */
     public static function from(string $input): self
     {
         $result = self::validate($input);
         if (!$result->isValid()) {
-            throw AbzarValidationException::fromResult($result);
+            throw ValidationException::fromResult($result);
         }
 
         /** @var LegalIdDetails $detail */

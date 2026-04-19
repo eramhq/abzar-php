@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Validation;
 
-use Eram\Abzar\AbzarValidationException;
+use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Validation\Details\PlateNumberDetails;
 use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\PlateNumber;
@@ -89,7 +89,7 @@ final class PlateNumberTest extends TestCase
 
     public function test_from_throws_on_invalid(): void
     {
-        $this->expectException(AbzarValidationException::class);
+        $this->expectException(ValidationException::class);
         PlateNumber::from('not a plate');
     }
 
@@ -102,8 +102,8 @@ final class PlateNumberTest extends TestCase
     {
         try {
             PlateNumber::from('12ح345-11');
-            $this->fail('expected AbzarValidationException for unknown letter');
-        } catch (AbzarValidationException $e) {
+            $this->fail('expected ValidationException for unknown letter');
+        } catch (ValidationException $e) {
             $this->assertSame(ErrorCode::PLATE_NUMBER_UNKNOWN_LETTER, $e->errorCode());
         }
     }
@@ -117,8 +117,8 @@ final class PlateNumberTest extends TestCase
     {
         try {
             PlateNumber::from('12ب345-99');
-            $this->fail('expected AbzarValidationException for unknown city code');
-        } catch (AbzarValidationException $e) {
+            $this->fail('expected ValidationException for unknown city code');
+        } catch (ValidationException $e) {
             $this->assertSame(ErrorCode::PLATE_NUMBER_UNKNOWN_CITY_CODE, $e->errorCode());
         }
     }
