@@ -124,13 +124,6 @@ final class AmountTest extends TestCase
         $this->assertSame(15_000, $added->inToman());
     }
 
-    public function test_to_string_returns_rials(): void
-    {
-        $amount = Amount::fromToman(50_000);
-
-        $this->assertSame('500000', (string) $amount);
-    }
-
     public function test_json_serializes_to_rials_shape(): void
     {
         $amount = Amount::fromToman(50_000);

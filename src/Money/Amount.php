@@ -89,11 +89,6 @@ final class Amount implements \JsonSerializable
         return $this->rials < $other->rials;
     }
 
-    public function __toString(): string
-    {
-        return (string) $this->rials;
-    }
-
     /**
      * @return array{rials: int}
      */

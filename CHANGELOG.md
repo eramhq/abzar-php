@@ -8,7 +8,7 @@ All notable changes to this project are documented in this file. The format is l
 
 ### Added
 
-- **`Eram\Abzar\Money\Amount`** — immutable value object for Iranian currency amounts. Stored internally as Rials to eliminate the Rial/Toman ×10 confusion. Factories `::fromRials()` / `::fromToman()`; accessors `->inRials()` / `->inToman()`; arithmetic `->add()` / `->subtract()`; comparisons `->equals()` / `->greaterThan()` / `->lessThan()` / `->isZero()`; `Stringable` returns rials. Negative construction throws `FormatException` with `ErrorCode::AMOUNT_NEGATIVE`. Pair with `Money\Currency` for display formatting. Ported from `eram/pardakht` and `eram/ersal` to end their duplicated copies.
+- **`Eram\Abzar\Money\Amount`** — immutable value object for Iranian currency amounts. Stored internally as Rials to eliminate the Rial/Toman ×10 confusion. Factories `::fromRials()` / `::fromToman()`; accessors `->inRials()` / `->inToman()`; arithmetic `->add()` / `->subtract()`; comparisons `->equals()` / `->greaterThan()` / `->lessThan()` / `->isZero()`; `JsonSerializable` emits `{"rials": N}`. Deliberately not `Stringable` — callers must pick `inRials()` / `inToman()` / `Money\Currency::format()` so the unit is always explicit. Negative construction throws `FormatException` with `ErrorCode::AMOUNT_NEGATIVE`. Pair with `Money\Currency` for display formatting. Ported from `eram/pardakht` and `eram/ersal` to end their duplicated copies.
 - `ErrorCode::AMOUNT_NEGATIVE` — emitted when an `Amount` is constructed with a negative rial value.
 
 ### Changed
