@@ -64,6 +64,7 @@ enum ErrorCode: string
     case TIME_AGO_INVALID_TIMESTAMP     = 'TIME_AGO.INVALID_TIMESTAMP';
 
     case AMOUNT_NEGATIVE                = 'AMOUNT.NEGATIVE';
+    case AMOUNT_OVERFLOW                = 'AMOUNT.OVERFLOW';
 
     case ENV_MISSING_EXT_INTL           = 'ENV.MISSING_EXT_INTL';
 
@@ -121,6 +122,7 @@ enum ErrorCode: string
             self::TIME_AGO_INVALID_TIMESTAMP     => 'تاریخ ورودی قابل تبدیل نیست',
 
             self::AMOUNT_NEGATIVE                => 'مبلغ نمی‌تواند منفی باشد',
+            self::AMOUNT_OVERFLOW                => 'مبلغ از حداکثر مقدار قابل نمایش بیشتر است',
 
             self::ENV_MISSING_EXT_INTL           => 'این قابلیت به افزونهٔ ext-intl نیاز دارد',
         };
