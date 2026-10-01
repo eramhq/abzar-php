@@ -24,9 +24,11 @@ final class HalfSpaceFixer
 
     /**
      * Longer suffixes come first so the alternation doesn't match a shorter
-     * prefix of a longer suffix (e.g. `ها` would shadow `هایشان`).
+     * prefix of a longer suffix (e.g. `ها` would shadow `هایشان`). The suffix
+     * must end the word: whitespace, end of text, punctuation, or a closing
+     * bracket / quote.
      */
-    private const SUFFIX_PATTERN = '/(\p{Arabic})\s+(هایشان|هایمان|هایتان|هایی|هایم|هایت|هایش|ترین|تر|ها|اید|اند|ایم|ام|ای)(\s|$|[.,;!?؟،؛])/u';
+    private const SUFFIX_PATTERN = '/(\p{Arabic})\s+(هایشان|هایمان|هایتان|هایی|هایم|هایت|هایش|ترین|تر|ها|اید|اند|ایم|ام|ای)(\s|$|[.,:;!?؟،؛)\]}»"\'])/u';
 
     private function __construct()
     {

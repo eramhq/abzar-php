@@ -11,28 +11,17 @@ use Eram\Abzar\Validation\NationalId;
 use Eram\Abzar\Validation\Operator;
 use Eram\Abzar\Validation\PhoneNumber;
 use Eram\Abzar\Validation\Province;
-use PHPUnit\Framework\TestCase;
 
 /**
- * Contract parity test against the upstream persian-tools JS library.
- *
- * Vectors are lifted from the specs in {@code tests/fixtures/persian-tools/}.
- * Each test skips when the fixture tree hasn't been pulled (`composer fixtures:pull`).
+ * Contract parity for the validators and lookups: national ID, card number,
+ * Sheba, phone number, province and bill ID. The other domains have their own
+ * classes next to this one.
  *
  * The fixtures' MIT LICENSE is vendored alongside the vectors; the {@link test_fixtures_license_is_vendored}
  * assertion blocks accidental removal.
  */
-final class PersianToolsContractTest extends TestCase
+final class PersianToolsContractTest extends PersianToolsFixtureTestCase
 {
-    private const FIXTURES_DIR = __DIR__ . '/../../fixtures/persian-tools';
-
-    protected function setUp(): void
-    {
-        if (!is_file(self::FIXTURES_DIR . '/SHA')) {
-            self::markTestSkipped('persian-tools fixtures not pulled. Run `composer fixtures:pull`.');
-        }
-    }
-
     public function test_fixtures_license_is_vendored(): void
     {
         self::assertFileExists(self::FIXTURES_DIR . '/LICENSE', 'Upstream MIT LICENSE must be vendored alongside fixtures.');

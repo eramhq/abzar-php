@@ -202,4 +202,34 @@ final class WordsToNumberTest extends TestCase
         // Overflow while adding a second big-scale group.
         self::assertNull(WordsToNumber::parse('نه کوینتیلیون و نهصد کوادریلیون'));
     }
+
+    /**
+     * Spellings persian-tools reads (and NumberToWords never emits) that map
+     * to exactly one value.
+     *
+     * @return iterable<string, array{string, int}>
+     */
+    public static function alternateSpellings(): iterable
+    {
+        yield 'colloquial six'          => ['شیش', 6];
+        yield 'colloquial four hundred' => ['چارصد', 400];
+        yield 'billion as billion'      => ['بیلیون', 1_000_000_000];
+        yield 'quadrillion with alef madda' => ['کوآدریلیون', 1_000_000_000_000_000];
+        yield 'in a phrase'             => ['منفی چارصد و شیش', -406];
+        yield 'mixed scales'            => ['دو بیلیون و شیش میلیون', 2_006_000_000];
+    }
+
+    /**
+     * @dataProvider alternateSpellings
+     */
+    public function test_alternate_spellings(string $input, int $expected): void
+    {
+        self::assertSame($expected, WordsToNumber::parse($input));
+    }
+
+    public function test_billion_and_milliard_are_the_same_scale(): void
+    {
+        // Both name 10⁹, so they can't appear in descending order together.
+        self::assertNull(WordsToNumber::parse('یک بیلیون یک میلیارد'));
+    }
 }

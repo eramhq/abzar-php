@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+### Added
+
+- `WordsToNumber::parse()` reads the alternate spellings `شیش` (6), `چارصد` (400), `بیلیون` (10⁹) and `کوآدریلیون` (10¹⁵), so it now parses every cardinal persian-tools' `numberToWords()` writes.
+- Contract tests for legal IDs, number words, formatting and text (`LegalIdContractTest`, `NumberWordsContractTest`, `FormattingContractTest`, `TextContractTest`), with a `divergences()` registry in each that pins every deliberate difference from persian-tools. [docs/en/persian-tools-parity.md](docs/en/persian-tools-parity.md) lists them.
+
+### Fixed
+
+- `HalfSpaceFixer` binds a suffix followed by a closing bracket, quote or colon: `(آبی تر)` → `(آبی‌تر)`. Before, only whitespace, the end of the text and `.,;!?؟،؛` ended a suffix.
+
+### Changed
+
+- `Currency::convert()` drops a redundant integer branch. Output is unchanged.
+- Mutation testing ignores the random `::fake()` generators, and the MSI floor is raised to 88% (was 80) in both `composer mutate` and CI.
+
 ## [0.7.0-beta] — 2026-10-01
 
 Correctness fixes across the lookup data, input cleaning, formatters and HTML handling, plus a consistency pass that makes every validator follow the same rules. **Contains breaking changes:** see [UPGRADE.md](UPGRADE.md) for migration snippets.
