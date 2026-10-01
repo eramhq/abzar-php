@@ -1,5 +1,12 @@
-/.github         export-ignore
-/tests           export-ignore
-/tools           export-ignore
-phpunit.xml.dist export-ignore
-phpstan.neon     export-ignore
+/.github                export-ignore
+/tests                  export-ignore
+/tools                  export-ignore
+/phpunit.xml.dist       export-ignore
+/phpstan.neon           export-ignore
+/composer.lock          export-ignore
+/infection.json5        export-ignore
+/phpbench.json          export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/.editorconfig          export-ignore
+/.gitignore             export-ignore
+/.gitattributes         export-ignore

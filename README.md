@@ -6,7 +6,7 @@ Abzar (`ابزار`, "tool") is a pure-PHP library covering the small but opinio
 
 No framework coupling, no runtime extensions beyond stock PHP, no transitive Composer dependencies.
 
-> **Messages and error codes.** Persian error messages are byte-identical to the upstream data. For language-neutral error handling, every validator failure also emits a machine-readable `ErrorCode`:
+> **Messages and error codes.** Every validator failure carries a human-facing Persian message and a machine-readable `ErrorCode`. Messages may be reworded between minor releases (see the [API stability policy](docs/en/api-stability.md)), so branch on codes, not strings:
 >
 > ```php
 > use Eram\Abzar\Validation\{CardNumber, ErrorCode};
@@ -54,7 +54,7 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 ## Install
 
 ```bash
-composer require eram/abzar:^0.5@beta
+composer require eram/abzar:^0.7@beta
 ```
 
 Requires PHP 8.1+. No runtime extensions beyond `mbstring`.
@@ -123,7 +123,15 @@ $price = Amount::fromToman(50_000);
 $price->inRials();                                 // 500000  (no ×10 confusion)
 Currency::format($price->inToman());               // '۵۰،۰۰۰ تومان'
 $price->add(Amount::fromToman(5_000))->inToman();  // 55000
+
+$line  = $price->times(3);                         // 150,000 toman
+$vat   = $line->percentOf(9);                      // 9% VAT, banker's rounding
+$line->add($vat)->inToman();                       // 163500
+$line->compareTo($price);                          // 1  (usort-ready)
+usort($amounts, fn (Amount $a, Amount $b) => $a->compareTo($b));
 ```
+
+`Amount` never goes negative and traps `PHP_INT_MAX` overflow; both raise an exception carrying `ErrorCode::AMOUNT_NEGATIVE` / `AMOUNT_OVERFLOW`. See [Currency](docs/en/currency.md) for the full method reference.
 
 ### Text
 
@@ -153,7 +161,8 @@ DigitConverter::toPersian('Version 1.2');          // 'Version ۱.۲'
 DigitConverter::toEnglish('نسخه ۱.۲');             // 'نسخه 1.2'
 DigitConverter::toArabic('1234');                  // '١٢٣٤'
 
-// HTML-aware: leaves tags, scripts, styles, and attributes alone
+// HTML-aware: leaves tags, attributes, entities (&#8204;), comments, and
+// <script> / <style> / <pre> / <code> / <textarea> content alone
 DigitConverter::convertContent('<a href="page-5">Item 5</a>');
 // '<a href="page-5">Item ۵</a>'
 ```
@@ -223,7 +232,7 @@ Longer-form docs live under [`docs/en/`](docs/en/README.md): per-class reference
 
 Abzar deliberately stays narrow. Two companion packages cover adjacent ground:
 
-- [`eramhq/daynum`](https://github.com/eramhq/daynum) — jalali / shamsi calendar utilities. Abzar does **not** ship calendar logic; install daynum for anything date-related.
+- [`eram/daynum`](https://github.com/eramhq/daynum) — jalali / shamsi calendar utilities. Abzar does **not** ship calendar logic; install daynum for anything date-related.
 - [`eramhq/persian-kit`](https://github.com/eramhq/persian-kit) — WordPress plugin that wires abzar into WP hooks (`the_content`, `sanitize_title`, `pre_get_posts`), adds admin tools for one-shot database normalization, and exposes shortcodes / blocks.
 
 See [`docs/en/related.md`](docs/en/related.md) for a longer comparison.
@@ -248,7 +257,7 @@ Abzar stays framework-agnostic. Integration recipes for Laravel FormRequest, Sym
 
 ## Stability
 
-Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.5@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
+Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.7@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
 
 ## License
 

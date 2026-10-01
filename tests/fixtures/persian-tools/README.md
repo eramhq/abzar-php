@@ -1,19 +1,19 @@
 # persian-tools JS fixtures
 
-This directory holds a copy of the upstream [persian-tools](https://github.com/persian-tools/persian-tools) JS test fixtures, used by the abzar contract tests to assert parity on the Luhn / mod-97 / national-id checksums and operator lookups.
+This directory holds a vendored copy of the upstream [persian-tools](https://github.com/persian-tools/persian-tools) JS test suites (`test/*.spec.ts`), the source of the test vectors hand-lifted into `tests/Unit/Fixtures/PersianToolsContractTest.php` (each data provider cites its spec file and line) to assert parity on the Luhn / mod-97 / national-ID checksums, bill IDs, operator and bank lookups.
 
-## Pulling fixtures
+The files are committed, so `composer test` runs the contract tests without network access. Only the specs are vendored — the upstream `src/` tables (e.g. the numberplate dataset behind `src/Data/PlateCodes.php`) are not; their provenance is recorded in each data file's header.
 
-The fixtures are **not vendored** — the checkout is deliberate. Run:
+## Refreshing
 
 ```
 composer fixtures:pull
 ```
 
-…to sync `tests/fixtures/persian-tools/` from the pinned upstream SHA. The SHA lives in `tools/fixtures/pull.sh`. Bumping it is a deliberate PR.
+…re-syncs this directory from the upstream SHA pinned in `tools/fixtures/SHA` (the copy here, `SHA`, records what is currently vendored). Bumping the pin is a deliberate PR: re-run the suite and record any intentional divergence in the contract test.
 
-Contract tests skip themselves when this directory is empty, so local development without the fixtures still runs a green `composer test`.
+The contract tests skip themselves when `SHA` is missing, i.e. when the directory has been emptied.
 
 ## License
 
-The upstream project is MIT. When the fixtures are pulled in, the upstream `LICENSE` is copied alongside them at `tests/fixtures/persian-tools/LICENSE`.
+The upstream project is MIT. Its `LICENSE` is copied alongside the specs at `tests/fixtures/persian-tools/LICENSE`.

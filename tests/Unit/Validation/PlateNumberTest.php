@@ -74,7 +74,7 @@ final class PlateNumberTest extends TestCase
 
     public function test_unknown_city_code_valid_with_warning(): void
     {
-        $result = PlateNumber::validate('12ب345-99');
+        $result = PlateNumber::validate('12ب345-80');
         $this->assertTrue($result->isValid());
         $this->assertSame([ErrorCode::PLATE_NUMBER_UNKNOWN_CITY_CODE], $result->warningCodes());
     }
@@ -116,7 +116,7 @@ final class PlateNumberTest extends TestCase
     public function test_from_throws_on_unknown_city_code(): void
     {
         try {
-            PlateNumber::from('12ب345-99');
+            PlateNumber::from('12ب345-80');
             $this->fail('expected ValidationException for unknown city code');
         } catch (ValidationException $e) {
             $this->assertSame(ErrorCode::PLATE_NUMBER_UNKNOWN_CITY_CODE, $e->errorCode());
@@ -125,7 +125,7 @@ final class PlateNumberTest extends TestCase
 
     public function test_try_from_null_on_unknown_city_code(): void
     {
-        $this->assertNull(PlateNumber::tryFrom('12ب345-99'));
+        $this->assertNull(PlateNumber::tryFrom('12ب345-80'));
     }
 
     public function test_stringable_canonical_form(): void
@@ -160,5 +160,105 @@ final class PlateNumberTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         PlateNumber::fake(PlateType::OTHER);
+    }
+
+    /**
+     * B1 — city codes follow the persian-tools numberplate table.
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function cityCodeProvinces(): iterable
+    {
+        yield '77 tehran'      => ['77', 'تهران'];
+        yield '10 tehran'      => ['10', 'تهران'];
+        yield '13 isfahan'     => ['13', 'اصفهان'];
+        yield '14 khuzestan'   => ['14', 'خوزستان'];
+        yield '47 markazi'     => ['47', 'مرکزی'];
+        yield '49 kohgiluyeh'  => ['49', 'کهگیلویه و بویراحمد'];
+        yield '68 alborz'      => ['68', 'البرز'];
+        yield '91 ardabil'     => ['91', 'اردبیل'];
+        yield '98 ilam'        => ['98', 'ایلام'];
+    }
+
+    /**
+     * @dataProvider cityCodeProvinces
+     */
+    public function test_city_code_resolves_to_province(string $code, string $province): void
+    {
+        $result = PlateNumber::validate('12ب345-' . $code);
+        $this->assertTrue($result->isStrictlyValid());
+        $detail = $result->detail();
+        $this->assertInstanceOf(PlateNumberDetails::class, $detail);
+        $this->assertSame($province, $detail->province);
+        $this->assertSame([$province], $detail->provinces);
+    }
+
+    public function test_shared_city_code_lists_every_province(): void
+    {
+        // 21 / 30 / 38 / 78 were issued in Tehran province before Alborz split off.
+        $detail = PlateNumber::validate('12ب345-21')->detail();
+        $this->assertInstanceOf(PlateNumberDetails::class, $detail);
+        $this->assertSame(['تهران', 'البرز'], $detail->provinces);
+        $this->assertSame('تهران - البرز', $detail->province);
+    }
+
+    /**
+     * B2 — letter → category follows the persian-tools numberplate table.
+     *
+     * @return iterable<string, array{string, PlateType}>
+     */
+    public static function letterTypes(): iterable
+    {
+        yield 'alef government'   => ['الف', PlateType::GOVERNMENT];
+        yield 'be private'        => ['ب', PlateType::PRIVATE];
+        yield 'pe police'         => ['پ', PlateType::POLICE];
+        yield 'te taxi'           => ['ت', PlateType::TAXI];
+        yield 'se military'       => ['ث', PlateType::MILITARY];
+        yield 'ze military'       => ['ز', PlateType::MILITARY];
+        yield 'zhe disabled'      => ['ژ', PlateType::DISABLED];
+        yield 'shin military'     => ['ش', PlateType::MILITARY];
+        yield 'ta private'        => ['ط', PlateType::PRIVATE];
+        yield 'ein public'        => ['ع', PlateType::PUBLIC];
+        yield 'fe military'       => ['ف', PlateType::MILITARY];
+        yield 'kaf agricultural'  => ['ک', PlateType::AGRICULTURAL];
+        yield 'gaf temporary'     => ['گ', PlateType::TEMPORARY];
+        yield 'mim private'       => ['م', PlateType::PRIVATE];
+        yield 'D diplomatic'      => ['D', PlateType::DIPLOMATIC];
+        yield 'S diplomatic'      => ['S', PlateType::DIPLOMATIC];
+    }
+
+    /**
+     * @dataProvider letterTypes
+     */
+    public function test_letter_resolves_to_type(string $letter, PlateType $type): void
+    {
+        $result = PlateNumber::validate('12' . $letter . '345-11');
+        $this->assertTrue($result->isStrictlyValid());
+        $detail = $result->detail();
+        $this->assertInstanceOf(PlateNumberDetails::class, $detail);
+        $this->assertSame($type, $detail->type);
+    }
+
+    public function test_arabic_yeh_and_kaf_letters_are_normalized(): void
+    {
+        // B9 — ي (U+064A) and ك (U+0643) come in from Arabic keyboards.
+        $yeh = PlateNumber::validate("12\u{064A}345-11");
+        $this->assertTrue($yeh->isStrictlyValid());
+        $detail = $yeh->detail();
+        $this->assertInstanceOf(PlateNumberDetails::class, $detail);
+        $this->assertSame('ی', $detail->letter);
+        $this->assertSame(PlateType::PRIVATE, $detail->type);
+
+        $kaf = PlateNumber::validate("12\u{0643}345-11");
+        $detail = $kaf->detail();
+        $this->assertInstanceOf(PlateNumberDetails::class, $detail);
+        $this->assertSame('ک', $detail->letter);
+        $this->assertSame(PlateType::AGRICULTURAL, $detail->type);
+    }
+
+    public function test_city_code_tolerates_rtl_marks_and_nbsp(): void
+    {
+        $result = PlateNumber::validate("12\u{00A0}ب\u{200F}345\u{2013}77");
+        $this->assertTrue($result->isStrictlyValid());
     }
 }

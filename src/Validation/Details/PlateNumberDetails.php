@@ -9,8 +9,13 @@ use Eram\Abzar\Validation\PlateType;
 /**
  * Parsed components of an Iranian license plate. The canonical shape is
  * {@code NN[letter]NNN-NN}: {@code twoDigit} + {@code letter} + {@code threeDigit}
- * + {@code cityCode}. {@code type} is the letter-derived category; {@code province}
- * is the city-code lookup result ({@code null} when the code isn't in the table).
+ * + {@code cityCode}. {@code type} is the letter-derived category.
+ *
+ * {@code provinces} lists every province the city code was issued in — usually
+ * one, but codes issued before a province split (e.g. 21 → Tehran + Alborz)
+ * list each successor. {@code province} is the display form: the single name,
+ * the names joined with {@code " - "}, or {@code null} when the code isn't in
+ * the table.
  */
 final class PlateNumberDetails implements ValidationDetail
 {
@@ -21,6 +26,8 @@ final class PlateNumberDetails implements ValidationDetail
         public readonly string $cityCode,
         public readonly PlateType $type,
         public readonly ?string $province,
+        /** @var list<string> */
+        public readonly array $provinces = [],
     ) {
     }
 
@@ -31,7 +38,8 @@ final class PlateNumberDetails implements ValidationDetail
      *     three_digit: string,
      *     city_code: string,
      *     type: string,
-     *     province: ?string
+     *     province: ?string,
+     *     provinces: list<string>
      * }
      */
     public function jsonSerialize(): array
@@ -43,6 +51,7 @@ final class PlateNumberDetails implements ValidationDetail
             'city_code'   => $this->cityCode,
             'type'        => $this->type->value,
             'province'    => $this->province,
+            'provinces'   => $this->provinces,
         ];
     }
 }

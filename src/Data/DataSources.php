@@ -13,7 +13,7 @@ final class DataSources
     public const SOURCE = 'persian-tools@5.0.0-beta.0';
 
     /** Date of the last data refresh (YYYY-MM-DD, UTC). */
-    public const UPDATED_AT = '2026-04-16';
+    public const UPDATED_AT = '2026-10-01';
 
     private function __construct()
     {
@@ -62,6 +62,30 @@ final class DataSources
     {
         /** @var array<string, array{province: string, city: string}> */
         return self::load('PhoneAreaCodes.php');
+    }
+
+    /**
+     * Car-plate two-digit city code → Persian province name(s). Keys are
+     * numeric strings, which PHP stores as ints; look up with either. Codes issued
+     * before a province split map to every successor province.
+     *
+     * @return array<int|string, non-empty-list<string>>
+     */
+    public static function plateCodes(): array
+    {
+        /** @var array<int|string, non-empty-list<string>> */
+        return self::load('PlateCodes.php');
+    }
+
+    /**
+     * Car-plate middle letter → {@see \Eram\Abzar\Validation\PlateType} backing value.
+     *
+     * @return array<string, string>
+     */
+    public static function plateLetters(): array
+    {
+        /** @var array<string, string> */
+        return self::load('PlateLetters.php');
     }
 
     /**

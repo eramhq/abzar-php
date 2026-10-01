@@ -16,6 +16,12 @@ namespace Eram\Abzar\Format;
  */
 final class WordsToNumber
 {
+    private const RANK_ONES     = 0;
+    private const RANK_TEENS    = 1;
+    private const RANK_TENS     = 2;
+    private const RANK_HUNDREDS = 3;
+    private const RANK_SCALE    = 4;
+
     private function __construct()
     {
     }
@@ -109,37 +115,90 @@ final class WordsToNumber
     }
 
     /**
+     * Sum a token stream left to right. Within each sub-thousand group the
+     * units must step down in rank — hundreds, then tens, then ones, or a
+     * single teen — so "دو سه" or "بیست سی" are rejected rather than summed.
+     * {@code هزار} multiplies the group in front of it; larger scales must
+     * appear in decreasing order ("هزار میلیارد" is allowed, "یک میلیون دو
+     * میلیون" isn't). Returns null on any rank violation or when the value
+     * would exceed {@code PHP_INT_MAX}.
+     *
      * @param list<string> $tokens
      */
     private static function sumTokens(array $tokens): ?int
     {
-        $lookup  = self::lookup();
-        $total   = 0;
-        $segment = 0;
+        $lookup    = self::lookup();
+        $total     = 0;      // sum of completed big-scale (≥ million) groups
+        $thousands = null;   // current group's "N هزار" part, once seen
+        $small     = 0;      // current sub-thousand accumulator
+        $ceiling   = self::RANK_SCALE;
+        $lastScale = PHP_INT_MAX;
+        $prevOnes  = false;
 
         foreach ($tokens as $token) {
             if (!isset($lookup[$token])) {
                 return null;
             }
-            [$kind, $value] = $lookup[$token];
+            [$rank, $value] = $lookup[$token];
 
-            if ($kind === 'scale') {
+            if ($rank === self::RANK_SCALE) {
                 if ($value === 1000) {
-                    $segment = max($segment, 1) * 1000;
+                    if ($thousands !== null) {
+                        return null;
+                    }
+                    $thousands = max($small, 1) * 1000;
                 } else {
-                    $total  += max($segment, 1) * $value;
-                    $segment = 0;
+                    if ($value >= $lastScale) {
+                        return null;
+                    }
+                    $group = ($thousands ?? 0) + $small;
+                    $group = $group === 0 ? 1 : $group;
+                    if ($group > intdiv(PHP_INT_MAX, $value)) {
+                        return null;
+                    }
+                    $product = $group * $value;
+                    if ($total > PHP_INT_MAX - $product) {
+                        return null;
+                    }
+                    $total    += $product;
+                    $lastScale = $value;
+                    $thousands = null;
                 }
-            } else {
-                $segment += $value;
+                $small    = 0;
+                $ceiling  = self::RANK_SCALE;
+                $prevOnes = false;
+                continue;
             }
+
+            // Colloquial split hundreds: "سه صد" = 300, "یک صد" = 100.
+            if ($token === 'صد' && $prevOnes && $small < 10) {
+                $small    *= 100;
+                $ceiling   = self::RANK_HUNDREDS;
+                $prevOnes  = false;
+                continue;
+            }
+
+            if ($rank >= $ceiling) {
+                return null;
+            }
+            $small   += $value;
+            // After hundreds: tens / teens / ones may follow. After tens: only
+            // ones. After a teen or a ones digit: nothing until the next scale.
+            $ceiling  = match ($rank) {
+                self::RANK_HUNDREDS => self::RANK_HUNDREDS,
+                self::RANK_TENS     => self::RANK_TEENS,
+                default             => self::RANK_ONES,
+            };
+            $prevOnes = $rank === self::RANK_ONES;
         }
 
-        return $total + $segment;
+        $rest = ($thousands ?? 0) + $small;
+
+        return $total > PHP_INT_MAX - $rest ? null : $total + $rest;
     }
 
     /**
-     * @return array<string, array{0: 'unit'|'scale', 1: int}>
+     * @return array<string, array{0: int, 1: int}> token → [rank, value]
      */
     private static function lookup(): array
     {
@@ -152,25 +211,25 @@ final class WordsToNumber
 
         foreach (PersianNumerals::ONES as $i => $word) {
             if ($word !== '') {
-                $map[$word] = ['unit', $i];
+                $map[$word] = [self::RANK_ONES, $i];
             }
         }
         foreach (PersianNumerals::TEENS as $i => $word) {
-            $map[$word] = ['unit', $i + 10];
+            $map[$word] = [self::RANK_TEENS, $i + 10];
         }
         foreach (PersianNumerals::TENS as $i => $word) {
             if ($word !== '') {
-                $map[$word] = ['unit', $i * 10];
+                $map[$word] = [self::RANK_TENS, $i * 10];
             }
         }
         foreach (PersianNumerals::HUNDREDS as $i => $word) {
             if ($word !== '') {
-                $map[$word] = ['unit', $i * 100];
+                $map[$word] = [self::RANK_HUNDREDS, $i * 100];
             }
         }
         // Common alternate forms.
-        $map['صد']   = ['unit', 100];
-        $map['هزار'] = ['scale', 1000];
+        $map['صد']   = [self::RANK_HUNDREDS, 100];
+        $map['هزار'] = [self::RANK_SCALE, 1000];
 
         $scales = [
             2 => 1_000_000,
@@ -180,7 +239,7 @@ final class WordsToNumber
             6 => 1_000_000_000_000_000_000,
         ];
         foreach ($scales as $i => $multiplier) {
-            $map[PersianNumerals::SCALES[$i]] = ['scale', $multiplier];
+            $map[PersianNumerals::SCALES[$i]] = [self::RANK_SCALE, $multiplier];
         }
 
         return $map;

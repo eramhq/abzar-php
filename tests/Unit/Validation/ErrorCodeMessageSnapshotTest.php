@@ -46,10 +46,19 @@ final class ErrorCodeMessageSnapshotTest extends TestCase
         yield 'legal-id middle zeros'     => [ErrorCode::LEGAL_ID_MIDDLE_ZEROS,         'شناسه حقوقی نامعتبر است'];
         yield 'legal-id checksum'         => [ErrorCode::LEGAL_ID_INVALID_CHECKSUM,     'شناسه حقوقی نامعتبر است'];
 
+        yield 'postal-code empty'         => [ErrorCode::POSTAL_CODE_EMPTY,             'کد پستی نمی‌تواند خالی باشد'];
+        yield 'postal-code length'        => [ErrorCode::POSTAL_CODE_WRONG_LENGTH,      'کد پستی باید ۱۰ رقم باشد'];
+        yield 'postal-code pattern'       => [ErrorCode::POSTAL_CODE_INVALID_PATTERN,   'کد پستی نامعتبر است'];
+
+        yield 'bill-id empty'             => [ErrorCode::BILL_ID_EMPTY,                 'شناسه قبض نمی‌تواند خالی باشد'];
+        yield 'bill-id length'            => [ErrorCode::BILL_ID_WRONG_LENGTH,          'شناسه قبض باید حداقل ۶ رقم باشد'];
+        yield 'bill-id checksum'          => [ErrorCode::BILL_ID_INVALID_CHECKSUM,      'شناسه قبض نامعتبر است'];
+        yield 'bill-id payment mismatch'  => [ErrorCode::BILL_ID_PAYMENT_MISMATCH,      'شناسه پرداخت با شناسه قبض مطابقت ندارد'];
         yield 'bill-id payment empty'     => [ErrorCode::BILL_ID_PAYMENT_EMPTY,         'شناسه پرداخت نمی‌تواند خالی باشد'];
         yield 'bill-id payment length'    => [ErrorCode::BILL_ID_PAYMENT_WRONG_LENGTH,  'شناسه پرداخت باید حداقل ۶ رقم باشد'];
 
         yield 'number formatter invalid'  => [ErrorCode::NUMBER_FORMATTER_INVALID,      'مقدار ورودی عددی معتبر نیست'];
+        yield 'number out of range'       => [ErrorCode::NUMBER_TO_WORDS_OUT_OF_RANGE,  'مقدار ورودی برای تبدیل به حروف خارج از محدوده پشتیبانی شده است'];
         yield 'number precision loss'     => [ErrorCode::NUMBER_TO_WORDS_PRECISION_LOSS, 'دقت عدد اعشاری از محدوده شناور PHP بیشتر است؛ مقدار را به‌صورت رشته ارسال کنید'];
         yield 'ordinal non positive'      => [ErrorCode::ORDINAL_NUMBER_NON_POSITIVE,   'عدد ترتیبی باید بزرگ‌تر از صفر باشد'];
         yield 'ordinal empty input'       => [ErrorCode::ORDINAL_NUMBER_EMPTY_INPUT,    'ورودی نمی‌تواند خالی باشد'];
@@ -60,6 +69,11 @@ final class ErrorCodeMessageSnapshotTest extends TestCase
         yield 'plate unknown letter'      => [ErrorCode::PLATE_NUMBER_UNKNOWN_LETTER,   'حرف میانی پلاک شناسایی نشد'];
         yield 'plate unknown city'        => [ErrorCode::PLATE_NUMBER_UNKNOWN_CITY_CODE, 'کد شهر پلاک شناسایی نشد'];
 
+        yield 'amount negative'           => [ErrorCode::AMOUNT_NEGATIVE,               'مبلغ نمی‌تواند منفی باشد'];
+        yield 'amount overflow'           => [ErrorCode::AMOUNT_OVERFLOW,               'مبلغ از حداکثر مقدار قابل نمایش بیشتر است'];
+
+        yield 'html segmentation failed'  => [ErrorCode::HTML_SEGMENTATION_FAILED,      'پردازش متن HTML ناموفق بود'];
+
         yield 'env missing ext-intl'      => [ErrorCode::ENV_MISSING_EXT_INTL,          'این قابلیت به افزونهٔ ext-intl نیاز دارد'];
     }
 
@@ -69,6 +83,21 @@ final class ErrorCodeMessageSnapshotTest extends TestCase
     public function test_message(ErrorCode $code, string $expected): void
     {
         self::assertSame($expected, $code->message());
+    }
+
+    public function test_every_case_is_snapshotted(): void
+    {
+        $covered = [];
+        foreach (self::snapshots() as [$code]) {
+            $covered[$code->name] = true;
+        }
+
+        $missing = array_values(array_filter(
+            array_map(static fn (ErrorCode $c): string => $c->name, ErrorCode::cases()),
+            static fn (string $name): bool => !isset($covered[$name]),
+        ));
+
+        self::assertSame([], $missing, 'add a snapshot for every new ErrorCode');
     }
 
     public function test_every_case_has_a_message(): void

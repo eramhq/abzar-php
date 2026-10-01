@@ -14,11 +14,23 @@ final class NumberFormatter
     {
     }
 
+    /**
+     * Group the integer part in thousands. String input may carry Persian /
+     * Arabic digits, existing grouping ({@code ,} {@code ،} {@code ٬} or any
+     * whitespace — including NBSP), the Arabic decimal separator {@code ٫},
+     * and a leading {@code +}; so the output of {@see \Eram\Abzar\Money\Currency::format()}
+     * round-trips.
+     *
+     * @throws FormatException when the input isn't a plain decimal number.
+     */
     public static function withSeparators(int|float|string $number, string $separator = ','): string
     {
         if (is_string($number)) {
-            $number = DigitConverter::toEnglish($number);
-            $number = str_replace([',', '٬'], '', $number);
+            $number = str_replace('٫', '.', DigitConverter::toEnglish(trim($number)));
+            $number = preg_replace('/[\s,،٬]/u', '', $number) ?? $number;
+            if (preg_match('/^\+\d/', $number)) {
+                $number = substr($number, 1);
+            }
         }
 
         $numberStr = (string) $number;

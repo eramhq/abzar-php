@@ -4,6 +4,45 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+## [0.7.0-beta] — 2026-10-01
+
+Correctness and hygiene only — no API removals; the behaviour changes below are bug fixes.
+
+### Added
+
+- **`Amount` arithmetic and comparison API** (shipped on `main` after 0.6.0-beta, previously unlisted): `times(int $qty)`, `percentOf(int|float $pct, int $mode = PHP_ROUND_HALF_EVEN)` (banker's rounding by default), `greaterThanOrEqual()`, `lessThanOrEqual()`, `compareTo()` (`usort`-ready). `fromToman()`, `add()` and `times()` trap `PHP_INT_MAX` overflow with the new `ErrorCode::AMOUNT_OVERFLOW`; `fromToman()` also rejects negatives explicitly instead of leaking a `TypeError` for `PHP_INT_MIN`.
+- `Province::ALBORZ` (`البرز`).
+- `PlateType::TEMPORARY` (`گ` — گذر موقت).
+- `PlateNumberDetails::$provinces` (`list<string>`, also in `jsonSerialize()` as `provinces`) — every province a plate city code was issued in. Codes issued before a province split list each successor (e.g. `21` → `['تهران', 'البرز']`); `$province` then holds the names joined with ` - `.
+- `DataSources::plateCodes()` / `DataSources::plateLetters()` — the plate tables now live in `src/Data/PlateCodes.php` / `src/Data/PlateLetters.php` like every other lookup table.
+- `ErrorCode::HTML_SEGMENTATION_FAILED` — raised (as `FormatException`) by `HtmlSegmenter::transformText()` and therefore `DigitConverter::convertContent()` / `CharNormalizer::normalizeContent()` when PCRE cannot segment the input.
+- CI: PHP 8.5 in the test and release matrices, `composer validate --strict`, read-only default token permissions, a per-ref concurrency group, a composer cache keyed on `composer.lock`, and a PHP 8.1 job without `ext-intl`.
+
+### Fixed
+
+- **Plate city codes** rebuilt from the persian-tools numberplate dataset, cross-checked against fa.wikipedia. The old table was wrong for most codes (e.g. `77` resolved to Khuzestan; it is Tehran) and missed dozens of real ones. 88 codes are now mapped (was 47). Deviations from upstream are documented in the data file header.
+- **Plate letter categories** corrected: `الف` is government (was private), `پ` police, `ث` / `ز` / `ش` / `ف` military, `ژ` disabled, `ع` public transport, `گ` temporary, `ط` / `م` private. `PlateType::GOVERNMENT_CIV` and `PlateType::RENTAL` no longer have a letter mapped and are `@deprecated`.
+- Plates typed with Arabic `ي` / `ك` are folded to Persian `ی` / `ک` before the letter lookup instead of being reported as an unknown letter.
+- `Iban` results for bank code `070` (Resalat) now resolve via `bankEnum()` to `Bank::RESALAT`; the table name was a spelling `Bank::fromPersian()` didn't know. `بانک قرض الحسنه رسالت` is also accepted as an alias.
+- Province name `کهگیلویه و بویراحمد` corrected (was `کهکیلویه…`) in every table; the old spelling still resolves through `Province::fromPersian()`.
+- Area code `026` and national-ID prefixes for Karaj, Savojbolagh, Taleghan and Nazarabad now resolve to Alborz instead of Tehran.
+- **Pasted input**: every validator now strips NBSP / narrow NBSP, ZWNJ / ZWJ, LRM / RLM / ALM, bidi embeddings and isolates, BOM, soft hyphen, and Unicode dashes / minus (`U+2010`–`U+2015`, `U+2212`), so IDs copied from phones and RTL chat apps validate. `Iban` and `LegalId` now share this input cleaning (and accept dash-grouped input).
+- `NumberFormatter::withSeparators()` accepts its own sibling's output: `،` / `٬` grouping, the Arabic decimal separator `٫`, a leading `+`, and space / NBSP grouping — so `withSeparators(Currency::format($n, withUnit: false))` round-trips.
+- `WordsToNumber::parse()` returns `null` instead of throwing `TypeError` past `PHP_INT_MAX` (e.g. `ده کوینتیلیون`), and rejects sequences that don't form a number (`دو سه`, `بیست سی`, `یک میلیون دو میلیون`) instead of summing them. Colloquial split hundreds (`سه صد`, `یک صد`) now parse as 300 / 100 (was 103 / 101).
+- `DigitConverter::convertContent()` / `CharNormalizer::normalizeContent()` no longer corrupt character references (`&#8204;` became `&#۸۲۰۴;`) and leave `<pre>`, `<code>`, `<textarea>` content alone alongside `<script>` / `<style>`. A literal `<` in text no longer disables the transform for the rest of that segment. PCRE failures raise `FormatException` instead of silently returning the input unconverted.
+- `Slug::generate()` strips Persian punctuation (`،` `؛` `؟` `٪` `٫` `٬` `۔`), kashida and tashkeel; ZWNJ becomes a `-` separator instead of being kept inside the slug.
+
+### Docs and packaging
+
+- `docs/en/currency.md`: `Amount` example values were 10× too small.
+- Companion package is `eram/daynum` on Packagist (was `eramhq/daynum`, a 404) in `composer.json` `suggest` and the docs.
+- Version pins in README / installation / API-stability docs bumped to `^0.7@beta`.
+- README: Money section covers `times` / `percentOf` / `compareTo`; removed the "byte-identical messages" claim that contradicted the API-stability policy.
+- CONTRIBUTING: current `ValidationResult` factories, `src/Data/` table location, input-cleaning helper.
+- `docs/en/async-runtimes.md` lists every process-wide static cache.
+- `.gitattributes` export-ignores `composer.lock`, `infection.json5`, `phpbench.json`, `.php-cs-fixer.dist.php`, `.editorconfig`, `.gitignore` and `.gitattributes`; `.gitignore` adds `var/` and `.phpbench/`.
+- `ErrorCodeMessageSnapshotTest` covers every `ErrorCode` case and fails when a new case lacks a snapshot.
+
 ## [0.6.0-beta] — 2026-04-18
 
 ### Added

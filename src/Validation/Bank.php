@@ -125,6 +125,7 @@ enum Bank: string
             'بانک مرکزی ایران' => self::MARKAZI,
             'موسسه کوثر'        => self::KOSAR,
             'موسسه نور'         => self::NOOR,
+            'بانک قرض الحسنه رسالت' => self::RESALAT,
         ];
     }
 }

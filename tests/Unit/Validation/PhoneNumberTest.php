@@ -286,4 +286,12 @@ class PhoneNumberTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         PhoneNumber::fake('12');
     }
+
+    public function test_karaj_area_code_resolves_to_alborz(): void
+    {
+        $phone = PhoneNumber::from('02632123456');
+        $this->assertSame('کرج', $phone->city());
+        $this->assertSame('البرز', $phone->province());
+        $this->assertSame(\Eram\Abzar\Validation\Province::ALBORZ, $phone->provinceEnum());
+    }
 }

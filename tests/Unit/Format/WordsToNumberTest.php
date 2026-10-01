@@ -94,4 +94,63 @@ final class WordsToNumberTest extends TestCase
             self::assertSame($n, WordsToNumber::parse(NumberToWords::convert($n)), "decimal roundtrip failed for $n");
         }
     }
+
+    public function test_values_past_php_int_max_return_null(): void
+    {
+        // B7 — used to escape as a TypeError from the int-typed accumulator.
+        self::assertNull(WordsToNumber::parse('ده کوینتیلیون'));
+        self::assertNull(WordsToNumber::parse('نهصد کوینتیلیون'));
+        self::assertNull(WordsToNumber::parse('منفی ده کوینتیلیون'));
+        self::assertSame(9_000_000_000_000_000_000, WordsToNumber::parse('نه کوینتیلیون'));
+    }
+
+    /**
+     * B7 — sequences no Persian speaker would produce must not silently sum.
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function nonsense(): iterable
+    {
+        yield 'adjacent ones'        => ['دو سه'];
+        yield 'adjacent tens'        => ['بیست سی'];
+        yield 'teen then ones'       => ['یازده دو'];
+        yield 'tens then teen'       => ['بیست یازده'];
+        yield 'ones then tens'       => ['دو بیست'];
+        yield 'adjacent hundreds'    => ['یکصد دویست'];
+        yield 'repeated scale'       => ['یک میلیون دو میلیون'];
+        yield 'ascending scale'      => ['یک میلیون یک میلیارد'];
+        yield 'double thousand'      => ['دو هزار سه هزار'];
+        yield 'nonsense fraction'    => ['سه ممیز دو سه'];
+    }
+
+    /**
+     * @dataProvider nonsense
+     */
+    public function test_nonsense_sequences_return_null(string $input): void
+    {
+        self::assertNull(WordsToNumber::parse($input));
+    }
+
+    /**
+     * @return iterable<string, array{string, int}>
+     */
+    public static function colloquial(): iterable
+    {
+        // Shapes from persian-tools' wordsToNumber.spec.ts and everyday writing.
+        yield 'tens-ones without va'  => ['دوازده هزار بیست دو', 12022];
+        yield 'all without va'        => ['نهصد نود نه هزار نهصد نود نه', 999999];
+        yield 'hundreds then thousand' => ['چهارصد پنجاه هزار', 450000];
+        yield 'bare scale'            => ['میلیون', 1_000_000];
+        yield 'thousand billion'      => ['هزار میلیارد', 1_000_000_000_000];
+        yield 'split hundred'         => ['سه صد', 300];
+        yield 'one split hundred'     => ['یک صد و بیست', 120];
+    }
+
+    /**
+     * @dataProvider colloquial
+     */
+    public function test_colloquial_forms(string $input, int $expected): void
+    {
+        self::assertSame($expected, WordsToNumber::parse($input));
+    }
 }

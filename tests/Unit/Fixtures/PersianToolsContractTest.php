@@ -191,7 +191,7 @@ final class PersianToolsContractTest extends TestCase
     {
         // phoneNumber.spec.ts line 98. Note: persian-tools also rejects `09802002580`
         // (unknown mobile prefix 980); abzar accepts it valid-with-warning via
-        // PHONE_NUMBER_UNKNOWN_OPERATOR — a documented divergence (see §2.3).
+        // PHONE_NUMBER_UNKNOWN_OPERATOR — a documented divergence (see CHANGELOG 0.5.0-beta).
         yield '99999999999' => ['99999999999'];
     }
 

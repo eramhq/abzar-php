@@ -20,8 +20,12 @@ final class Slug
 
         $text = $normalizer->normalizeForSearch($text);
         $text = mb_strtolower($text, 'UTF-8');
-        $text = (string) preg_replace('/[\s_]+/u', '-', $text);
-        $text = (string) preg_replace('/[^\x{0600}-\x{06FF}\x{200C}a-z0-9\-]/u', '', $text);
+        // Persian punctuation (، ؛ ؟ ٪ ٫ ٬ ۔), kashida, and tashkeel / superscript
+        // alef sit inside the Arabic block the whitelist below keeps, so drop
+        // them explicitly. ZWNJ separates words visually, so it becomes "-".
+        $text = (string) preg_replace('/[\x{060C}\x{061B}\x{061F}\x{066A}-\x{066C}\x{06D4}\x{0640}\x{064B}-\x{065F}\x{0670}]/u', '', $text);
+        $text = (string) preg_replace('/[\s_\x{200C}]+/u', '-', $text);
+        $text = (string) preg_replace('/[^\x{0600}-\x{06FF}a-z0-9\-]/u', '', $text);
         $text = (string) preg_replace('/-+/', '-', $text);
 
         return trim($text, '-');

@@ -153,4 +153,12 @@ class IbanTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         Iban::fake('12');
     }
+
+    public function test_accepts_iban_with_dashes_and_invisible_marks(): void
+    {
+        // B4 — Iban previously skipped the shared input cleaner.
+        $this->assertTrue(Iban::validate('IR82-0540-1026-8002-0817-9090-02')->isValid());
+        $this->assertTrue(Iban::validate("\u{200E}IR82\u{00A0}0540\u{00A0}1026\u{00A0}8002\u{00A0}0817\u{00A0}9090\u{00A0}02")->isValid());
+        $this->assertSame('IR820540102680020817909002', Iban::from("\u{200F}ir82 0540 1026 8002 0817 9090 02")->value());
+    }
 }
