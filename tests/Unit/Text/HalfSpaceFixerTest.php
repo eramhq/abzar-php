@@ -63,4 +63,23 @@ final class HalfSpaceFixerTest extends TestCase
         // Locks the intentional broadness of می/نمی — see HalfSpaceFixer docblock before tightening.
         $this->assertSame("این می\u{200C}کتاب است", HalfSpaceFixer::fix('این می کتاب است'));
     }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function suffixBeforeClosingMark(): iterable
+    {
+        yield 'parenthesis'   => ['(آبی تر)', "(آبی\u{200C}تر)"];
+        yield 'bracket'       => ['[خانه ها]', "[خانه\u{200C}ها]"];
+        yield 'guillemet'     => ['«کتاب ها»', "«کتاب\u{200C}ها»"];
+        yield 'colon'         => ['درخت ها: بلند', "درخت\u{200C}ها: بلند"];
+    }
+
+    /**
+     * @dataProvider suffixBeforeClosingMark
+     */
+    public function test_suffix_before_closing_mark(string $input, string $expected): void
+    {
+        $this->assertSame($expected, HalfSpaceFixer::fix($input));
+    }
 }

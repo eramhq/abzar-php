@@ -23,6 +23,7 @@ WordsToNumber::parse('هزار میلیارد');                // 1000000000000
 - Whitespace and ZWNJ separate tokens; the `و` conjunction is treated as a separator and is optional (`بیست دو` = 22).
 - Within each group below a thousand, the words must step down in size: hundreds, then tens, then ones, or a single teen. Sequences such as `دو سه`, `بیست سی` or `یازده دو` return `null` instead of being summed. A ones word followed by `صد` (`سه صد`, `یک صد`) is read as split hundreds.
 - `هزار` multiplies the group in front of it, once per group. Larger scales (`میلیون` and up) must appear in decreasing order, so `هزار میلیارد` is accepted but `یک میلیون دو میلیون` returns `null`.
+- Besides the forms `NumberToWords` writes, these alternate spellings are accepted: `شیش` (6), `صد` (100), `چارصد` (400), `بیلیون` (10⁹, the same scale as `میلیارد`) and `کوآدریلیون` (10¹⁵). Together with split hundreds, this covers everything persian-tools' `numberToWords()` writes. See [persian-tools parity](persian-tools-parity.md).
 
 ## Precision ceiling
 

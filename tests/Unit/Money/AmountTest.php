@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Eram\Abzar\Tests\Unit\Money;
 
 use Eram\Abzar\Exception\MoneyException;
+use Eram\Abzar\Format\NumberToWords;
 use Eram\Abzar\Money\Amount;
+use Eram\Abzar\Money\Unit;
 use Eram\Abzar\Validation\ErrorCode;
 use PHPUnit\Framework\TestCase;
 
@@ -408,6 +410,46 @@ final class AmountTest extends TestCase
         $this->assertSame(
             ErrorCode::AMOUNT_OVERFLOW->message() . ': ' . str_repeat('9', 64) . '…',
             MoneyException::forInput(ErrorCode::AMOUNT_OVERFLOW, str_repeat('9', 70))->getMessage(),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{int, Unit, string}>
+     */
+    public static function inWords(): iterable
+    {
+        yield 'rials'                 => [1_200_000, Unit::RIAL, 'یک میلیون و دویست هزار ریال'];
+        yield 'toman'                 => [1_200_000, Unit::TOMAN, 'یکصد و بیست هزار تومان'];
+        yield 'toman with remainder'  => [12_345, Unit::TOMAN, 'یک هزار و دویست و سی و چهار تومان و پنج ریال'];
+        yield 'under one toman'       => [5, Unit::TOMAN, 'پنج ریال'];
+        yield 'zero toman'            => [0, Unit::TOMAN, 'صفر تومان'];
+        yield 'zero rials'            => [0, Unit::RIAL, 'صفر ریال'];
+        yield 'single rial as rials'  => [1, Unit::RIAL, 'یک ریال'];
+        yield 'exact toman'           => [10, Unit::TOMAN, 'یک تومان'];
+    }
+
+    /**
+     * @dataProvider inWords
+     */
+    public function test_to_words(int $rials, Unit $unit, string $expected): void
+    {
+        $this->assertSame($expected, Amount::fromRials($rials)->toWords($unit));
+    }
+
+    public function test_to_words_defaults_to_toman(): void
+    {
+        $this->assertSame('پنجاه هزار تومان', Amount::fromToman(50_000)->toWords());
+    }
+
+    public function test_to_words_covers_php_int_max(): void
+    {
+        $max = Amount::fromRials(PHP_INT_MAX);
+
+        $this->assertSame(NumberToWords::convert(PHP_INT_MAX) . ' ریال', $max->toWords(Unit::RIAL));
+        // 9,223,372,036,854,775,807 rials = 922,337,203,685,477,580 toman + 7 rials.
+        $this->assertSame(
+            NumberToWords::convert(intdiv(PHP_INT_MAX, 10)) . ' تومان و هفت ریال',
+            $max->toWords(),
         );
     }
 }

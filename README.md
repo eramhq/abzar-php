@@ -1,5 +1,7 @@
 # Abzar
 
+[فارسی](README.fa.md)
+
 **Zero-runtime-dependency Persian (Farsi) utility toolkit for PHP 8.1+.**
 
 Abzar (`ابزار`, "tool") is a pure-PHP library covering the small but opinionated set of utilities every Persian-language application ends up reimplementing: national-ID / IBAN / bank-card / phone validation, number-to-words and time-ago formatting, Persian slug generation, script detection, and digit conversion between Persian, Arabic, and English.
@@ -54,7 +56,7 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 ## Install
 
 ```bash
-composer require eram/abzar:^0.7@beta
+composer require eram/abzar:^0.8@beta
 ```
 
 Requires PHP 8.1+. No runtime extensions beyond `mbstring`.
@@ -142,6 +144,10 @@ $vat   = $line->percentOf(9);                      // 9% VAT, banker's rounding
 $line->add($vat)->inToman();                       // 163500
 $line->compareTo($price);                          // 1  (usort-ready)
 usort($amounts, fn (Amount $a, Amount $b) => $a->compareTo($b));
+
+$price->toWords();                                 // 'پنجاه هزار تومان'
+Amount::fromRials(12_345)->toWords();              // 'یک هزار و دویست و سی و چهار تومان و پنج ریال'
+$price->toWords(Unit::RIAL);                       // 'پانصد هزار ریال'
 ```
 
 `Amount` never goes negative and traps `PHP_INT_MAX` overflow; both raise an exception carrying `ErrorCode::AMOUNT_NEGATIVE` / `AMOUNT_OVERFLOW`. See [Currency](docs/en/currency.md) for the full method reference.
@@ -252,7 +258,11 @@ HalfSpaceFixer::fix('بزرگ ترین');       // 'بزرگ‌ترین'
 
 ## Further reading
 
-Longer-form docs live under [`docs/en/`](docs/en/README.md): per-class references ([Postal Code](docs/en/postal-code.md), [Bill ID](docs/en/bill-id.md), [Keyboard Fixer](docs/en/keyboard-fixer.md), [Words to Number](docs/en/words-to-number.md), [Currency](docs/en/currency.md)), plus installation, [API stability policy](docs/en/api-stability.md), async-runtime notes, and framework integration recipes.
+Longer-form docs live under [`docs/en/`](docs/en/README.md):
+
+- **Validators:** [National ID](docs/en/national-id.md), [Legal ID](docs/en/legal-id.md), [Card Number](docs/en/card-number.md), [IBAN (Sheba)](docs/en/iban.md), [Phone Number](docs/en/phone-number.md), [Postal Code](docs/en/postal-code.md), [Bill ID](docs/en/bill-id.md), [Plate Number](docs/en/plate-number.md), and the [Error codes](docs/en/error-codes.md) table.
+- **Formatting and money:** [Words to Number](docs/en/words-to-number.md), [Currency](docs/en/currency.md), [Keyboard Fixer](docs/en/keyboard-fixer.md).
+- **Project:** [installation](docs/en/installation.md), [API stability policy](docs/en/api-stability.md), [async-runtime notes](docs/en/async-runtimes.md), [framework recipes](docs/en/recipes/), and [persian-tools parity](docs/en/persian-tools-parity.md).
 
 ## Related packages
 
@@ -283,7 +293,7 @@ Abzar stays framework-agnostic. Integration recipes for Laravel FormRequest, Sym
 
 ## Stability
 
-Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.7@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
+Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.8@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
 
 ## License
 

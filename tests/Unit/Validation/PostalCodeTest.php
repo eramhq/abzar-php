@@ -99,4 +99,21 @@ final class PostalCodeTest extends TestCase
         $hits = PostalCode::extractAll($text);
         $this->assertSame(['1357986421', '1234567891'], array_map(static fn (PostalCode $p): string => $p->value(), $hits));
     }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function digitsWithStrayLetter(): iterable
+    {
+        yield 'leading letter'  => ['x1357986421'];
+        yield 'trailing letter' => ['1357986421x'];
+    }
+
+    /**
+     * @dataProvider digitsWithStrayLetter
+     */
+    public function test_stray_letter_is_wrong_length(string $input): void
+    {
+        self::assertSame([ErrorCode::POSTAL_CODE_WRONG_LENGTH], PostalCode::validate($input)->errorCodes());
+    }
 }

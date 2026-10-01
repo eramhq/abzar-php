@@ -1,6 +1,6 @@
 {
     "name": "eram/abzar",
-    "description": "Zero-runtime-dependency Persian (Farsi) utility toolkit for PHP 8.1+: validators (national ID, IBAN, bank card, phone), formatters (number-to-words, time-ago, ordinals), text utilities (slug, script detection, char normalization), and digit conversion.",
+    "description": "Zero-runtime-dependency Persian (Farsi) toolkit for PHP 8.1+: validators for national ID, legal ID, bank card, Sheba/IBAN, phone, postal code, bill ID and license plate; Toman/Rial money with an Amount value object; formatters (number to words and back, ordinals, time-ago); text tools (slug, script detection, character normalization, ZWNJ half-space, keyboard-layout fix) and digit conversion.",
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/eramhq/abzar-php",
@@ -19,7 +19,20 @@
         "slug",
         "number-to-words",
         "digit-conversion",
-        "utilities"
+        "utilities",
+        "card-number",
+        "sheba",
+        "postal-code",
+        "license-plate",
+        "bill-id",
+        "toman",
+        "rial",
+        "money",
+        "words-to-number",
+        "keyboard-layout",
+        "persian-digits",
+        "zwnj",
+        "ordinal"
     ],
     "require": {
         "php": ">=8.1",
@@ -81,7 +94,7 @@
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix",
         "bench": "phpbench run --report=default",
-        "mutate": "infection --threads=max --min-msi=80 --only-covered",
+        "mutate": "infection --threads=max --min-msi=88 --only-covered",
         "fixtures:pull": "tools/fixtures/pull.sh"
     }
 }

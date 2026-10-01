@@ -161,4 +161,75 @@ final class WordsToNumberTest extends TestCase
         self::assertSame(100, WordsToNumber::parse('صد'));
         self::assertSame(120, WordsToNumber::parse('صد و بیست'));
     }
+
+    public function test_surrounding_whitespace_is_ignored(): void
+    {
+        self::assertSame(-3, WordsToNumber::parse('  منفی سه  '));
+        // The sign strip leaves a leading space on the integer part.
+        self::assertSame(0, WordsToNumber::parse('منفی  صفر'));
+    }
+
+    public function test_second_decimal_separator_returns_null(): void
+    {
+        self::assertNull(WordsToNumber::parse('سه ممیز پنج ممیز دو'));
+    }
+
+    public function test_fraction_zero_padding_survives_empty_tokens(): void
+    {
+        // ZWNJ followed by a space splits into an empty token between the zeros.
+        self::assertSame(3.005, WordsToNumber::parse("سه ممیز صفر\u{200C} صفر پنج"));
+    }
+
+    public function test_bare_hundred_after_thousand(): void
+    {
+        self::assertSame(1100, WordsToNumber::parse('هزار صد'));
+        self::assertSame(1100, WordsToNumber::parse('یک هزار و صد'));
+    }
+
+    public function test_quadrillion_scale(): void
+    {
+        self::assertSame(1_000_000_000_000_000, WordsToNumber::parse('یک کوادریلیون'));
+        self::assertSame(2_000_000_000_000_000, WordsToNumber::parse('دو کوادریلیون'));
+    }
+
+    public function test_php_int_max_boundary(): void
+    {
+        self::assertSame(PHP_INT_MAX, WordsToNumber::parse(NumberToWords::convert(PHP_INT_MAX)));
+        // PHP_INT_MAX + 1 (…۸۰۸) overflows in the trailing sub-million group.
+        $maxPlusOne = preg_replace('/هفت$/u', 'هشت', NumberToWords::convert(PHP_INT_MAX));
+        self::assertStringEndsWith('هشتصد و هشت', (string) $maxPlusOne);
+        self::assertNull(WordsToNumber::parse((string) $maxPlusOne));
+        // Overflow while adding a second big-scale group.
+        self::assertNull(WordsToNumber::parse('نه کوینتیلیون و نهصد کوادریلیون'));
+    }
+
+    /**
+     * Spellings persian-tools reads (and NumberToWords never emits) that map
+     * to exactly one value.
+     *
+     * @return iterable<string, array{string, int}>
+     */
+    public static function alternateSpellings(): iterable
+    {
+        yield 'colloquial six'          => ['شیش', 6];
+        yield 'colloquial four hundred' => ['چارصد', 400];
+        yield 'billion as billion'      => ['بیلیون', 1_000_000_000];
+        yield 'quadrillion with alef madda' => ['کوآدریلیون', 1_000_000_000_000_000];
+        yield 'in a phrase'             => ['منفی چارصد و شیش', -406];
+        yield 'mixed scales'            => ['دو بیلیون و شیش میلیون', 2_006_000_000];
+    }
+
+    /**
+     * @dataProvider alternateSpellings
+     */
+    public function test_alternate_spellings(string $input, int $expected): void
+    {
+        self::assertSame($expected, WordsToNumber::parse($input));
+    }
+
+    public function test_billion_and_milliard_are_the_same_scale(): void
+    {
+        // Both name 10⁹, so they can't appear in descending order together.
+        self::assertNull(WordsToNumber::parse('یک بیلیون یک میلیارد'));
+    }
 }

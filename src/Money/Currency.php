@@ -61,14 +61,8 @@ final class Currency
             return $amount;
         }
 
-        if ($from === Unit::TOMAN && $to === Unit::RIAL) {
-            return is_int($amount) ? $amount * 10 : $amount * 10.0;
-        }
-
-        if (is_int($amount) && $amount % 10 === 0) {
-            return intdiv($amount, 10);
-        }
-
-        return $amount / 10;
+        // Integer `/` stays int when exact (12340 → 1234) and yields a float
+        // otherwise (1235 → 123.5).
+        return $from === Unit::TOMAN ? $amount * 10 : $amount / 10;
     }
 }

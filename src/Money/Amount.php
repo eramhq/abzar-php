@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eram\Abzar\Money;
 
 use Eram\Abzar\Exception\MoneyException;
+use Eram\Abzar\Format\NumberToWords;
 use Eram\Abzar\Validation\ErrorCode;
 
 /**
@@ -169,6 +170,29 @@ final class Amount implements \JsonSerializable
             );
         }
         return new self((int) $computed);
+    }
+
+    /**
+     * The amount in Persian words, for cheques, invoices and receipts:
+     * {@code یکصد و بیست هزار تومان}. A Toman rendering of a rial amount that
+     * isn't a multiple of 10 spells the remainder out instead of truncating it
+     * (12,345 rials → {@code یک هزار و دویست و سی و چهار تومان و پنج ریال}).
+     */
+    public function toWords(Unit $unit = Unit::TOMAN): string
+    {
+        if ($unit === Unit::RIAL) {
+            return NumberToWords::convert($this->rials) . ' ' . Unit::RIAL->persianName();
+        }
+
+        $toman     = intdiv($this->rials, 10);
+        $remainder = $this->rials % 10;
+        $rialWords = NumberToWords::convert($remainder) . ' ' . Unit::RIAL->persianName();
+
+        return match (true) {
+            $remainder === 0 => NumberToWords::convert($toman) . ' ' . Unit::TOMAN->persianName(),
+            $toman === 0     => $rialWords,
+            default          => NumberToWords::convert($toman) . ' ' . Unit::TOMAN->persianName() . ' و ' . $rialWords,
+        };
     }
 
     /**

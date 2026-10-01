@@ -227,9 +227,12 @@ final class WordsToNumber
                 $map[$word] = [self::RANK_HUNDREDS, $i * 100];
             }
         }
-        // Common alternate forms.
-        $map['صد']   = [self::RANK_HUNDREDS, 100];
-        $map['هزار'] = [self::RANK_SCALE, 1000];
+        // Common alternate forms, including the spellings persian-tools reads
+        // (شیش, چارصد) or writes (کوآدریلیون). Each maps to a single value.
+        $map['شیش']   = [self::RANK_ONES, 6];
+        $map['صد']    = [self::RANK_HUNDREDS, 100];
+        $map['چارصد'] = [self::RANK_HUNDREDS, 400];
+        $map['هزار']  = [self::RANK_SCALE, 1000];
 
         $scales = [
             2 => 1_000_000,
@@ -241,6 +244,8 @@ final class WordsToNumber
         foreach ($scales as $i => $multiplier) {
             $map[PersianNumerals::SCALES[$i]] = [self::RANK_SCALE, $multiplier];
         }
+        $map['بیلیون']     = [self::RANK_SCALE, 1_000_000_000];
+        $map['کوآدریلیون'] = [self::RANK_SCALE, 1_000_000_000_000_000];
 
         return $map;
     }
