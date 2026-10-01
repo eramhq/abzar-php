@@ -7,12 +7,21 @@ Abzar is a zero-runtime-dependency Persian (Farsi) utility toolkit for PHP 8.1+.
 - [Installation](installation.md)
 - [API stability & backwards-compatibility policy](api-stability.md)
 - [Async runtime safety (Octane / RoadRunner / Swoole)](async-runtimes.md)
-- Reference
+- Validators
+  - [National ID](national-id.md)
+  - [Legal ID](legal-id.md)
+  - [Card Number](card-number.md)
+  - [IBAN (Sheba)](iban.md)
+  - [Phone Number](phone-number.md)
   - [Postal Code](postal-code.md)
   - [Bill ID](bill-id.md)
-  - [Keyboard Fixer](keyboard-fixer.md)
+  - [Plate Number](plate-number.md)
+  - [Error codes](error-codes.md): every `ErrorCode` with its Persian message
+- Formatting, money and text
   - [Words to Number](words-to-number.md)
   - [Currency](currency.md)
+  - [Keyboard Fixer](keyboard-fixer.md)
+- [persian-tools parity](persian-tools-parity.md): contract-test coverage and deliberate divergences
 - [Integration recipes](recipes/)
   - [Laravel FormRequest](recipes/laravel.md)
   - [Symfony Validator](recipes/symfony.md)

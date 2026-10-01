@@ -252,7 +252,11 @@ HalfSpaceFixer::fix('بزرگ ترین');       // 'بزرگ‌ترین'
 
 ## Further reading
 
-Longer-form docs live under [`docs/en/`](docs/en/README.md): per-class references ([Postal Code](docs/en/postal-code.md), [Bill ID](docs/en/bill-id.md), [Keyboard Fixer](docs/en/keyboard-fixer.md), [Words to Number](docs/en/words-to-number.md), [Currency](docs/en/currency.md)), plus installation, [API stability policy](docs/en/api-stability.md), async-runtime notes, and framework integration recipes.
+Longer-form docs live under [`docs/en/`](docs/en/README.md):
+
+- **Validators:** [National ID](docs/en/national-id.md), [Legal ID](docs/en/legal-id.md), [Card Number](docs/en/card-number.md), [IBAN (Sheba)](docs/en/iban.md), [Phone Number](docs/en/phone-number.md), [Postal Code](docs/en/postal-code.md), [Bill ID](docs/en/bill-id.md), [Plate Number](docs/en/plate-number.md), and the [Error codes](docs/en/error-codes.md) table.
+- **Formatting and money:** [Words to Number](docs/en/words-to-number.md), [Currency](docs/en/currency.md), [Keyboard Fixer](docs/en/keyboard-fixer.md).
+- **Project:** [installation](docs/en/installation.md), [API stability policy](docs/en/api-stability.md), [async-runtime notes](docs/en/async-runtimes.md), [framework recipes](docs/en/recipes/), and [persian-tools parity](docs/en/persian-tools-parity.md).
 
 ## Related packages
 

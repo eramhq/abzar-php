@@ -7,6 +7,8 @@ All notable changes to this project are documented in this file. The format is l
 ### Added
 
 - `WordsToNumber::parse()` reads the alternate spellings `شیش` (6), `چارصد` (400), `بیلیون` (10⁹) and `کوآدریلیون` (10¹⁵), so it now parses every cardinal persian-tools' `numberToWords()` writes.
+- Reference pages for every validator: [National ID](docs/en/national-id.md), [Legal ID](docs/en/legal-id.md), [Card Number](docs/en/card-number.md), [IBAN](docs/en/iban.md), [Phone Number](docs/en/phone-number.md) and [Plate Number](docs/en/plate-number.md), alongside the existing postal-code and bill-ID pages.
+- [docs/en/error-codes.md](docs/en/error-codes.md): every `ErrorCode` with its Persian message, emitting class and kind (error, warning or thrown). `ErrorCodeDocsTest` fails when a case is missing or its message is out of date.
 - Contract tests for legal IDs, number words, formatting and text (`LegalIdContractTest`, `NumberWordsContractTest`, `FormattingContractTest`, `TextContractTest`), with a `divergences()` registry in each that pins every deliberate difference from persian-tools. [docs/en/persian-tools-parity.md](docs/en/persian-tools-parity.md) lists them.
 
 ### Fixed
