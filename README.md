@@ -1,5 +1,7 @@
 # Abzar
 
+[فارسی](README.fa.md)
+
 **Zero-runtime-dependency Persian (Farsi) utility toolkit for PHP 8.1+.**
 
 Abzar (`ابزار`, "tool") is a pure-PHP library covering the small but opinionated set of utilities every Persian-language application ends up reimplementing: national-ID / IBAN / bank-card / phone validation, number-to-words and time-ago formatting, Persian slug generation, script detection, and digit conversion between Persian, Arabic, and English.
@@ -54,7 +56,7 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 ## Install
 
 ```bash
-composer require eram/abzar:^0.7@beta
+composer require eram/abzar:^0.8@beta
 ```
 
 Requires PHP 8.1+. No runtime extensions beyond `mbstring`.
@@ -291,7 +293,7 @@ Abzar stays framework-agnostic. Integration recipes for Laravel FormRequest, Sym
 
 ## Stability
 
-Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.7@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
+Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.8@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
 
 ## License
 

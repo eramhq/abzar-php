@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+## [0.8.0-beta] — 2026-10-01
+
+`Amount::toWords()`, reference docs for every validator and an `ErrorCode` table, contract tests for four more persian-tools domains, and a higher mutation-testing floor. No breaking changes: see [UPGRADE.md](UPGRADE.md).
+
 ### Added
 
 - **`Amount::toWords(Unit $unit = Unit::TOMAN): string`** spells an amount out in Persian with its unit, for cheques and invoices: `یکصد و بیست هزار تومان`. Like `Currency::format()` it defaults to Toman, and a sub-toman remainder is spelled out (`… تومان و پنج ریال`), never truncated. It covers the full `int` range and never throws.
@@ -18,6 +22,8 @@ All notable changes to this project are documented in this file. The format is l
 
 ### Changed
 
+- `composer.json` description and keywords now name every validator (legal ID, Sheba, postal code, bill ID, plate), money and text tools, to make the package easier to find on Packagist.
+- `README.fa.md`: a Persian landing page with install steps, ten short examples and links to the English docs. It's linked from the top of the README.
 - `Currency::convert()` drops a redundant integer branch. Output is unchanged.
 - Mutation testing ignores the random `::fake()` generators, and the MSI floor is raised to 88% (was 80) in both `composer mutate` and CI.
 

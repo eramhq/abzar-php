@@ -1,5 +1,16 @@
 # Upgrade guide
 
+## 0.7 → 0.8
+
+No breaking changes. Bump the constraint to `^0.8@beta`.
+
+Two outputs widen, which only matters if you assert on them:
+
+- `WordsToNumber::parse()` now reads `شیش`, `چارصد`, `بیلیون` and `کوآدریلیون`, which used to return `null`.
+- `HalfSpaceFixer::fix()` now binds a suffix that is followed by a closing bracket, quote or colon: `(آبی تر)` becomes `(آبی‌تر)` (before, it was left unchanged).
+
+New in 0.8: `Amount::toWords()`. See the [CHANGELOG](CHANGELOG.md).
+
 ## 0.6 → 0.7
 
 0.7 fixes a batch of data and input-handling bugs and makes the validators behave the same way as each other. Most apps need only the first two sections; section 6 lists bug fixes that change output you may have stored or asserted on. Every change is also listed in the [CHANGELOG](CHANGELOG.md).
