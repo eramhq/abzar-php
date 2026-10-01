@@ -14,9 +14,43 @@ final class KeyboardFixerTest extends TestCase
         self::assertSame('سلام', KeyboardFixer::enToFa('sghl'));
     }
 
-    public function test_en_to_fa_lowercases_input(): void
+    /**
+     * Shift layer of the ISIRI 9147 standard layout — 0.8 maps it instead of
+     * lowercasing, so Shift+H yields آ rather than ا.
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function shiftLayer(): iterable
     {
-        self::assertSame('سلام', KeyboardFixer::enToFa('SGHL'));
+        yield 'alef madda'  => ['Hfhn', 'آباد'];
+        yield 'zhe'         => ['Chgi', 'ژاله'];
+        yield 'hamza'       => ['Mlhl', 'ءمام'];
+        yield 'zwnj'        => ['ldBv,l', "می\u{200C}روم"];
+        yield 'guillemets'  => ['Lsghl K', '«سلام »'];
+        yield 'tashkeel'    => ['sUgh', 'سَلا'];
+    }
+
+    /**
+     * @dataProvider shiftLayer
+     */
+    public function test_en_to_fa_shift_layer(string $typed, string $expected): void
+    {
+        self::assertSame($expected, KeyboardFixer::enToFa($typed));
+    }
+
+    /**
+     * @dataProvider shiftLayer
+     */
+    public function test_fa_to_en_shift_layer_roundtrip(string $typed, string $persian): void
+    {
+        self::assertSame($typed, KeyboardFixer::faToEn($persian));
+    }
+
+    public function test_fa_to_en_leaves_ascii_brackets_alone(): void
+    {
+        // Shift+O / Shift+P produce ASCII brackets, which are far more often
+        // literal in Persian text than evidence of a layout slip.
+        self::assertSame('[sghl]', KeyboardFixer::faToEn('[سلام]'));
     }
 
     public function test_fa_to_en_roundtrip(): void

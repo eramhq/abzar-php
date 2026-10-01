@@ -54,4 +54,10 @@ final class BankTest extends TestCase
         self::assertSame(Bank::RESALAT, Iban::from(Iban::fake('070'))->bankEnum());
         self::assertSame(Bank::RESALAT, Bank::fromPersian('بانک قرض الحسنه رسالت'));
     }
+
+    public function test_ayandeh_is_defunct(): void
+    {
+        // License revoked and merged into Bank Melli on 2025-10-23.
+        self::assertTrue(Bank::AYANDEH->isDefunct());
+    }
 }

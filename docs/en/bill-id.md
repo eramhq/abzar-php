@@ -20,11 +20,16 @@ if ($bill !== null) {
 
 // Same cross-checksum as ::from / ::tryFrom, without constructing a VO.
 BillId::validatePair($billId, $paymentId)->isValid();
+
+// Fixtures: a 13-digit bill ID (optionally of a given type) and a payment ID
+// that cross-validates against it.
+$fakeBill    = BillId::fake(BillType::ELECTRIC);
+$fakePayment = BillId::fakePaymentId($fakeBill);
 ```
 
 ## Algorithm
 
-- `bill_id` is 6–18 digits. The last digit is a mod-11 checksum over the first N−1 digits; the second-to-last digit encodes the bill type.
+- `bill_id` is 6–13 digits. The last digit is a mod-11 checksum over the first N−1 digits; the second-to-last digit encodes the bill type.
 - `payment_id` is 6–18 digits. Its last two digits are cross-checksums computed over `bill_id + payment_prefix` and `bill_id + payment_prefix + first_checksum`.
 
 The weighting vector is `[2, 3, 4, 5, 6, 7]` repeated from the rightmost digit.
@@ -34,7 +39,7 @@ The weighting vector is `[2, 3, 4, 5, 6, 7]` repeated from the rightmost digit.
 | Code | When |
 |---|---|
 | `BILL_ID.EMPTY` | `bill_id` is empty |
-| `BILL_ID.WRONG_LENGTH` | `bill_id` is outside 6–18 digits |
+| `BILL_ID.WRONG_LENGTH` | `bill_id` is outside 6–13 digits |
 | `BILL_ID.INVALID_CHECKSUM` | `bill_id` last digit does not match its mod-11 checksum |
 | `BILL_ID.PAYMENT_EMPTY` | `payment_id` is empty (pair validation only) |
 | `BILL_ID.PAYMENT_WRONG_LENGTH` | `payment_id` is outside 6–18 digits |

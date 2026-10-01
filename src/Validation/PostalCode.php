@@ -6,6 +6,7 @@ namespace Eram\Abzar\Validation;
 
 use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Internal\Extractor;
 use Eram\Abzar\Validation\Details\PostalCodeDetails;
 
 /**
@@ -93,6 +94,18 @@ final class PostalCode implements \JsonSerializable, \Stringable
                 return $code;
             }
         }
+    }
+
+    /**
+     * Scan free text for 10-digit runs, plain or written {@code 12345-67890},
+     * and return each valid postal code, left to right. A bare 10-digit run may
+     * equally be a national ID — callers mining mixed text should expect overlap.
+     *
+     * @return list<self>
+     */
+    public static function extractAll(string $text): array
+    {
+        return Extractor::all($text, '/(?<!\d)\d{5}[\s-]?\d{5}(?!\d)/u', self::tryFrom(...));
     }
 
     public function value(): string

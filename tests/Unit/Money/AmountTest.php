@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Money;
 
-use Eram\Abzar\Exception\FormatException;
+use Eram\Abzar\Exception\MoneyException;
 use Eram\Abzar\Money\Amount;
 use Eram\Abzar\Validation\ErrorCode;
 use PHPUnit\Framework\TestCase;
@@ -39,11 +39,11 @@ final class AmountTest extends TestCase
 
     public function test_throws_on_negative_amount(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromRials(-100);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_NEGATIVE, $e->errorCode());
             throw $e;
         }
@@ -80,14 +80,14 @@ final class AmountTest extends TestCase
 
     public function test_subtract_below_zero_throws(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         $a = Amount::fromToman(10_000);
         $b = Amount::fromToman(20_000);
 
         try {
             $a->subtract($b);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_NEGATIVE, $e->errorCode());
             throw $e;
         }
@@ -142,11 +142,11 @@ final class AmountTest extends TestCase
 
     public function test_from_toman_throws_beyond_overflow_boundary(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromToman(intdiv(PHP_INT_MAX, 10) + 1);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_OVERFLOW, $e->errorCode());
             throw $e;
         }
@@ -154,11 +154,11 @@ final class AmountTest extends TestCase
 
     public function test_from_toman_throws_amount_negative_on_php_int_min(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromToman(PHP_INT_MIN);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_NEGATIVE, $e->errorCode());
             throw $e;
         }
@@ -166,11 +166,11 @@ final class AmountTest extends TestCase
 
     public function test_from_toman_throws_amount_negative_on_minus_one(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromToman(-1);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_NEGATIVE, $e->errorCode());
             throw $e;
         }
@@ -188,14 +188,14 @@ final class AmountTest extends TestCase
 
     public function test_add_throws_on_overflow(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         $a = Amount::fromRials(PHP_INT_MAX);
         $b = Amount::fromRials(1);
 
         try {
             $a->add($b);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_OVERFLOW, $e->errorCode());
             throw $e;
         }
@@ -272,11 +272,11 @@ final class AmountTest extends TestCase
 
     public function test_times_negative_throws(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromToman(100)->times(-1);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_NEGATIVE, $e->errorCode());
             throw $e;
         }
@@ -291,11 +291,11 @@ final class AmountTest extends TestCase
 
     public function test_times_beyond_overflow_throws(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromRials(2)->times(PHP_INT_MAX);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_OVERFLOW, $e->errorCode());
             throw $e;
         }
@@ -332,11 +332,11 @@ final class AmountTest extends TestCase
 
     public function test_percent_of_negative_throws(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromToman(1_000)->percentOf(-5);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_NEGATIVE, $e->errorCode());
             throw $e;
         }
@@ -344,11 +344,11 @@ final class AmountTest extends TestCase
 
     public function test_percent_of_nan_throws(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromToman(1_000)->percentOf(NAN);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_OVERFLOW, $e->errorCode());
             throw $e;
         }
@@ -356,11 +356,11 @@ final class AmountTest extends TestCase
 
     public function test_percent_of_infinity_throws(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromToman(1_000)->percentOf(INF);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_OVERFLOW, $e->errorCode());
             throw $e;
         }
@@ -368,11 +368,11 @@ final class AmountTest extends TestCase
 
     public function test_percent_of_overflow_throws(): void
     {
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromRials(PHP_INT_MAX)->percentOf(200);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_OVERFLOW, $e->errorCode());
             throw $e;
         }
@@ -382,13 +382,32 @@ final class AmountTest extends TestCase
     {
         // PHP_INT_MAX as float becomes 2^63 (not representable exactly); without
         // the `>=` guard, (int) of this float would silently overflow negative.
-        $this->expectException(FormatException::class);
+        $this->expectException(MoneyException::class);
 
         try {
             Amount::fromRials(PHP_INT_MAX)->percentOf(100);
-        } catch (FormatException $e) {
+        } catch (MoneyException $e) {
             $this->assertSame(ErrorCode::AMOUNT_OVERFLOW, $e->errorCode());
             throw $e;
         }
+    }
+
+    public function test_money_exception_message_carries_input(): void
+    {
+        try {
+            Amount::fromRials(-5);
+            $this->fail('expected MoneyException');
+        } catch (MoneyException $e) {
+            $this->assertSame(ErrorCode::AMOUNT_NEGATIVE->message() . ': -5', $e->getMessage());
+        }
+
+        $this->assertSame(
+            ErrorCode::AMOUNT_OVERFLOW->message(),
+            MoneyException::forInput(ErrorCode::AMOUNT_OVERFLOW, "\x00")->getMessage(),
+        );
+        $this->assertSame(
+            ErrorCode::AMOUNT_OVERFLOW->message() . ': ' . str_repeat('9', 64) . '…',
+            MoneyException::forInput(ErrorCode::AMOUNT_OVERFLOW, str_repeat('9', 70))->getMessage(),
+        );
     }
 }

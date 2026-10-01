@@ -78,19 +78,25 @@ class CardNumberTest extends TestCase
         $this->assertNull(CardNumber::tryFrom('invalid'));
     }
 
-    public function test_from_throws_on_unknown_bin(): void
+    public function test_from_accepts_unknown_bin_with_null_bank(): void
     {
-        try {
-            CardNumber::from('1234567890123452');
-            $this->fail('expected ValidationException for unknown BIN');
-        } catch (ValidationException $e) {
-            $this->assertSame(ErrorCode::CARD_NUMBER_UNKNOWN_BIN, $e->errorCode());
-        }
+        // 0.8: VOs follow isValid(); warnings no longer block construction.
+        $card = CardNumber::from('1234567890123452');
+        $this->assertSame('123456', $card->bin());
+        $this->assertNull($card->bank());
+        $this->assertNull($card->bankEnum());
     }
 
-    public function test_try_from_null_on_unknown_bin(): void
+    public function test_try_from_accepts_unknown_bin(): void
     {
-        $this->assertNull(CardNumber::tryFrom('1234567890123452'));
+        $this->assertNotNull(CardNumber::tryFrom('1234567890123452'));
+    }
+
+    public function test_all_same_digits_has_dedicated_code(): void
+    {
+        $result = CardNumber::validate('0000000000000000');
+        $this->assertFalse($result->isValid());
+        $this->assertSame([ErrorCode::CARD_NUMBER_ALL_SAME_DIGITS], $result->errorCodes());
     }
 
     public function test_invalid_luhn(): void
@@ -147,10 +153,11 @@ class CardNumberTest extends TestCase
         $this->assertSame('6037991234567893', $hits[1]->value());
     }
 
-    public function test_extract_all_skips_unknown_bin_cards(): void
+    public function test_extract_all_includes_unknown_bin_cards(): void
     {
         $hits = CardNumber::extractAll('Paid 1234567890123452 today');
-        $this->assertSame([], $hits);
+        $this->assertCount(1, $hits);
+        $this->assertNull($hits[0]->bank());
     }
 
     public function test_extract_all_still_returns_known_bin_cards(): void
@@ -160,12 +167,23 @@ class CardNumberTest extends TestCase
         $this->assertSame('6037991234567893', $hits[0]->value());
     }
 
-    public function test_extract_all_mixed_input_returns_only_known_bin(): void
+    public function test_extract_all_mixed_input_keeps_order(): void
     {
         $text = 'Known 6037991234567893 and unknown 1234567890123452 side by side.';
         $hits = CardNumber::extractAll($text);
-        $this->assertCount(1, $hits);
+        $this->assertCount(2, $hits);
         $this->assertSame('6037991234567893', $hits[0]->value());
+        $this->assertSame('1234567890123452', $hits[1]->value());
+    }
+
+    public function test_fake_rejects_malformed_bin_with_validation_exception(): void
+    {
+        try {
+            CardNumber::fake('12');
+            $this->fail('expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame(ErrorCode::FAKE_INVALID_ARGUMENT, $e->errorCode());
+        }
     }
 
     public function test_formatted_groups_in_four(): void

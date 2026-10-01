@@ -92,4 +92,11 @@ final class PostalCodeTest extends TestCase
             self::assertTrue(PostalCode::validate($code)->isValid(), "generated $code");
         }
     }
+
+    public function test_extract_all(): void
+    {
+        $text = 'کد پستی ۱۳۵۷۹-۸۶۴۲۱ و 1234567891 ثبت شد؛ 0123456789 نامعتبر است.';
+        $hits = PostalCode::extractAll($text);
+        $this->assertSame(['1357986421', '1234567891'], array_map(static fn (PostalCode $p): string => $p->value(), $hits));
+    }
 }

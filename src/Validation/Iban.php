@@ -7,8 +7,15 @@ namespace Eram\Abzar\Validation;
 use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Internal\Extractor;
 use Eram\Abzar\Validation\Details\IbanDetails;
 
+/**
+ * Iranian IBAN (شبا) — {@code IR} + 2 check digits + 3-digit bank code + 19
+ * account digits, ISO 13616 mod-97. A checksum-valid IBAN whose bank code
+ * isn't in the bundled table is valid with an {@see ErrorCode::IBAN_UNKNOWN_BANK}
+ * warning and a null bank.
+ */
 final class Iban implements \JsonSerializable, \Stringable
 {
     private function __construct(
@@ -70,12 +77,11 @@ final class Iban implements \JsonSerializable, \Stringable
 
         $bankCode = substr($input, 4, 3);
         $bank     = DataSources::ibanBanks()[$bankCode] ?? null;
+        $detail   = new IbanDetails(value: $input, bankCode: $bankCode, bank: $bank);
 
-        return ValidationResult::valid(new IbanDetails(
-            value:    $input,
-            bankCode: $bankCode,
-            bank:     $bank,
-        ));
+        return $bank === null
+            ? ValidationResult::validWithWarnings(ErrorCode::IBAN_UNKNOWN_BANK, $detail)
+            : ValidationResult::valid($detail);
     }
 
     /**
@@ -95,7 +101,7 @@ final class Iban implements \JsonSerializable, \Stringable
         }
 
         if (!preg_match('/^\d{3}$/', $bankCode)) {
-            throw new \InvalidArgumentException('bankCode must be exactly 3 digits');
+            throw ValidationException::forFakeArgument('bankCode must be exactly 3 digits');
         }
 
         $account = '';
@@ -109,9 +115,32 @@ final class Iban implements \JsonSerializable, \Stringable
         return 'IR' . $check . $bankCode . $account;
     }
 
+    /**
+     * Scan free text for {@code IR} + 24 digits (case-insensitive, optionally
+     * grouped with spaces or dashes) and return each valid IBAN, left to right.
+     *
+     * @return list<self>
+     */
+    public static function extractAll(string $text): array
+    {
+        return Extractor::all($text, '/(?<![A-Za-z0-9])IR(?:[\s-]?\d){24}(?!\d)/iu', self::tryFrom(...));
+    }
+
     public function value(): string
     {
         return $this->detail->value;
+    }
+
+    /**
+     * Masked display that keeps {@code IR}, the check digits, the bank code
+     * and the last 4 digits, grouped like {@see self::formatted()}
+     * (e.g. {@code IR82 054* **** **** **** **90 02}).
+     */
+    public function masked(): string
+    {
+        $v = $this->detail->value;
+
+        return implode(' ', str_split(substr($v, 0, 7) . str_repeat('*', 15) . substr($v, 22), 4));
     }
 
     /**

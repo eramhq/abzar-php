@@ -18,13 +18,27 @@ final class Currency
     {
     }
 
+    /**
+     * An {@see Amount} is rendered in $unit; a Toman rendering of a rial
+     * amount that isn't a multiple of 10 keeps its fraction (12,345 rials →
+     * {@code ۱،۲۳۴.۵ تومان}). Scalars are formatted as given.
+     */
     public static function format(
-        int|float|string $amount,
+        int|float|string|Amount $amount,
         Unit $unit = Unit::TOMAN,
         bool $persianDigits = true,
         bool $withUnit = true,
         string $separator = '،',
     ): string {
+        if ($amount instanceof Amount) {
+            $rials  = $amount->inRials();
+            $amount = match (true) {
+                $unit === Unit::RIAL => $rials,
+                $rials % 10 === 0    => intdiv($rials, 10),
+                default              => intdiv($rials, 10) . '.' . ($rials % 10),
+            };
+        }
+
         $formatted = NumberFormatter::withSeparators($amount, $separator);
 
         if ($persianDigits) {

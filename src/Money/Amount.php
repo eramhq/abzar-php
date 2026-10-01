@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Money;
 
-use Eram\Abzar\Exception\FormatException;
+use Eram\Abzar\Exception\MoneyException;
 use Eram\Abzar\Validation\ErrorCode;
 
 /**
@@ -26,12 +26,12 @@ final class Amount implements \JsonSerializable
         private readonly int $rials,
     ) {
         if ($rials < 0) {
-            throw FormatException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $rials);
+            throw MoneyException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $rials);
         }
     }
 
     /**
-     * @throws FormatException
+     * @throws MoneyException
      */
     public static function fromRials(int $rials): self
     {
@@ -39,15 +39,15 @@ final class Amount implements \JsonSerializable
     }
 
     /**
-     * @throws FormatException
+     * @throws MoneyException
      */
     public static function fromToman(int $toman): self
     {
         if ($toman < 0) {
-            throw FormatException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $toman);
+            throw MoneyException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $toman);
         }
         if ($toman > intdiv(PHP_INT_MAX, 10)) {
-            throw FormatException::forInput(ErrorCode::AMOUNT_OVERFLOW, (string) $toman);
+            throw MoneyException::forInput(ErrorCode::AMOUNT_OVERFLOW, (string) $toman);
         }
         return new self($toman * 10);
     }
@@ -73,12 +73,12 @@ final class Amount implements \JsonSerializable
     }
 
     /**
-     * @throws FormatException when the sum would overflow PHP_INT_MAX.
+     * @throws MoneyException when the sum would overflow PHP_INT_MAX.
      */
     public function add(self $other): self
     {
         if ($this->rials > PHP_INT_MAX - $other->rials) {
-            throw FormatException::forInput(
+            throw MoneyException::forInput(
                 ErrorCode::AMOUNT_OVERFLOW,
                 $this->rials . '+' . $other->rials,
             );
@@ -87,7 +87,7 @@ final class Amount implements \JsonSerializable
     }
 
     /**
-     * @throws FormatException when the result would be negative.
+     * @throws MoneyException when the result would be negative.
      */
     public function subtract(self $other): self
     {
@@ -123,15 +123,15 @@ final class Amount implements \JsonSerializable
     }
 
     /**
-     * @throws FormatException when `$qty` is negative or the product would overflow.
+     * @throws MoneyException when `$qty` is negative or the product would overflow.
      */
     public function times(int $qty): self
     {
         if ($qty < 0) {
-            throw FormatException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $qty);
+            throw MoneyException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $qty);
         }
         if ($qty !== 0 && $this->rials > intdiv(PHP_INT_MAX, $qty)) {
-            throw FormatException::forInput(
+            throw MoneyException::forInput(
                 ErrorCode::AMOUNT_OVERFLOW,
                 $this->rials . '*' . $qty,
             );
@@ -149,21 +149,21 @@ final class Amount implements \JsonSerializable
      * @param int|float $pct  percentage (e.g. `9` for 9% VAT, `0.5` for half a percent).
      * @param 1|2|3|4   $mode one of `PHP_ROUND_HALF_*`; defaults to banker's rounding.
      *
-     * @throws FormatException when `$pct` is negative, non-finite, or the result would overflow.
+     * @throws MoneyException when `$pct` is negative, non-finite, or the result would overflow.
      */
     public function percentOf(int|float $pct, int $mode = PHP_ROUND_HALF_EVEN): self
     {
         if (!is_finite((float) $pct)) {
-            throw FormatException::forInput(ErrorCode::AMOUNT_OVERFLOW, is_nan((float) $pct) ? 'NAN' : 'INF');
+            throw MoneyException::forInput(ErrorCode::AMOUNT_OVERFLOW, is_nan((float) $pct) ? 'NAN' : 'INF');
         }
         if ($pct < 0) {
-            throw FormatException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $pct);
+            throw MoneyException::forInput(ErrorCode::AMOUNT_NEGATIVE, (string) $pct);
         }
         $computed = round($this->rials * $pct / 100, 0, $mode);
         // (float) PHP_INT_MAX rounds up to 2^63 (ULP ~2048 at this magnitude),
         // so `>=` is required — any float that equals 2^63 is undefined under (int).
         if (!is_finite($computed) || $computed < 0.0 || $computed >= (float) PHP_INT_MAX) {
-            throw FormatException::forInput(
+            throw MoneyException::forInput(
                 ErrorCode::AMOUNT_OVERFLOW,
                 $this->rials . '*' . $pct . '%',
             );

@@ -34,8 +34,8 @@ class OrdinalNumberTest extends TestCase
 
     public function test_to_word_thirty(): void
     {
-        // "سی" ends with "ی" → "سی اُم"
-        $this->assertSame('سی اُم', OrdinalNumber::toWord(30));
+        // "سی" ends with "ی" → "سی‌ام" (ZWNJ, not a space)
+        $this->assertSame("سی\u{200C}ام", OrdinalNumber::toWord(30));
     }
 
     public function test_to_word_compound(): void
@@ -70,7 +70,7 @@ class OrdinalNumberTest extends TestCase
 
     public function test_to_short_english_digits(): void
     {
-        $this->assertSame('43ام', OrdinalNumber::toShort(43, 'english'));
+        $this->assertSame('43ام', OrdinalNumber::toShort(43, persianDigits: false));
     }
 
     public function test_to_short_first(): void
@@ -82,12 +82,12 @@ class OrdinalNumberTest extends TestCase
     {
         // Callers asking for English digits get to pick a matching suffix rather
         // than receive hybrid-script output like "43ام".
-        $this->assertSame('43rd', OrdinalNumber::toShort(43, 'english', 'rd'));
+        $this->assertSame('43rd', OrdinalNumber::toShort(43, false, 'rd'));
     }
 
     public function test_to_short_empty_suffix(): void
     {
-        $this->assertSame('۴۳', OrdinalNumber::toShort(43, 'persian', ''));
+        $this->assertSame('۴۳', OrdinalNumber::toShort(43, true, ''));
     }
 
     public function test_to_short_zero_throws(): void
@@ -105,7 +105,8 @@ class OrdinalNumberTest extends TestCase
 
     public function test_add_suffix_ending_with_ye(): void
     {
-        $this->assertSame('سی اُم', OrdinalNumber::addSuffix('سی'));
+        $this->assertSame("سی\u{200C}ام", OrdinalNumber::addSuffix('سی'));
+        $this->assertSame("صد و سی\u{200C}ام", OrdinalNumber::addSuffix('صد و سی'));
     }
 
     public function test_add_suffix_default(): void

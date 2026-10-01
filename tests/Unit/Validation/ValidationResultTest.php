@@ -178,4 +178,35 @@ class ValidationResultTest extends TestCase
         $this->assertSame(['شماره کارت نامعتبر است'], $payload['warnings'] ?? null);
         $this->assertSame(['CARD_NUMBER.INVALID_CHECKSUM'], $payload['warning_codes'] ?? null);
     }
+
+    public function test_exception_from_result_without_codes_uses_generic_code(): void
+    {
+        // 0.8: no more \LogicException for string-only results.
+        $e = \Eram\Abzar\Exception\ValidationException::fromResult(ValidationResult::invalid('custom failure'));
+        $this->assertSame(ErrorCode::VALIDATION_FAILED, $e->errorCode());
+        $this->assertSame('custom failure', $e->getMessage());
+
+        $valid = \Eram\Abzar\Exception\ValidationException::fromResult(ValidationResult::valid());
+        $this->assertSame(ErrorCode::VALIDATION_FAILED, $valid->errorCode());
+    }
+
+    public function test_exception_from_result_prefers_error_code_over_warning(): void
+    {
+        $result = ValidationResult::invalid(
+            ErrorCode::CARD_NUMBER_INVALID_CHECKSUM,
+            [ErrorCode::CARD_NUMBER_UNKNOWN_BIN, ErrorCode::IBAN_UNKNOWN_BANK],
+        );
+        $e = \Eram\Abzar\Exception\ValidationException::fromResult($result);
+        $this->assertSame(ErrorCode::CARD_NUMBER_INVALID_CHECKSUM, $e->errorCode());
+
+        $warned = ValidationResult::validWithWarnings([ErrorCode::CARD_NUMBER_UNKNOWN_BIN, ErrorCode::IBAN_UNKNOWN_BANK]);
+        $this->assertSame(ErrorCode::CARD_NUMBER_UNKNOWN_BIN, \Eram\Abzar\Exception\ValidationException::fromResult($warned)->errorCode());
+    }
+
+    public function test_fake_argument_exception_message(): void
+    {
+        $e = \Eram\Abzar\Exception\ValidationException::forFakeArgument('bin must be exactly 6 digits');
+        $this->assertSame(ErrorCode::FAKE_INVALID_ARGUMENT->message() . ': bin must be exactly 6 digits', $e->getMessage());
+        $this->assertSame([ErrorCode::FAKE_INVALID_ARGUMENT], $e->result()->errorCodes());
+    }
 }

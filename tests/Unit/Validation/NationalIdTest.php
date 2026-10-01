@@ -211,4 +211,34 @@ class NationalIdTest extends TestCase
         $this->assertTrue(NationalId::validate("001\u{2013}354\u{2013}2419")->isValid());
         $this->assertSame('0013542419', NationalId::from("\u{202B}۰۰۱۳۵۴۲۴۱۹\u{202C}")->value());
     }
+
+    public function test_unknown_city_code_valid_with_warning(): void
+    {
+        self::assertArrayNotHasKey('998', \Eram\Abzar\Data\DataSources::nationalIdCityCodes());
+
+        $result = NationalId::validate('9988271611');
+        $this->assertTrue($result->isValid());
+        $this->assertSame([ErrorCode::NATIONAL_ID_UNKNOWN_CITY_CODE], $result->warningCodes());
+
+        $ni = NationalId::from('9988271611');
+        $this->assertSame('998', $ni->cityCode());
+        $this->assertNull($ni->city());
+        $this->assertNull($ni->province());
+    }
+
+    public function test_known_city_code_has_no_warning(): void
+    {
+        $this->assertTrue(NationalId::validate('0013542419')->isStrictlyValid());
+    }
+
+    public function test_fake_rejects_malformed_city_code(): void
+    {
+        try {
+            NationalId::fake('12');
+            $this->fail('expected ValidationException');
+        } catch (\Eram\Abzar\Exception\ValidationException $e) {
+            $this->assertSame(ErrorCode::FAKE_INVALID_ARGUMENT, $e->errorCode());
+            $this->assertFalse($e->result()->isValid());
+        }
+    }
 }

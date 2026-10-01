@@ -62,4 +62,18 @@ final class CurrencyTest extends TestCase
     {
         self::assertSame(42, Currency::convert(42, Unit::TOMAN, Unit::TOMAN));
     }
+
+    public function test_format_accepts_amount(): void
+    {
+        $amount = \Eram\Abzar\Money\Amount::fromToman(1234);
+        self::assertSame('۱،۲۳۴ تومان', Currency::format($amount));
+        self::assertSame('۱۲،۳۴۰ ریال', Currency::format($amount, Unit::RIAL));
+    }
+
+    public function test_format_amount_keeps_sub_toman_rials(): void
+    {
+        // 12,345 rials is 1,234.5 toman — never silently truncated.
+        $amount = \Eram\Abzar\Money\Amount::fromRials(12345);
+        self::assertSame('1,234.5 تومان', Currency::format($amount, persianDigits: false, separator: ','));
+    }
 }

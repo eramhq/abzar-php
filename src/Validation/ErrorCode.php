@@ -20,20 +20,24 @@ enum ErrorCode: string
     case NATIONAL_ID_SEQUENTIAL_DIGITS  = 'NATIONAL_ID.SEQUENTIAL_DIGITS';
     case NATIONAL_ID_MIDDLE_ZEROS       = 'NATIONAL_ID.MIDDLE_ZEROS';
     case NATIONAL_ID_INVALID_CHECKSUM   = 'NATIONAL_ID.INVALID_CHECKSUM';
+    case NATIONAL_ID_UNKNOWN_CITY_CODE  = 'NATIONAL_ID.UNKNOWN_CITY_CODE';
 
     case CARD_NUMBER_EMPTY              = 'CARD_NUMBER.EMPTY';
     case CARD_NUMBER_WRONG_LENGTH       = 'CARD_NUMBER.WRONG_LENGTH';
     case CARD_NUMBER_INVALID_CHECKSUM   = 'CARD_NUMBER.INVALID_CHECKSUM';
+    case CARD_NUMBER_ALL_SAME_DIGITS    = 'CARD_NUMBER.ALL_SAME_DIGITS';
     case CARD_NUMBER_UNKNOWN_BIN        = 'CARD_NUMBER.UNKNOWN_BIN';
 
     case IBAN_EMPTY                     = 'IBAN.EMPTY';
     case IBAN_MISSING_PREFIX            = 'IBAN.MISSING_PREFIX';
     case IBAN_WRONG_LENGTH              = 'IBAN.WRONG_LENGTH';
     case IBAN_INVALID_CHECKSUM          = 'IBAN.INVALID_CHECKSUM';
+    case IBAN_UNKNOWN_BANK              = 'IBAN.UNKNOWN_BANK';
 
     case PHONE_NUMBER_EMPTY             = 'PHONE_NUMBER.EMPTY';
     case PHONE_NUMBER_INVALID_FORMAT    = 'PHONE_NUMBER.INVALID_FORMAT';
     case PHONE_NUMBER_UNKNOWN_OPERATOR  = 'PHONE_NUMBER.UNKNOWN_OPERATOR';
+    case PHONE_NUMBER_UNKNOWN_AREA_CODE = 'PHONE_NUMBER.UNKNOWN_AREA_CODE';
 
     case LEGAL_ID_EMPTY                 = 'LEGAL_ID.EMPTY';
     case LEGAL_ID_WRONG_LENGTH          = 'LEGAL_ID.WRONG_LENGTH';
@@ -68,6 +72,9 @@ enum ErrorCode: string
 
     case HTML_SEGMENTATION_FAILED       = 'HTML.SEGMENTATION_FAILED';
 
+    case VALIDATION_FAILED              = 'VALIDATION.FAILED';
+    case FAKE_INVALID_ARGUMENT          = 'FAKE.INVALID_ARGUMENT';
+
     case ENV_MISSING_EXT_INTL           = 'ENV.MISSING_EXT_INTL';
 
     public function message(): string
@@ -80,20 +87,24 @@ enum ErrorCode: string
             self::NATIONAL_ID_SEQUENTIAL_DIGITS,
             self::NATIONAL_ID_MIDDLE_ZEROS,
             self::NATIONAL_ID_INVALID_CHECKSUM   => 'کد ملی نامعتبر است',
+            self::NATIONAL_ID_UNKNOWN_CITY_CODE  => 'محل صدور کد ملی شناسایی نشد',
 
             self::CARD_NUMBER_EMPTY              => 'شماره کارت نمی‌تواند خالی باشد',
             self::CARD_NUMBER_WRONG_LENGTH       => 'شماره کارت باید ۱۶ رقم باشد',
-            self::CARD_NUMBER_INVALID_CHECKSUM   => 'شماره کارت نامعتبر است',
+            self::CARD_NUMBER_INVALID_CHECKSUM,
+            self::CARD_NUMBER_ALL_SAME_DIGITS    => 'شماره کارت نامعتبر است',
             self::CARD_NUMBER_UNKNOWN_BIN        => 'بانک صادرکننده شناسایی نشد',
 
             self::IBAN_EMPTY                     => 'شماره شبا نمی‌تواند خالی باشد',
             self::IBAN_MISSING_PREFIX            => 'شماره شبا باید با IR شروع شود',
             self::IBAN_WRONG_LENGTH              => 'شماره شبا باید ۲۶ کاراکتر باشد (IR + ۲۴ رقم)',
             self::IBAN_INVALID_CHECKSUM          => 'شماره شبا نامعتبر است',
+            self::IBAN_UNKNOWN_BANK              => 'بانک این شماره شبا شناسایی نشد',
 
             self::PHONE_NUMBER_EMPTY             => 'شماره تلفن نمی‌تواند خالی باشد',
             self::PHONE_NUMBER_INVALID_FORMAT    => 'شماره تلفن باید یک شماره موبایل یا تلفن ثابت ایرانی معتبر باشد',
             self::PHONE_NUMBER_UNKNOWN_OPERATOR  => 'اپراتور این شماره شناسایی نشد',
+            self::PHONE_NUMBER_UNKNOWN_AREA_CODE => 'پیش‌شماره این تلفن ثابت شناسایی نشد',
 
             self::LEGAL_ID_EMPTY                 => 'شناسه حقوقی نمی‌تواند خالی باشد',
             self::LEGAL_ID_WRONG_LENGTH          => 'شناسه حقوقی باید ۱۱ رقم باشد',
@@ -105,7 +116,7 @@ enum ErrorCode: string
             self::POSTAL_CODE_INVALID_PATTERN    => 'کد پستی نامعتبر است',
 
             self::BILL_ID_EMPTY                  => 'شناسه قبض نمی‌تواند خالی باشد',
-            self::BILL_ID_WRONG_LENGTH           => 'شناسه قبض باید حداقل ۶ رقم باشد',
+            self::BILL_ID_WRONG_LENGTH           => 'شناسه قبض باید بین ۶ تا ۱۳ رقم باشد',
             self::BILL_ID_INVALID_CHECKSUM       => 'شناسه قبض نامعتبر است',
             self::BILL_ID_PAYMENT_MISMATCH       => 'شناسه پرداخت با شناسه قبض مطابقت ندارد',
             self::BILL_ID_PAYMENT_EMPTY          => 'شناسه پرداخت نمی‌تواند خالی باشد',
@@ -127,6 +138,9 @@ enum ErrorCode: string
             self::AMOUNT_OVERFLOW                => 'مبلغ از حداکثر مقدار قابل نمایش بیشتر است',
 
             self::HTML_SEGMENTATION_FAILED       => 'پردازش متن HTML ناموفق بود',
+
+            self::VALIDATION_FAILED              => 'اعتبارسنجی ناموفق بود',
+            self::FAKE_INVALID_ARGUMENT          => 'آرگومان ورودی برای تولید داده آزمایشی نامعتبر است',
 
             self::ENV_MISSING_EXT_INTL           => 'این قابلیت به افزونهٔ ext-intl نیاز دارد',
         };

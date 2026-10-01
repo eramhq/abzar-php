@@ -160,4 +160,40 @@ final class BillIdTest extends TestCase
 
         return $rem < 2 ? 0 : 11 - $rem;
     }
+
+    public function test_bill_id_longer_than_13_digits_rejected(): void
+    {
+        $result = BillId::validate('12345678901234');
+        self::assertSame([ErrorCode::BILL_ID_WRONG_LENGTH], $result->errorCodes());
+    }
+
+    public function test_fake_round_trips(): void
+    {
+        for ($i = 0; $i < 50; $i++) {
+            $bill = BillId::fake();
+            self::assertTrue(BillId::validate($bill)->isValid(), "generated $bill");
+            self::assertLessThanOrEqual(13, strlen($bill));
+
+            $payment = BillId::fakePaymentId($bill);
+            self::assertTrue(BillId::validatePair($bill, $payment)->isValid(), "generated $bill / $payment");
+        }
+    }
+
+    public function test_fake_honors_type(): void
+    {
+        $bill = BillId::fake(BillType::GAS);
+        self::assertSame(BillType::GAS, BillId::from($bill, BillId::fakePaymentId($bill))->type());
+    }
+
+    public function test_fake_rejects_other_type(): void
+    {
+        $this->expectException(\Eram\Abzar\Exception\ValidationException::class);
+        BillId::fake(BillType::OTHER);
+    }
+
+    public function test_fake_payment_id_rejects_invalid_bill(): void
+    {
+        $this->expectException(\Eram\Abzar\Exception\ValidationException::class);
+        BillId::fakePaymentId('123');
+    }
 }

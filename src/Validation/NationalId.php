@@ -7,12 +7,17 @@ namespace Eram\Abzar\Validation;
 use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Internal\Extractor;
 use Eram\Abzar\Validation\Details\NationalIdDetails;
 
 /**
  * Iranian National ID (کد ملی) — a 10-digit personal identifier. Ingest
  * via {@see self::from()} or {@see self::tryFrom()} when the input should
  * become a handle; use {@see self::validate()} for a plain pass/fail check.
+ *
+ * A checksum-valid ID whose 3-digit prefix isn't in the bundled table is valid
+ * with an {@see ErrorCode::NATIONAL_ID_UNKNOWN_CITY_CODE} warning and null
+ * {@code city} / {@code province}.
  */
 final class NationalId implements \JsonSerializable, \Stringable
 {
@@ -88,13 +93,16 @@ final class NationalId implements \JsonSerializable, \Stringable
 
         $prefix   = substr($input, 0, 3);
         $cityData = DataSources::nationalIdCityCodes()[$prefix] ?? ['city' => null, 'province' => null];
-
-        return ValidationResult::valid(new NationalIdDetails(
+        $detail   = new NationalIdDetails(
             value:    $input,
             cityCode: $prefix,
             city:     $cityData['city'],
             province: $cityData['province'],
-        ));
+        );
+
+        return $cityData['province'] === null
+            ? ValidationResult::validWithWarnings(ErrorCode::NATIONAL_ID_UNKNOWN_CITY_CODE, $detail)
+            : ValidationResult::valid($detail);
     }
 
     /**
@@ -109,7 +117,7 @@ final class NationalId implements \JsonSerializable, \Stringable
     {
         $cityCode ??= str_pad((string) random_int(1, 999), 3, '0', STR_PAD_LEFT);
         if (!preg_match('/^\d{3}$/', $cityCode)) {
-            throw new \InvalidArgumentException('cityCode must be exactly 3 digits');
+            throw ValidationException::forFakeArgument('cityCode must be exactly 3 digits');
         }
 
         while (true) {
@@ -150,18 +158,7 @@ final class NationalId implements \JsonSerializable, \Stringable
      */
     public static function extractAll(string $text): array
     {
-        $english = \Eram\Abzar\Digits\DigitConverter::toEnglish($text);
-        preg_match_all('/(?<!\d)\d{10}(?!\d)/', $english, $matches);
-
-        $out = [];
-        foreach ($matches[0] as $candidate) {
-            $vo = self::tryFrom($candidate);
-            if ($vo !== null) {
-                $out[] = $vo;
-            }
-        }
-
-        return $out;
+        return Extractor::all($text, '/(?<!\d)\d{10}(?!\d)/u', self::tryFrom(...));
     }
 
     public function value(): string
