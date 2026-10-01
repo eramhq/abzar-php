@@ -50,6 +50,23 @@ $qty      = $total->times(3);                        // 3,924,000 rials
 usort($amounts, fn (Amount $a, Amount $b) => $a->compareTo($b));
 ```
 
+### In words
+
+`toWords()` spells the amount out for cheques, invoices and receipts. Like `Currency::format()`, it defaults to Toman. A rial remainder is spelled out, never truncated:
+
+```php
+use Eram\Abzar\Money\Amount;
+use Eram\Abzar\Money\Unit;
+
+Amount::fromRials(1_200_000)->toWords();          // 'یکصد و بیست هزار تومان'
+Amount::fromRials(1_200_000)->toWords(Unit::RIAL); // 'یک میلیون و دویست هزار ریال'
+Amount::fromRials(12_345)->toWords();             // 'یک هزار و دویست و سی و چهار تومان و پنج ریال'
+Amount::fromRials(5)->toWords();                  // 'پنج ریال'
+Amount::fromRials(0)->toWords();                  // 'صفر تومان'
+```
+
+It covers the whole `int` range and never throws. The number words come from `NumberToWords::convert()`.
+
 ### Method reference
 
 | Method | Returns | Notes |
@@ -67,6 +84,7 @@ usort($amounts, fn (Amount $a, Amount $b) => $a->compareTo($b));
 | `subtract(Amount)` | `Amount` | Throws `AMOUNT_NEGATIVE` when the result would be negative. |
 | `times(int $qty)` | `Amount` | Throws `AMOUNT_NEGATIVE` on negative qty, `AMOUNT_OVERFLOW` when the product exceeds `PHP_INT_MAX`. `times(0)` yields zero. |
 | `percentOf(int\|float $pct, int $mode = PHP_ROUND_HALF_EVEN)` | `Amount` | Banker's rounding by default. Throws `AMOUNT_NEGATIVE` on negative pct, `AMOUNT_OVERFLOW` on `NAN` / `INF` / overflow. |
+| `toWords(Unit $unit = Unit::TOMAN)` | `string` | Persian words with the unit; a sub-toman remainder is added as `… و N ریال`. |
 | `jsonSerialize()` | `array{rials: int}` | `json_encode($amount)` → `{"rials": …}`. |
 
 All throws surface as `Eram\Abzar\Exception\MoneyException` (0.6 and earlier: `FormatException`). Catch via the library's base `AbzarException` for a single pipeline-wide handler — see `docs/en/api-stability.md`.

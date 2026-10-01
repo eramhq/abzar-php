@@ -6,6 +6,7 @@ All notable changes to this project are documented in this file. The format is l
 
 ### Added
 
+- **`Amount::toWords(Unit $unit = Unit::TOMAN): string`** spells an amount out in Persian with its unit, for cheques and invoices: `یکصد و بیست هزار تومان`. Like `Currency::format()` it defaults to Toman, and a sub-toman remainder is spelled out (`… تومان و پنج ریال`), never truncated. It covers the full `int` range and never throws.
 - `WordsToNumber::parse()` reads the alternate spellings `شیش` (6), `چارصد` (400), `بیلیون` (10⁹) and `کوآدریلیون` (10¹⁵), so it now parses every cardinal persian-tools' `numberToWords()` writes.
 - Reference pages for every validator: [National ID](docs/en/national-id.md), [Legal ID](docs/en/legal-id.md), [Card Number](docs/en/card-number.md), [IBAN](docs/en/iban.md), [Phone Number](docs/en/phone-number.md) and [Plate Number](docs/en/plate-number.md), alongside the existing postal-code and bill-ID pages.
 - [docs/en/error-codes.md](docs/en/error-codes.md): every `ErrorCode` with its Persian message, emitting class and kind (error, warning or thrown). `ErrorCodeDocsTest` fails when a case is missing or its message is out of date.

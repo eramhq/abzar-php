@@ -142,6 +142,10 @@ $vat   = $line->percentOf(9);                      // 9% VAT, banker's rounding
 $line->add($vat)->inToman();                       // 163500
 $line->compareTo($price);                          // 1  (usort-ready)
 usort($amounts, fn (Amount $a, Amount $b) => $a->compareTo($b));
+
+$price->toWords();                                 // 'پنجاه هزار تومان'
+Amount::fromRials(12_345)->toWords();              // 'یک هزار و دویست و سی و چهار تومان و پنج ریال'
+$price->toWords(Unit::RIAL);                       // 'پانصد هزار ریال'
 ```
 
 `Amount` never goes negative and traps `PHP_INT_MAX` overflow; both raise an exception carrying `ErrorCode::AMOUNT_NEGATIVE` / `AMOUNT_OVERFLOW`. See [Currency](docs/en/currency.md) for the full method reference.
