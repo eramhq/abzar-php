@@ -153,4 +153,12 @@ final class WordsToNumberTest extends TestCase
     {
         self::assertSame($expected, WordsToNumber::parse($input));
     }
+
+    public function test_large_scales_accumulate(): void
+    {
+        self::assertSame(1_002_000_000, WordsToNumber::parse('یک میلیارد و دو میلیون'));
+        self::assertSame(3_000_000_000_004, WordsToNumber::parse('سه تریلیون و چهار'));
+        self::assertSame(100, WordsToNumber::parse('صد'));
+        self::assertSame(120, WordsToNumber::parse('صد و بیست'));
+    }
 }

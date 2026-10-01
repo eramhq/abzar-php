@@ -215,19 +215,43 @@ class PhoneNumberTest extends TestCase
         $this->assertNull(PhoneNumber::tryFrom(''));
     }
 
-    public function test_from_throws_on_unknown_operator(): void
+    public function test_from_accepts_unknown_operator(): void
     {
-        try {
-            PhoneNumber::from('09401234567');
-            $this->fail('expected ValidationException for unknown operator');
-        } catch (ValidationException $e) {
-            $this->assertSame(ErrorCode::PHONE_NUMBER_UNKNOWN_OPERATOR, $e->errorCode());
-        }
+        $phone = PhoneNumber::from('09401234567');
+        $this->assertTrue($phone->isMobile());
+        $this->assertNull($phone->operator());
+        $this->assertNull($phone->operatorEnum());
     }
 
-    public function test_try_from_null_on_unknown_operator(): void
+    public function test_try_from_accepts_unknown_operator(): void
     {
-        $this->assertNull(PhoneNumber::tryFrom('09401234567'));
+        $this->assertNotNull(PhoneNumber::tryFrom('09401234567'));
+    }
+
+    public function test_unknown_area_code_valid_with_warning(): void
+    {
+        // 012 is not an assigned area code; the number still has landline shape.
+        $result = PhoneNumber::validate('01212345678');
+        $this->assertTrue($result->isValid());
+        $this->assertSame([ErrorCode::PHONE_NUMBER_UNKNOWN_AREA_CODE], $result->warningCodes());
+        $detail = $result->detail();
+        $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+        $this->assertSame(PhoneNumberType::LANDLINE, $detail->type);
+        $this->assertSame('012', $detail->areaCode);
+        $this->assertNull($detail->city);
+        $this->assertNull($detail->province);
+
+        $phone = PhoneNumber::from('012 1234 5678');
+        $this->assertSame('+981212345678', $phone->e164());
+        $this->assertNull($phone->provinceEnum());
+    }
+
+    public function test_landline_shape_requires_area_code_digit_one_to_eight(): void
+    {
+        $this->assertSame(
+            [ErrorCode::PHONE_NUMBER_INVALID_FORMAT],
+            PhoneNumber::validate('00123456789')->errorCodes(),
+        );
     }
 
     public function test_from_landline(): void
@@ -283,8 +307,46 @@ class PhoneNumberTest extends TestCase
 
     public function test_fake_rejects_non_three_digit_prefix(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ValidationException::class);
         PhoneNumber::fake('12');
+    }
+
+    public function test_fake_landline(): void
+    {
+        for ($i = 0; $i < 50; $i++) {
+            $number = PhoneNumber::fake(type: PhoneNumberType::LANDLINE);
+            $result = PhoneNumber::validate($number);
+            $this->assertTrue($result->isStrictlyValid(), "generated $number");
+            $detail = $result->detail();
+            $this->assertInstanceOf(PhoneNumberDetails::class, $detail);
+            $this->assertSame(PhoneNumberType::LANDLINE, $detail->type);
+        }
+    }
+
+    public function test_fake_landline_honors_area_code(): void
+    {
+        $number = PhoneNumber::fake(type: PhoneNumberType::LANDLINE, areaCode: '021');
+        $this->assertStringStartsWith('021', $number);
+        $this->assertSame('تهران', PhoneNumber::from($number)->city());
+    }
+
+    public function test_fake_rejects_operator_prefix_for_landline(): void
+    {
+        $this->expectException(ValidationException::class);
+        PhoneNumber::fake('912', PhoneNumberType::LANDLINE);
+    }
+
+    public function test_masked(): void
+    {
+        $this->assertSame('0912 *** 4567', PhoneNumber::from('09121234567')->masked());
+        $this->assertSame('021 **** 7777', PhoneNumber::from('02188887777')->masked());
+    }
+
+    public function test_extract_all(): void
+    {
+        $text = 'Call ۰۹۱۲ ۱۲۳ ۴۵۶۷ or +98 21 8888 7777, not 12345 or 091212345678.';
+        $hits = PhoneNumber::extractAll($text);
+        $this->assertSame(['09121234567', '02188887777'], array_map(static fn (PhoneNumber $p): string => $p->value(), $hits));
     }
 
     public function test_karaj_area_code_resolves_to_alborz(): void

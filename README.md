@@ -18,7 +18,7 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 >
 > Error-code values are stable API surface as of `0.3` — renaming a case is a breaking change.
 
-> **Exception hierarchy.** Every thrown exception extends `Eram\Abzar\Exception\AbzarException` (abstract; carries `errorCode(): ErrorCode`). Three concrete subclasses: `ValidationException` (thrown by `::from()`), `FormatException` (thrown by formatters), and `EnvironmentException` (thrown when an optional extension like `ext-intl` is missing at runtime). Catch the base to handle every library failure uniformly.
+> **Exception hierarchy.** Every thrown exception extends `Eram\Abzar\Exception\AbzarException` (abstract; carries `errorCode(): ErrorCode`). Four concrete subclasses: `ValidationException` (thrown by `::from()` and by `::fake()` on a bad pinned argument), `FormatException` (thrown by formatters), `MoneyException` (thrown by `Money\Amount` on negative or overflowing values), and `EnvironmentException` (thrown when an optional extension like `ext-intl` is missing at runtime). Catch the base to handle every library failure uniformly.
 
 ## Feature matrix
 
@@ -91,7 +91,17 @@ Iban::from('IR820540102680020817909002')->bankEnum();  // Bank::PARSIAN
 PhoneNumber::normalize('+989121234567');               // '09121234567'
 ```
 
-> **`isValid()` vs `isStrictlyValid()`.** `validate()` can return `true` with a non-fatal warning when the input parses cleanly but an optional lookup fails (unknown card BIN, unknown mobile-operator prefix). `isValid()` does not reject these. For strict acceptance — form submissions, payment flows — use `from()` / `tryFrom()` (which reject warning-bearing results) or call `isStrictlyValid()` explicitly. The warning path is documented per validator under `docs/en/`.
+> **`isValid()` vs `isStrictlyValid()`.** Every validator follows one rule: input that is well-formed and passes its checksum is *valid*. When an optional lookup doesn't know it (unknown national-ID city prefix, card BIN, IBAN bank code, mobile operator, landline area code, plate letter or city code), the result is still valid but carries a warning code and the lookup field is `null`. `isValid()`, `from()`, `tryFrom()`, `normalize()` and `extractAll()` all accept these. When you need every lookup resolved (for example a payment form that only takes cards from known issuers), check `isStrictlyValid()`, which is valid with no warnings:
+>
+> ```php
+> $r = CardNumber::validate('1234567890123452');   // Luhn-valid, unknown BIN
+> $r->isValid();                                   // true
+> $r->isStrictlyValid();                           // false
+> $r->warningCodes();                              // [ErrorCode::CARD_NUMBER_UNKNOWN_BIN]
+> CardNumber::from('1234567890123452')->bank();    // null
+> ```
+>
+> Upgrading from 0.6? `from()` used to reject these for cards, phones and plates. See [UPGRADE.md](UPGRADE.md).
 
 ### Formatting
 
@@ -109,6 +119,7 @@ NumberToWords::convert(3.25);                     // 'سه ممیز بیست و 
 
 OrdinalNumber::toWord(43);                        // 'چهل و سوم'
 OrdinalNumber::toShort(43);                       // '۴۳ام'
+OrdinalNumber::toShort(43, false, 'rd');          // '43rd'
 
 TimeAgo::format(time() - 300);                    // '۵ دقیقه پیش'
 ```
@@ -118,10 +129,12 @@ TimeAgo::format(time() - 300);                    // '۵ دقیقه پیش'
 ```php
 use Eram\Abzar\Money\Amount;
 use Eram\Abzar\Money\Currency;
+use Eram\Abzar\Money\Unit;
 
 $price = Amount::fromToman(50_000);
 $price->inRials();                                 // 500000  (no ×10 confusion)
-Currency::format($price->inToman());               // '۵۰،۰۰۰ تومان'
+Currency::format($price);                          // '۵۰،۰۰۰ تومان'
+Currency::format($price, Unit::RIAL);              // '۵۰۰،۰۰۰ ریال'
 $price->add(Amount::fromToman(5_000))->inToman();  // 55000
 
 $line  = $price->times(3);                         // 150,000 toman
@@ -176,7 +189,11 @@ $plate = PlateNumber::from('12 ب 345 11');
 $plate->letter();     // 'ب'
 $plate->type()->value; // 'private'
 $plate->province();   // 'تهران'
-(string) $plate;      // '12ب345-11'
+$plate->provinceEnum(); // Province::TEHRAN
+$plate->value();      // '12ب345-11'
+
+// Codes issued before a province split map to every successor:
+PlateNumber::from('12ب345-21')->provinces();      // ['تهران', 'البرز']
 ```
 
 ### Display formatters
@@ -186,6 +203,8 @@ use Eram\Abzar\Validation\{CardNumber, PhoneNumber, Iban};
 
 CardNumber::from('6037991234567893')->formatted();       // '6037 9912 3456 7893'
 CardNumber::from('6037991234567893')->masked();          // '6037 99** **** 7893'
+PhoneNumber::from('09121234567')->masked();              // '0912 *** 4567'
+Iban::from('IR820540102680020817909002')->masked();      // 'IR82 054* **** **** **** **90 02'
 PhoneNumber::from('09121234567')->formatted();           // '0912 123 4567'
 PhoneNumber::from('09121234567')->formatted(true);       // '+98 912 123 4567'
 PhoneNumber::from('02188887777')->formatted();           // '021 8888 7777'
@@ -195,20 +214,27 @@ Iban::from('IR820540102680020817909002')->formatted();   // 'IR82 0540 1026 8002
 ### Fixtures and extraction
 
 ```php
-use Eram\Abzar\Validation\{NationalId, CardNumber, LegalId, PhoneNumber, Iban, PostalCode, PlateNumber, PlateType};
+use Eram\Abzar\Validation\{BillId, BillType, NationalId, CardNumber, LegalId, PhoneNumber, PhoneNumberType, Iban, PostalCode, PlateNumber, PlateType};
 
 // Valid-by-construction generators (tests / seed data only — may or may not be real)
 $id     = NationalId::fake();            // e.g. '0013542419'
 $card   = CardNumber::fake('603799');    // Luhn-valid card with pinned BIN
 $legal  = LegalId::fake();
 $phone  = PhoneNumber::fake();           // e.g. '09121234567' (or pin operator: fake('912'))
+$tel    = PhoneNumber::fake(type: PhoneNumberType::LANDLINE, areaCode: '021');
 $iban   = Iban::fake();                  // e.g. 'IR82054…' (or pin bank code: fake('054'))
 $postal = PostalCode::fake();
 $plate  = PlateNumber::fake(PlateType::TAXI); // pin category, or fake() for any
+$bill   = BillId::fake(BillType::GAS);
+$pay    = BillId::fakePaymentId($bill);  // cross-checksums against $bill
 
 // Pull every valid ID out of free text (chat logs, OCR, scraped pages)
 $ids    = NationalId::extractAll('Customer 0013542419 and 1234567891 enrolled.');
 $cards  = CardNumber::extractAll('Paid via 6037 9912 3456 7893');
+$phones = PhoneNumber::extractAll('تماس: ۰۹۱۲ ۱۲۳ ۴۵۶۷ یا +98 21 8888 7777');
+$ibans  = Iban::extractAll('شبا IR82 0540 1026 8002 0817 9090 02');
+$postal = PostalCode::extractAll('کد پستی ۱۳۵۷۹-۸۶۴۲۱');
+$plates = PlateNumber::extractAll('پلاک ۱۲ب۳۴۵-۷۷');
 ```
 
 ### Persian collation and half-space fixing

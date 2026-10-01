@@ -150,8 +150,40 @@ class IbanTest extends TestCase
 
     public function test_fake_rejects_non_three_digit_bank_code(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ValidationException::class);
         Iban::fake('12');
+    }
+
+    public function test_unknown_bank_code_valid_with_warning(): void
+    {
+        $result = Iban::validate('IR940990278828365058148453');
+        $this->assertTrue($result->isValid());
+        $this->assertSame([ErrorCode::IBAN_UNKNOWN_BANK], $result->warningCodes());
+        $iban = Iban::from('IR940990278828365058148453');
+        $this->assertSame('099', $iban->bankCode());
+        $this->assertNull($iban->bank());
+    }
+
+    public function test_known_bank_code_has_no_warning(): void
+    {
+        $this->assertTrue(Iban::validate('IR820540102680020817909002')->isStrictlyValid());
+    }
+
+    public function test_masked(): void
+    {
+        $this->assertSame(
+            'IR82 054* **** **** **** **90 02',
+            Iban::from('IR820540102680020817909002')->masked(),
+        );
+    }
+
+    public function test_extract_all(): void
+    {
+        $text = 'شبا: IR82 0540 1026 8002 0817 9090 02 و ir820540102680020817909002؛ نامعتبر IR820540102680020817909003';
+        $hits = Iban::extractAll($text);
+        $this->assertCount(2, $hits);
+        $this->assertSame('IR820540102680020817909002', $hits[0]->value());
+        $this->assertSame('IR820540102680020817909002', $hits[1]->value());
     }
 
     public function test_accepts_iban_with_dashes_and_invisible_marks(): void

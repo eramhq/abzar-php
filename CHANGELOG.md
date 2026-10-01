@@ -6,7 +6,24 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [0.7.0-beta] — 2026-10-01
 
-Correctness and hygiene only — no API removals; the behaviour changes below are bug fixes.
+Correctness fixes across the lookup data, input cleaning, formatters and HTML handling, plus a consistency pass that makes every validator follow the same rules. **Contains breaking changes:** see [UPGRADE.md](UPGRADE.md) for migration snippets.
+
+### Changed (breaking — 0.x)
+
+- **One warning rule for every validator.** Well-formed, checksum-valid input is valid; an unknown lookup adds a warning code and leaves the lookup field `null`:
+  - `NationalId`: unknown city prefix → `NATIONAL_ID.UNKNOWN_CITY_CODE` warning (was silently valid).
+  - `Iban`: unknown bank code → `IBAN.UNKNOWN_BANK` warning (was silently valid).
+  - `PhoneNumber`: landline with an uncatalogued `0[1-8]x` area code → valid with `PHONE_NUMBER.UNKNOWN_AREA_CODE` and null city / province (was invalid `PHONE_NUMBER.INVALID_FORMAT`). 11-digit input starting `00` is no longer read as a landline.
+  - `CardNumber`: all-same-digit cards → `CARD_NUMBER.ALL_SAME_DIGITS` (was `CARD_NUMBER.INVALID_CHECKSUM`).
+- **`from()` / `tryFrom()` / `extractAll()` accept warning-bearing results** on `CardNumber`, `PhoneNumber` and `PlateNumber`, matching the other validators. This reverses the 0.5 strict-VO rule. `isStrictlyValid()` is unchanged; use it for strict acceptance.
+- `::fake()` throws `ValidationException` with `ErrorCode::FAKE_INVALID_ARGUMENT` instead of `\InvalidArgumentException`.
+- `Money\Amount` throws the new `Exception\MoneyException` instead of `FormatException` (same `AMOUNT_*` codes).
+- `ValidationException::fromResult()` falls back to `ErrorCode::VALIDATION_FAILED` instead of throwing `\LogicException` when the result has no code.
+- `OrdinalNumber::toShort(int $n, bool $persianDigits = true, string $suffix = 'ام')` — the second argument was the string `'persian'` / `'english'`.
+- `OrdinalNumber` joins `ام` to words ending in `ی` with ZWNJ: `سی‌ام` (was `سی اُم`). Deliberate divergence from persian-tools.
+- `KeyboardFixer::enToFa()` maps upper-case letters through the ISIRI 9147 Shift layer (`H` → `آ`, `C` → `ژ`, `M` → `ء`, `B` → ZWNJ, …) instead of lower-casing them; `faToEn()` reverses it.
+- `BillId` caps bill IDs at 13 digits (was 18); the `BILL_ID.WRONG_LENGTH` message now states the range.
+- `Bank::AYANDEH->isDefunct()` is `true`: Ayandeh was dissolved into Bank Melli on 2025-10-23.
 
 ### Added
 
@@ -17,6 +34,15 @@ Correctness and hygiene only — no API removals; the behaviour changes below ar
 - `DataSources::plateCodes()` / `DataSources::plateLetters()` — the plate tables now live in `src/Data/PlateCodes.php` / `src/Data/PlateLetters.php` like every other lookup table.
 - `ErrorCode::HTML_SEGMENTATION_FAILED` — raised (as `FormatException`) by `HtmlSegmenter::transformText()` and therefore `DigitConverter::convertContent()` / `CharNormalizer::normalizeContent()` when PCRE cannot segment the input.
 - CI: PHP 8.5 in the test and release matrices, `composer validate --strict`, read-only default token permissions, a per-ref concurrency group, a composer cache keyed on `composer.lock`, and a PHP 8.1 job without `ext-intl`.
+- `extractAll()` on `PhoneNumber`, `Iban`, `PostalCode` and `PlateNumber`, sharing one internal engine with `NationalId::extractAll()` / `CardNumber::extractAll()`.
+- `masked()` on `PhoneNumber` (`0912 *** 4567`, `021 **** 7777`) and `Iban` (`IR82 054* **** **** **** **90 02`).
+- `PlateNumber::value()`, `provinces()`, `provinceEnum()` (single-province codes only) and `provinceEnums()`; `PlateNumberDetails::provinceEnum()` / `provinceEnums()`.
+- `Currency::format()` accepts a `Money\Amount`, rendered in the requested unit without truncating sub-toman rials.
+- `BillId::fake(?BillType $type = null)` and `BillId::fakePaymentId(string $billId)`.
+- `PhoneNumber::fake()` can generate landlines: `fake(type: PhoneNumberType::LANDLINE, areaCode: '021')`.
+- `Exception\MoneyException`; `ValidationException::forFakeArgument()`.
+- `ErrorCode` cases: `NATIONAL_ID_UNKNOWN_CITY_CODE`, `CARD_NUMBER_ALL_SAME_DIGITS`, `IBAN_UNKNOWN_BANK`, `PHONE_NUMBER_UNKNOWN_AREA_CODE`, `VALIDATION_FAILED`, `FAKE_INVALID_ARGUMENT`.
+- `UPGRADE.md`.
 
 ### Fixed
 
@@ -42,6 +68,9 @@ Correctness and hygiene only — no API removals; the behaviour changes below ar
 - `docs/en/async-runtimes.md` lists every process-wide static cache.
 - `.gitattributes` export-ignores `composer.lock`, `infection.json5`, `phpbench.json`, `.php-cs-fixer.dist.php`, `.editorconfig`, `.gitignore` and `.gitattributes`; `.gitignore` adds `var/` and `.phpbench/`.
 - `ErrorCodeMessageSnapshotTest` covers every `ErrorCode` case and fails when a new case lacks a snapshot.
+- README "`isValid()` vs `isStrictlyValid()`" rewritten for the uniform rule; examples for the new extractors, masks, plate provinces, `Currency::format(Amount)` and the fake helpers.
+- `docs/en/words-to-number.md` no longer claims large values overflow to `float`; it documents the ordering rules and `null` on overflow.
+- `docs/en/keyboard-fixer.md`, `bill-id.md`, `currency.md` and `api-stability.md` updated for the changes above.
 
 ## [0.6.0-beta] — 2026-04-18
 

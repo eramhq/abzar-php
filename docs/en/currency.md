@@ -3,20 +3,25 @@
 `Eram\Abzar\Money\Currency` formats and converts between Toman and Rial.
 
 ```php
+use Eram\Abzar\Money\Amount;
 use Eram\Abzar\Money\Currency;
 use Eram\Abzar\Money\Unit;
 
 Currency::format(1234);                                // ۱،۲۳۴ تومان
-Currency::format(12340, Unit::RIAL, persianDigits: false); // 12,340 ریال
+Currency::format(12340, Unit::RIAL, persianDigits: false); // 12،340 ریال
 Currency::format(1000, withUnit: false);               // ۱،۰۰۰
 Currency::convert(1234, Unit::TOMAN, Unit::RIAL);      // 12340
+
+// An Amount is rendered in the requested unit; sub-toman rials are kept.
+Currency::format(Amount::fromRials(12_345));           // '۱،۲۳۴.۵ تومان'
+Currency::format(Amount::fromToman(50_000), Unit::RIAL); // '۵۰۰،۰۰۰ ریال'
 ```
 
 ## Options
 
 | Arg | Default | Purpose |
 |---|---|---|
-| `amount` | — | `int`, `float`, or numeric string. Strings are digit-normalized first. |
+| `amount` | — | `int`, `float`, numeric string, or `Amount`. Strings are digit-normalized first and may carry `،` / `٬` / `,` grouping. |
 | `unit` | `TOMAN` | `Unit::TOMAN` or `Unit::RIAL`. |
 | `persianDigits` | `true` | Convert output digits to Persian (`۰-۹`). |
 | `withUnit` | `true` | Append the unit word (`تومان` / `ریال`). |
@@ -64,4 +69,4 @@ usort($amounts, fn (Amount $a, Amount $b) => $a->compareTo($b));
 | `percentOf(int\|float $pct, int $mode = PHP_ROUND_HALF_EVEN)` | `Amount` | Banker's rounding by default. Throws `AMOUNT_NEGATIVE` on negative pct, `AMOUNT_OVERFLOW` on `NAN` / `INF` / overflow. |
 | `jsonSerialize()` | `array{rials: int}` | `json_encode($amount)` → `{"rials": …}`. |
 
-All throws surface as `Eram\Abzar\Exception\FormatException`. Catch via the library's base `AbzarException` for a single pipeline-wide handler — see `docs/en/api-stability.md`.
+All throws surface as `Eram\Abzar\Exception\MoneyException` (0.6 and earlier: `FormatException`). Catch via the library's base `AbzarException` for a single pipeline-wide handler — see `docs/en/api-stability.md`.

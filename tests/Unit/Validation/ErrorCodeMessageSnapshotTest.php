@@ -26,20 +26,24 @@ final class ErrorCodeMessageSnapshotTest extends TestCase
         yield 'national-id middle zeros'  => [ErrorCode::NATIONAL_ID_MIDDLE_ZEROS,      'کد ملی نامعتبر است'];
         yield 'national-id checksum'      => [ErrorCode::NATIONAL_ID_INVALID_CHECKSUM,  'کد ملی نامعتبر است'];
         yield 'national-id truncated'     => [ErrorCode::NATIONAL_ID_LIKELY_TRUNCATED,  'کد ملی باید ۱۰ رقم باشد؛ ممکن است صفرهای ابتدایی حذف شده باشد'];
+        yield 'national-id unknown city'  => [ErrorCode::NATIONAL_ID_UNKNOWN_CITY_CODE, 'محل صدور کد ملی شناسایی نشد'];
 
         yield 'card empty'                => [ErrorCode::CARD_NUMBER_EMPTY,             'شماره کارت نمی‌تواند خالی باشد'];
         yield 'card length'               => [ErrorCode::CARD_NUMBER_WRONG_LENGTH,      'شماره کارت باید ۱۶ رقم باشد'];
         yield 'card checksum'             => [ErrorCode::CARD_NUMBER_INVALID_CHECKSUM,  'شماره کارت نامعتبر است'];
         yield 'card unknown bin'          => [ErrorCode::CARD_NUMBER_UNKNOWN_BIN,       'بانک صادرکننده شناسایی نشد'];
+        yield 'card same digits'          => [ErrorCode::CARD_NUMBER_ALL_SAME_DIGITS,   'شماره کارت نامعتبر است'];
 
         yield 'iban empty'                => [ErrorCode::IBAN_EMPTY,                    'شماره شبا نمی‌تواند خالی باشد'];
         yield 'iban missing prefix'       => [ErrorCode::IBAN_MISSING_PREFIX,           'شماره شبا باید با IR شروع شود'];
         yield 'iban wrong length'         => [ErrorCode::IBAN_WRONG_LENGTH,             'شماره شبا باید ۲۶ کاراکتر باشد (IR + ۲۴ رقم)'];
         yield 'iban checksum'             => [ErrorCode::IBAN_INVALID_CHECKSUM,         'شماره شبا نامعتبر است'];
+        yield 'iban unknown bank'         => [ErrorCode::IBAN_UNKNOWN_BANK,             'بانک این شماره شبا شناسایی نشد'];
 
         yield 'phone empty'               => [ErrorCode::PHONE_NUMBER_EMPTY,            'شماره تلفن نمی‌تواند خالی باشد'];
         yield 'phone format'              => [ErrorCode::PHONE_NUMBER_INVALID_FORMAT,   'شماره تلفن باید یک شماره موبایل یا تلفن ثابت ایرانی معتبر باشد'];
         yield 'phone unknown operator'    => [ErrorCode::PHONE_NUMBER_UNKNOWN_OPERATOR, 'اپراتور این شماره شناسایی نشد'];
+        yield 'phone unknown area code'   => [ErrorCode::PHONE_NUMBER_UNKNOWN_AREA_CODE, 'پیش‌شماره این تلفن ثابت شناسایی نشد'];
 
         yield 'legal-id empty'            => [ErrorCode::LEGAL_ID_EMPTY,                'شناسه حقوقی نمی‌تواند خالی باشد'];
         yield 'legal-id length'           => [ErrorCode::LEGAL_ID_WRONG_LENGTH,         'شناسه حقوقی باید ۱۱ رقم باشد'];
@@ -51,7 +55,7 @@ final class ErrorCodeMessageSnapshotTest extends TestCase
         yield 'postal-code pattern'       => [ErrorCode::POSTAL_CODE_INVALID_PATTERN,   'کد پستی نامعتبر است'];
 
         yield 'bill-id empty'             => [ErrorCode::BILL_ID_EMPTY,                 'شناسه قبض نمی‌تواند خالی باشد'];
-        yield 'bill-id length'            => [ErrorCode::BILL_ID_WRONG_LENGTH,          'شناسه قبض باید حداقل ۶ رقم باشد'];
+        yield 'bill-id length'            => [ErrorCode::BILL_ID_WRONG_LENGTH,          'شناسه قبض باید بین ۶ تا ۱۳ رقم باشد'];
         yield 'bill-id checksum'          => [ErrorCode::BILL_ID_INVALID_CHECKSUM,      'شناسه قبض نامعتبر است'];
         yield 'bill-id payment mismatch'  => [ErrorCode::BILL_ID_PAYMENT_MISMATCH,      'شناسه پرداخت با شناسه قبض مطابقت ندارد'];
         yield 'bill-id payment empty'     => [ErrorCode::BILL_ID_PAYMENT_EMPTY,         'شناسه پرداخت نمی‌تواند خالی باشد'];
@@ -73,6 +77,9 @@ final class ErrorCodeMessageSnapshotTest extends TestCase
         yield 'amount overflow'           => [ErrorCode::AMOUNT_OVERFLOW,               'مبلغ از حداکثر مقدار قابل نمایش بیشتر است'];
 
         yield 'html segmentation failed'  => [ErrorCode::HTML_SEGMENTATION_FAILED,      'پردازش متن HTML ناموفق بود'];
+
+        yield 'validation failed'         => [ErrorCode::VALIDATION_FAILED,             'اعتبارسنجی ناموفق بود'];
+        yield 'fake invalid argument'     => [ErrorCode::FAKE_INVALID_ARGUMENT,         'آرگومان ورودی برای تولید داده آزمایشی نامعتبر است'];
 
         yield 'env missing ext-intl'      => [ErrorCode::ENV_MISSING_EXT_INTL,          'این قابلیت به افزونهٔ ext-intl نیاز دارد'];
     }

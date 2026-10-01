@@ -9,7 +9,8 @@ use Eram\Abzar\Validation\PhoneNumberType;
 use Eram\Abzar\Validation\Province;
 
 /**
- * Parsed details for a valid Iranian phone number.
+ * Parsed details for a valid Iranian phone number. Lookup fields are null when
+ * the operator prefix (mobile) or area code (landline) isn't catalogued.
  *
  * Construct via {@see self::mobile()} or {@see self::landline()} — the direct
  * constructor is private to keep the mobile/landline variants unambiguous.
@@ -41,8 +42,8 @@ final class PhoneNumberDetails implements ValidationDetail
         string $normalizedLocal,
         string $normalizedE164,
         string $areaCode,
-        string $city,
-        string $province,
+        ?string $city,
+        ?string $province,
     ): self {
         return new self(
             type:            PhoneNumberType::LANDLINE,

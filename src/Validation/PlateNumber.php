@@ -7,6 +7,7 @@ namespace Eram\Abzar\Validation;
 use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Internal\Extractor;
 use Eram\Abzar\Text\CharNormalizer;
 use Eram\Abzar\Validation\Details\PlateNumberDetails;
 
@@ -23,17 +24,17 @@ final class PlateNumber implements \JsonSerializable, \Stringable
     }
 
     /**
-     * A {@code PlateNumber} VO always represents a plate with a mapped letter
-     * type and known province — warning-bearing results (unknown letter or
-     * city code) are rejected here. Use {@see self::validate()} for full-info
-     * pass/fail.
+     * Accepts every well-formed plate, including warning-bearing results: an
+     * unknown letter yields {@see PlateType::OTHER}, an unknown city code a
+     * null province. Check {@code PlateNumber::validate($x)->isStrictlyValid()}
+     * first when only catalogued letters / codes are acceptable.
      *
      * @throws ValidationException
      */
     public static function from(string $input): self
     {
         $result = self::validate($input);
-        if (!$result->isStrictlyValid()) {
+        if (!$result->isValid()) {
             throw ValidationException::fromResult($result);
         }
 
@@ -46,7 +47,7 @@ final class PlateNumber implements \JsonSerializable, \Stringable
     public static function tryFrom(string $input): ?self
     {
         $result = self::validate($input);
-        if (!$result->isStrictlyValid()) {
+        if (!$result->isValid()) {
             return null;
         }
 
@@ -110,7 +111,7 @@ final class PlateNumber implements \JsonSerializable, \Stringable
     public static function fake(?PlateType $type = null): string
     {
         if ($type === PlateType::OTHER) {
-            throw new \InvalidArgumentException(
+            throw ValidationException::forFakeArgument(
                 'PlateType::OTHER cannot be pinned; it represents unknown letters, not a plate category',
             );
         }
@@ -121,7 +122,7 @@ final class PlateNumber implements \JsonSerializable, \Stringable
         } else {
             $letters = array_keys($letterTypes, $type->value, true);
             if ($letters === []) {
-                throw new \InvalidArgumentException('No letter mapped to PlateType::' . $type->name);
+                throw ValidationException::forFakeArgument('No letter mapped to PlateType::' . $type->name);
             }
         }
 
@@ -143,6 +144,30 @@ final class PlateNumber implements \JsonSerializable, \Stringable
         $normalizer ??= new CharNormalizer();
 
         return $normalizer->normalize($letter);
+    }
+
+    /**
+     * Scan free text for plates shaped {@code NN[letter]NNN-NN} (Persian or
+     * ASCII digits, groups optionally separated by spaces or a dash) and return
+     * each one, left to right.
+     *
+     * @return list<self>
+     */
+    public static function extractAll(string $text): array
+    {
+        return Extractor::all(
+            $text,
+            '/(?<!\d)\d{2}\s?\p{L}{1,3}\s?\d{3}\s?[-\x{2013}]?\s?\d{2}(?!\d)/u',
+            self::tryFrom(...),
+        );
+    }
+
+    /**
+     * Canonical {@code NN[letter]NNN-NN} form; same as the string cast.
+     */
+    public function value(): string
+    {
+        return (string) $this;
     }
 
     public function twoDigit(): string
@@ -173,6 +198,31 @@ final class PlateNumber implements \JsonSerializable, \Stringable
     public function province(): ?string
     {
         return $this->detail->province;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function provinces(): array
+    {
+        return $this->detail->provinces;
+    }
+
+    /**
+     * The province when the city code maps to exactly one; null for unknown
+     * codes and for codes shared across a province split (see {@see self::provinceEnums()}).
+     */
+    public function provinceEnum(): ?Province
+    {
+        return $this->detail->provinceEnum();
+    }
+
+    /**
+     * @return list<Province>
+     */
+    public function provinceEnums(): array
+    {
+        return $this->detail->provinceEnums();
     }
 
     public function detail(): PlateNumberDetails

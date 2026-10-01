@@ -7,7 +7,8 @@ use Eram\Abzar\Text\KeyboardFixer;
 
 KeyboardFixer::enToFa('sghl');   // سلام
 KeyboardFixer::faToEn('سلام');   // sghl
-KeyboardFixer::enToFa('SGHL');   // سلام — input is lowercased first
+KeyboardFixer::enToFa('Hfhn');   // آباد — Shift+H is آ (ISIRI 9147 Shift layer)
+KeyboardFixer::enToFa('ldBv,l'); // می‌روم — Shift+B is ZWNJ
 
 // Optional heuristic: was this input typed with the wrong layout?
 KeyboardFixer::detect('sghl');     // true
@@ -17,7 +18,8 @@ KeyboardFixer::detect('سلام');     // false (already Persian)
 
 ## Behaviour
 
-- Only Latin letters (lower- and uppercase) and a small set of punctuation are mapped. Digits, whitespace, Persian, Arabic, kashida, and ZWNJ pass through unchanged.
-- `enToFa()` lowercases its input before mapping. Round-trips preserve the lowercase form: `faToEn(enToFa('SGHL')) === 'sghl'`.
+- Only Latin letters and a small set of punctuation are mapped. Digits, whitespace, Persian, Arabic, kashida, and ZWNJ pass through unchanged.
+- Upper-case letters follow the Shift layer of the ISIRI 9147 standard layout: `H` → `آ`, `C` → `ژ`, `M` → `ء`, `B` → ZWNJ, `K` / `L` → `»` / `«`, `A` → `ؤ`, `S` → `ئ`, the top row → tashkeel, and so on. `faToEn()` reverses it, so `faToEn(enToFa('Hfhn')) === 'Hfhn'`. ASCII `[` / `]` (Shift+P / Shift+O) are left alone by `faToEn()`.
+- Text typed with Caps Lock on is not the Shift layer. Lower-case it first if that's your case: `enToFa(strtolower($typed))`. Before 0.7, `enToFa()` lower-cased every input.
 - The layout mapping is the standard Iranian Persian keyboard. Dari, Pashto, and other regional variants are out of scope.
 - `detect()` is a coarse character-script entropy heuristic, not grammar-aware. It returns `true` when the input is ASCII-letter-only and the vowel ratio is below ~25% — the fingerprint of a Persian word typed with the English layout. Mixed-script or already-Persian input never triggers. Treat it as a signal for *suggesting* a layout swap to the user, not for auto-applying one: consonant-heavy English tokens (brand names like `chatgpt`, acronyms, or short technical jargon) will false-positive. Do not call `enToFa()` unconditionally on `detect() === true` without giving users an opt-out.

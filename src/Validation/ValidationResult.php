@@ -42,10 +42,10 @@ final class ValidationResult implements \JsonSerializable, \Stringable
     }
 
     /**
-     * True when the result is valid AND carries no warnings — the contract
-     * value-object constructors use to decide whether the result can yield
-     * a VO (warning-bearing results can't, because the VO shape has no slot
-     * to represent "valid but uncertain").
+     * True when the result is valid AND carries no warnings — i.e. every
+     * optional lookup (bank, operator, area / city code, plate letter)
+     * resolved. Value-object constructors accept warning-bearing results
+     * (their lookup accessors return null); use this for strict acceptance.
      */
     public function isStrictlyValid(): bool
     {

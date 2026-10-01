@@ -9,6 +9,7 @@ use Eram\Abzar\Validation\Details\PlateNumberDetails;
 use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\PlateNumber;
 use Eram\Abzar\Validation\PlateType;
+use Eram\Abzar\Validation\Province;
 use PHPUnit\Framework\TestCase;
 
 final class PlateNumberTest extends TestCase
@@ -98,34 +99,50 @@ final class PlateNumberTest extends TestCase
         $this->assertNull(PlateNumber::tryFrom(''));
     }
 
-    public function test_from_throws_on_unknown_letter(): void
+    public function test_from_accepts_unknown_letter(): void
     {
-        try {
-            PlateNumber::from('12ح345-11');
-            $this->fail('expected ValidationException for unknown letter');
-        } catch (ValidationException $e) {
-            $this->assertSame(ErrorCode::PLATE_NUMBER_UNKNOWN_LETTER, $e->errorCode());
-        }
+        $plate = PlateNumber::from('12ح345-11');
+        $this->assertSame(PlateType::OTHER, $plate->type());
     }
 
-    public function test_try_from_null_on_unknown_letter(): void
+    public function test_try_from_accepts_unknown_letter(): void
     {
-        $this->assertNull(PlateNumber::tryFrom('12ح345-11'));
+        $this->assertNotNull(PlateNumber::tryFrom('12ح345-11'));
     }
 
-    public function test_from_throws_on_unknown_city_code(): void
+    public function test_from_accepts_unknown_city_code(): void
     {
-        try {
-            PlateNumber::from('12ب345-80');
-            $this->fail('expected ValidationException for unknown city code');
-        } catch (ValidationException $e) {
-            $this->assertSame(ErrorCode::PLATE_NUMBER_UNKNOWN_CITY_CODE, $e->errorCode());
-        }
+        $plate = PlateNumber::from('12ب345-80');
+        $this->assertNull($plate->province());
+        $this->assertNull($plate->provinceEnum());
+        $this->assertSame([], $plate->provinces());
     }
 
-    public function test_try_from_null_on_unknown_city_code(): void
+    public function test_try_from_accepts_unknown_city_code(): void
     {
-        $this->assertNull(PlateNumber::tryFrom('12ب345-80'));
+        $this->assertNotNull(PlateNumber::tryFrom('12ب345-80'));
+    }
+
+    public function test_value_and_province_enum(): void
+    {
+        $plate = PlateNumber::from('12 ب 345 77');
+        $this->assertSame('12ب345-77', $plate->value());
+        $this->assertSame(Province::TEHRAN, $plate->provinceEnum());
+        $this->assertSame([Province::TEHRAN], $plate->provinceEnums());
+    }
+
+    public function test_shared_code_has_no_single_province_enum(): void
+    {
+        $plate = PlateNumber::from('12ب345-21');
+        $this->assertNull($plate->provinceEnum());
+        $this->assertSame([Province::TEHRAN, Province::ALBORZ], $plate->provinceEnums());
+    }
+
+    public function test_extract_all(): void
+    {
+        $text = 'پلاک ۱۲ب۳۴۵-۷۷ و 45 ت 678 11 دیده شد؛ 12345-11 پلاک نیست.';
+        $hits = PlateNumber::extractAll($text);
+        $this->assertSame(['12ب345-77', '45ت678-11'], array_map(static fn (PlateNumber $p): string => $p->value(), $hits));
     }
 
     public function test_stringable_canonical_form(): void
@@ -158,7 +175,7 @@ final class PlateNumberTest extends TestCase
 
     public function test_fake_rejects_plate_type_other(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ValidationException::class);
         PlateNumber::fake(PlateType::OTHER);
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eram\Abzar\Validation\Details;
 
 use Eram\Abzar\Validation\PlateType;
+use Eram\Abzar\Validation\Province;
 
 /**
  * Parsed components of an Iranian license plate. The canonical shape is
@@ -29,6 +30,27 @@ final class PlateNumberDetails implements ValidationDetail
         /** @var list<string> */
         public readonly array $provinces = [],
     ) {
+    }
+
+    public function provinceEnum(): ?Province
+    {
+        return count($this->provinces) === 1 ? Province::fromPersian($this->provinces[0]) : null;
+    }
+
+    /**
+     * @return list<Province>
+     */
+    public function provinceEnums(): array
+    {
+        $out = [];
+        foreach ($this->provinces as $name) {
+            $province = Province::fromPersian($name);
+            if ($province !== null) {
+                $out[] = $province;
+            }
+        }
+
+        return $out;
     }
 
     /**

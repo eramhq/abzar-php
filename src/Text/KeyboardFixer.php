@@ -9,6 +9,10 @@ namespace Eram\Abzar\Text;
  * (fa-IR). Typical use case: a user typed with the wrong layout — e.g. pressed
  * the keys for "سلام" while QWERTY was active and produced "sghl".
  *
+ * Upper-case letters follow the Shift layer of the ISIRI 9147 standard layout
+ * (Shift+H → آ, Shift+C → ژ, Shift+M → ء, Shift+B → ZWNJ, tashkeel on the top
+ * row, …) instead of being folded to lower case.
+ *
  * Digits, whitespace, Persian / Arabic / kashida / ZWNJ are passed through as-is.
  */
 final class KeyboardFixer
@@ -26,21 +30,35 @@ final class KeyboardFixer
         '?' => '؟', '"' => '،',
     ];
 
+    /**
+     * ISIRI 9147 Shift layer for the letter keys.
+     *
+     * @var array<string, string>
+     */
+    private const EN_TO_FA_SHIFT = [
+        'Q' => "\u{0652}", 'W' => "\u{064C}", 'E' => "\u{064D}", 'R' => "\u{064B}", 'T' => "\u{064F}",
+        'Y' => "\u{0650}", 'U' => "\u{064E}", 'I' => "\u{0651}", 'O' => ']', 'P' => '[',
+        'A' => 'ؤ', 'S' => 'ئ', 'D' => 'ي', 'F' => 'إ', 'G' => 'أ', 'H' => 'آ',
+        'J' => 'ة', 'K' => '»', 'L' => '«',
+        'Z' => 'ك', 'X' => "\u{0653}", 'C' => 'ژ', 'V' => "\u{0670}", 'B' => "\u{200C}",
+        'N' => "\u{0654}", 'M' => 'ء',
+    ];
+
     private function __construct()
     {
     }
 
     public static function enToFa(string $text): string
     {
-        $lower = mb_strtolower($text, 'UTF-8');
-
-        return strtr($lower, self::EN_TO_FA);
+        return strtr($text, self::EN_TO_FA + self::EN_TO_FA_SHIFT);
     }
 
     public static function faToEn(string $text): string
     {
         static $reverse = null;
-        $reverse ??= array_flip(self::EN_TO_FA);
+        // Shift+O / Shift+P yield ASCII brackets, which in Persian text are far
+        // more likely literal than a layout slip — leave them out of the reverse map.
+        $reverse ??= array_flip(self::EN_TO_FA) + array_flip(array_diff_key(self::EN_TO_FA_SHIFT, ['O' => 0, 'P' => 0]));
 
         return strtr($text, $reverse);
     }

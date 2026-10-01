@@ -7,6 +7,7 @@ namespace Eram\Abzar\Validation;
 use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Internal\Extractor;
 use Eram\Abzar\Validation\Details\CardNumberDetails;
 
 final class CardNumber implements \JsonSerializable, \Stringable
@@ -17,16 +18,17 @@ final class CardNumber implements \JsonSerializable, \Stringable
     }
 
     /**
-     * A {@code CardNumber} VO always represents a fully validated Iranian card
-     * with a resolved bank — warning-bearing results (e.g. unknown BIN) are
-     * rejected here. Use {@see self::validate()} for full-info pass/fail.
+     * Accepts every valid card, including warning-bearing results: a
+     * Luhn-valid card with an unknown BIN yields a VO with a null bank. Check
+     * {@code CardNumber::validate($x)->isStrictlyValid()} first when only
+     * cards from a known issuer are acceptable.
      *
      * @throws ValidationException
      */
     public static function from(string $input): self
     {
         $result = self::validate($input);
-        if (!$result->isStrictlyValid()) {
+        if (!$result->isValid()) {
             throw ValidationException::fromResult($result);
         }
 
@@ -39,7 +41,7 @@ final class CardNumber implements \JsonSerializable, \Stringable
     public static function tryFrom(string $input): ?self
     {
         $result = self::validate($input);
-        if (!$result->isStrictlyValid()) {
+        if (!$result->isValid()) {
             return null;
         }
 
@@ -63,7 +65,7 @@ final class CardNumber implements \JsonSerializable, \Stringable
 
         // All-zeros is a degenerate Luhn pass; no legitimate card has that shape.
         if (preg_match('/^(\d)\1{15}$/', $input)) {
-            return ValidationResult::invalid(ErrorCode::CARD_NUMBER_INVALID_CHECKSUM);
+            return ValidationResult::invalid(ErrorCode::CARD_NUMBER_ALL_SAME_DIGITS);
         }
 
         if (!self::luhn($input)) {
@@ -94,7 +96,7 @@ final class CardNumber implements \JsonSerializable, \Stringable
         }
 
         if (!preg_match('/^\d{6}$/', $bin)) {
-            throw new \InvalidArgumentException('bin must be exactly 6 digits');
+            throw ValidationException::forFakeArgument('bin must be exactly 6 digits');
         }
 
         $body = $bin;
@@ -110,28 +112,15 @@ final class CardNumber implements \JsonSerializable, \Stringable
     }
 
     /**
-     * Scan free text for 16-digit runs (optionally spaced / dashed) and return
-     * each that parses as a valid card. Run order follows left-to-right. Only
-     * cards with a bundled BIN are returned — unknown-BIN Luhn-valid candidates
-     * are dropped (same guarantee as {@see self::from()}).
+     * Scan free text for 16-digit runs (optionally grouped with single spaces
+     * or dashes) and return each that parses as a valid card, left to right.
+     * Unknown-BIN cards are included (with a null bank), as with {@see self::from()}.
      *
      * @return list<self>
      */
     public static function extractAll(string $text): array
     {
-        $english = \Eram\Abzar\Digits\DigitConverter::toEnglish($text);
-        // Match 16 digits allowing single spaces or dashes between groups.
-        preg_match_all('/(?<!\d)(?:\d[\s-]?){15}\d(?!\d)/', $english, $matches);
-
-        $out = [];
-        foreach ($matches[0] as $candidate) {
-            $vo = self::tryFrom($candidate);
-            if ($vo !== null) {
-                $out[] = $vo;
-            }
-        }
-
-        return $out;
+        return Extractor::all($text, '/(?<!\d)(?:\d[\s-]?){15}\d(?!\d)/u', self::tryFrom(...));
     }
 
     public function value(): string

@@ -25,7 +25,12 @@ final class OrdinalNumber
         return self::addSuffix($word);
     }
 
-    public static function toShort(int $n, string $digits = 'persian', string $suffix = 'ام'): string
+    /**
+     * Numeric ordinal: {@code toShort(43)} → {@code ۴۳ام}. Pass
+     * {@code $persianDigits: false} for ASCII digits, typically with a
+     * matching suffix ({@code toShort(43, false, 'rd')} → {@code 43rd}).
+     */
+    public static function toShort(int $n, bool $persianDigits = true, string $suffix = 'ام'): string
     {
         if ($n < 1) {
             throw FormatException::forInput(ErrorCode::ORDINAL_NUMBER_NON_POSITIVE, (string) $n);
@@ -33,7 +38,7 @@ final class OrdinalNumber
 
         $str = (string) $n;
 
-        if ($digits === 'persian') {
+        if ($persianDigits) {
             $str = DigitConverter::toPersian($str);
         }
 
@@ -52,8 +57,9 @@ final class OrdinalNumber
             return mb_substr($word, 0, mb_strlen($word) - 2) . 'سوم';
         }
 
+        // سی → سی‌ام: joined with ZWNJ, per standard Persian orthography.
         if (str_ends_with($word, 'ی')) {
-            return $word . ' اُم';
+            return $word . "\u{200C}ام";
         }
 
         return $word . 'م';

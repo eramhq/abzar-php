@@ -9,6 +9,9 @@ WordsToNumber::parse('یک هزار و دویست و سی و چهار'); // 1234
 WordsToNumber::parse('منفی پنج');                    // -5
 WordsToNumber::parse('سه ممیز پنج');                 // 3.5 (float)
 WordsToNumber::parse('foo bar');                     // null — unparseable
+WordsToNumber::parse('دو سه');                       // null — not a number
+WordsToNumber::parse('سه صد');                       // 300 — split hundreds
+WordsToNumber::parse('هزار میلیارد');                // 1000000000000
 ```
 
 ## Rules
@@ -17,8 +20,10 @@ WordsToNumber::parse('foo bar');                     // null — unparseable
 - `ممیز` switches to fractional mode — the post-separator integer is divided by `10^digits` and the result becomes a `float`.
 - Leading `یک` before `هزار` / `میلیون` / etc. is optional.
 - Mixed word + digit input (e.g. `یک هزار و 200`) returns `null`. Normalize to pure words or pure digits first.
-- Whitespace and ZWNJ separate tokens; the `و` conjunction is treated as a separator.
+- Whitespace and ZWNJ separate tokens; the `و` conjunction is treated as a separator and is optional (`بیست دو` = 22).
+- Within each group below a thousand, the words must step down in size: hundreds, then tens, then ones, or a single teen. Sequences such as `دو سه`, `بیست سی` or `یازده دو` return `null` instead of being summed. A ones word followed by `صد` (`سه صد`, `یک صد`) is read as split hundreds.
+- `هزار` multiplies the group in front of it, once per group. Larger scales (`میلیون` and up) must appear in decreasing order, so `هزار میلیارد` is accepted but `یک میلیون دو میلیون` returns `null`.
 
 ## Precision ceiling
 
-Integer results fit in `int` up to `PHP_INT_MAX` (≈ 9.2 × 10¹⁸). Larger values silently overflow to `float` with the usual IEEE-754 precision loss. If you need big-integer semantics, fall back to a dedicated math library.
+Integer results fit in `int` up to `PHP_INT_MAX` (≈ 9.2 × 10¹⁸). Larger values (e.g. `ده کوینتیلیون`) return `null`. If you need big-integer semantics, use a dedicated math library.

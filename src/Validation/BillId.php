@@ -68,7 +68,7 @@ final class BillId implements \JsonSerializable, \Stringable
             return ValidationResult::invalid(ErrorCode::BILL_ID_EMPTY);
         }
 
-        if (!preg_match('/^\d{6,18}$/', $billId)) {
+        if (!preg_match('/^\d{6,13}$/', $billId)) {
             return ValidationResult::invalid(ErrorCode::BILL_ID_WRONG_LENGTH);
         }
 
@@ -112,6 +112,59 @@ final class BillId implements \JsonSerializable, \Stringable
             paymentId: $paymentId,
             type:      $billDetail->type,
         ));
+    }
+
+    /**
+     * Generate a checksum-valid bill ID (13 digits: file ID, company code,
+     * type digit, check digit) for fixtures or tests. Pin the bill category
+     * with $type; {@see BillType::OTHER} is rejected. Pair it with
+     * {@see self::fakePaymentId()} to build a full {@see self::from()} input.
+     *
+     * @throws ValidationException for {@see BillType::OTHER}.
+     */
+    public static function fake(?BillType $type = null): string
+    {
+        if ($type === BillType::OTHER) {
+            throw ValidationException::forFakeArgument('BillType::OTHER cannot be pinned; it represents unknown type digits');
+        }
+
+        $typeDigits = [];
+        for ($d = 0; $d <= 9; $d++) {
+            $decoded = BillType::fromTypeDigit($d);
+            if ($decoded !== BillType::OTHER && ($type === null || $decoded === $type)) {
+                $typeDigits[] = $d;
+            }
+        }
+
+        $body = (string) random_int(1, 9);
+        for ($i = 0; $i < 10; $i++) {
+            $body .= (string) random_int(0, 9);
+        }
+        $body .= (string) $typeDigits[array_rand($typeDigits)];
+
+        return $body . self::mod11($body);
+    }
+
+    /**
+     * Generate a payment ID (amount in thousands of rials, year digit, period,
+     * two check digits) that cross-validates against $billId.
+     *
+     * @throws ValidationException when $billId itself is invalid.
+     */
+    public static function fakePaymentId(string $billId): string
+    {
+        $result = self::validate($billId);
+        if (!$result->isValid()) {
+            throw ValidationException::fromResult($result);
+        }
+
+        /** @var BillIdDetails $detail */
+        $detail = $result->detail();
+
+        $prefix = random_int(1, 99_999) . random_int(0, 9) . str_pad((string) random_int(1, 12), 2, '0', STR_PAD_LEFT);
+        $first  = self::mod11($prefix);
+
+        return $prefix . $first . self::mod11($detail->billId . $prefix . $first);
     }
 
     public function billId(): string

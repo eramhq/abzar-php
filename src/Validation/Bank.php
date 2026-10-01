@@ -99,8 +99,9 @@ enum Bank: string
     }
 
     /**
-     * Banks dissolved or merged into Sepah (2020–2023). Historic BINs / IBAN
-     * codes remain in circulation, but the institution no longer issues new accounts.
+     * Banks dissolved or merged away: into Sepah (2020–2023), and Ayandeh into
+     * Melli (license revoked 2025-10-23). Historic BINs / IBAN codes remain in
+     * circulation, but the institution no longer issues new accounts.
      */
     public function isDefunct(): bool
     {
@@ -111,7 +112,8 @@ enum Bank: string
             self::MEHR_EGHTESAD,
             self::NOOR,
             self::DEY,
-            self::KOSAR => true,
+            self::KOSAR,
+            self::AYANDEH => true,
             default     => false,
         };
     }
