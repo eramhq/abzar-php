@@ -4,12 +4,12 @@ Abzar is scoped to framework-agnostic Persian utilities. These companion package
 
 ## Maintained by eramhq
 
-### [`eramhq/daynum`](https://github.com/eramhq/daynum)
+### [`eram/daynum`](https://github.com/eramhq/daynum)
 
 Jalali / Shamsi calendar utilities: parsing, formatting, month names, leap-year arithmetic, conversion to and from Gregorian. Abzar does **not** ship calendar logic and will not grow jalali support in-tree — use daynum for anything date-related.
 
 ```bash
-composer require eramhq/daynum
+composer require eram/daynum
 ```
 
 ### [`eramhq/persian-kit`](https://github.com/eramhq/persian-kit)

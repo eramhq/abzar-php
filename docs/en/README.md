@@ -26,6 +26,6 @@ Abzar ships the small set of Persian utilities every Iranian-facing PHP app reim
 
 What it is **not**:
 
-- A jalali / shamsi calendar library — see [`eramhq/daynum`](https://github.com/eramhq/daynum).
+- A jalali / shamsi calendar library — see [`eram/daynum`](https://github.com/eramhq/daynum).
 - A WordPress plugin — see [`eramhq/persian-kit`](https://github.com/eramhq/persian-kit).
 - A framework bridge (Laravel rule objects, Symfony validators) — write the thin adapter in your own application code; recipes below show how.

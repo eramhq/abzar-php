@@ -5,7 +5,11 @@ Abzar is safe to use inside long-running PHP workers. This page documents the sp
 ## Summary
 
 - **No request-scoped state.** Abzar never stores request inputs, user IDs, or session data across calls.
-- **Static caches are pure.** The only process-wide cache is `Slug::defaultNormalizer()`, which holds a stateless `CharNormalizer` instance constructed with default options. It depends on nothing but source code and cannot leak between requests.
+- **Static caches are pure.** Every process-wide cache is filled from source code alone and never from caller input, so nothing can leak between requests:
+  - `DataSources` — the bundled lookup tables (`src/Data/*.php`), loaded once per table.
+  - `PersianLookup::fromPersian()` — the per-enum Persian-name index for `Bank` / `Operator` / `Province`.
+  - Default-option `CharNormalizer` instances held by `Slug`, `Province` and `PlateNumber`.
+  - `WordsToNumber`'s word table and `KeyboardFixer`'s reverse layout map.
 - **No global configuration.** There is no `setLocale()`, `setConfig()`, or similar mutation point. Every function takes its input explicitly.
 - **Thread-safety** (Swoole coroutines, parallel worker threads) follows PHP's general model: each worker owns its classes and statics. Abzar does not mutate those statics after construction, so concurrent reads are safe.
 

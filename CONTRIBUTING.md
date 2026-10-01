@@ -15,7 +15,7 @@ composer test              # phpunit
 composer phpstan           # phpstan level 8
 ```
 
-All PRs must be clean against the bundled PHPStan configuration and pass on the PHP 8.1–8.4 matrix in CI.
+All PRs must be clean against the bundled PHPStan configuration and pass on the PHP 8.1–8.5 matrix in CI.
 
 ## Code style
 
@@ -28,17 +28,17 @@ All PRs must be clean against the bundled PHPStan configuration and pass on the 
 ## Adding a new validator
 
 1. Add the class under `src/Validation/<Name>.php`.
-2. Return `ValidationResult::success(array $details)` / `ValidationResult::failure(string $error)` — do not invent a different result shape.
-3. Always accept Persian and Arabic digit input; use `Eram\Abzar\Digits\DigitConverter::toEnglish()` on the input before regex / arithmetic.
+2. Return `ValidationResult::valid($detail)`, `ValidationResult::validWithWarnings(ErrorCode::…, $detail)` or `ValidationResult::invalid(ErrorCode::…)`, with a readonly DTO under `src/Validation/Details/` implementing `ValidationDetail` — do not invent a different result shape. Every new failure or warning gets its own `ErrorCode` case (plus a snapshot in `ErrorCodeMessageSnapshotTest`).
+3. Always accept Persian and Arabic digits and pasted noise (NBSP, bidi marks, Unicode dashes): run the input through `Eram\Abzar\Internal\ErrorInput::digits()` before regex / arithmetic.
 4. Add unit tests under `tests/Unit/Validation/<Name>Test.php` mirroring the conventions in the existing tests (Persian-digit case, Arabic-digit case, empty case, edge cases around the checksum).
 5. Document the new class in `README.md`'s feature matrix.
 
 ## Adding to a data table
 
-The BIN / city / operator tables in `src/Validation/` are snapshots of a specific upstream release. When adding new entries:
+The BIN / city / operator / plate tables in `src/Data/` (loaded through `Eram\Abzar\Data\DataSources`) are snapshots of a specific upstream release. When adding new entries:
 
 - Include the issuer name in Persian exactly as upstream (banks change brand names; use the name from the cited persian-tools version).
-- Add a test case that asserts the new entry resolves to the expected bank / city / operator.
+- Add a test case that asserts the new entry resolves to the expected bank / city / operator. Persian names must resolve through the matching enum's `fromPersian()` — `DataSourcesTest::test_every_bundled_name_resolves_to_an_enum` fails otherwise; add a `persianAliases()` entry when a table must keep a variant spelling.
 - Update the docblock that cites the source version if you're moving to a newer upstream snapshot.
 
 ## Commit style

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Eram\Abzar\Validation;
 
 use Eram\Abzar\Data\DataSources;
-use Eram\Abzar\Digits\DigitConverter;
 use Eram\Abzar\Exception\ValidationException;
+use Eram\Abzar\Internal\ErrorInput;
 use Eram\Abzar\Validation\Details\IbanDetails;
 
 final class Iban implements \JsonSerializable, \Stringable
@@ -47,8 +47,7 @@ final class Iban implements \JsonSerializable, \Stringable
 
     public static function validate(string $input): ValidationResult
     {
-        $input = DigitConverter::toEnglish(trim($input));
-        $input = strtoupper((string) preg_replace('/\s/', '', $input));
+        $input = strtoupper(ErrorInput::digits($input));
 
         if ($input === '') {
             return ValidationResult::invalid(ErrorCode::IBAN_EMPTY);

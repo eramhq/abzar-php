@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eram\Abzar\Tests\Unit\Validation;
 
 use Eram\Abzar\Validation\Bank;
+use Eram\Abzar\Validation\Iban;
 use PHPUnit\Framework\TestCase;
 
 final class BankTest extends TestCase
@@ -45,5 +46,12 @@ final class BankTest extends TestCase
         foreach (Bank::cases() as $case) {
             self::assertMatchesRegularExpression('/^[a-z][a-z0-9-]*$/', $case->value);
         }
+    }
+
+    public function test_resalat_iban_code_resolves_to_enum(): void
+    {
+        // B3 — IbanBanks 070 used a surface form Bank::fromPersian() didn't know.
+        self::assertSame(Bank::RESALAT, Iban::from(Iban::fake('070'))->bankEnum());
+        self::assertSame(Bank::RESALAT, Bank::fromPersian('بانک قرض الحسنه رسالت'));
     }
 }

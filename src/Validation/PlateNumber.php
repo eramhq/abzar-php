@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
+use Eram\Abzar\Data\DataSources;
 use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Internal\ErrorInput;
+use Eram\Abzar\Text\CharNormalizer;
 use Eram\Abzar\Validation\Details\PlateNumberDetails;
 
 /**
@@ -15,71 +17,6 @@ use Eram\Abzar\Validation\Details\PlateNumberDetails;
  */
 final class PlateNumber implements \JsonSerializable, \Stringable
 {
-    /** @var array<string, PlateType> */
-    private const LETTER_TYPES = [
-        'الف' => PlateType::PRIVATE,
-        'ب'   => PlateType::PRIVATE,
-        'پ'   => PlateType::GOVERNMENT_CIV,
-        'ت'   => PlateType::TAXI,
-        'ث'   => PlateType::POLICE,
-        'ج'   => PlateType::PRIVATE,
-        'د'   => PlateType::PRIVATE,
-        'ز'   => PlateType::DISABLED,
-        'ژ'   => PlateType::POLICE,
-        'س'   => PlateType::PRIVATE,
-        'ش'   => PlateType::MILITARY,
-        'ص'   => PlateType::PRIVATE,
-        'ط'   => PlateType::RENTAL,
-        'ع'   => PlateType::PUBLIC,
-        'ف'   => PlateType::RENTAL,
-        'ق'   => PlateType::PRIVATE,
-        'ک'   => PlateType::AGRICULTURAL,
-        'گ'   => PlateType::GOVERNMENT,
-        'ل'   => PlateType::PRIVATE,
-        'م'   => PlateType::GOVERNMENT,
-        'ن'   => PlateType::PRIVATE,
-        'و'   => PlateType::PRIVATE,
-        'ه'   => PlateType::PRIVATE,
-        'ی'   => PlateType::PRIVATE,
-        'D'   => PlateType::DIPLOMATIC,
-        'S'   => PlateType::DIPLOMATIC,
-    ];
-
-    private const CITY_PROVINCE = [
-        '10' => 'تهران',              '11' => 'تهران',              '12' => 'تهران',
-        '13' => 'تهران',              '14' => 'تهران',              '15' => 'تهران',
-        '18' => 'البرز',              '19' => 'البرز',
-        '20' => 'مازندران',           '21' => 'مازندران',           '22' => 'مازندران',
-        '23' => 'گیلان',              '24' => 'گیلان',
-        '25' => 'گلستان',             '26' => 'گلستان',
-        '27' => 'قزوین',
-        '28' => 'زنجان',
-        '29' => 'سمنان',
-        '30' => 'خراسان رضوی',        '31' => 'خراسان رضوی',        '32' => 'خراسان رضوی',
-        '34' => 'خراسان جنوبی',
-        '36' => 'خراسان شمالی',
-        '37' => 'سیستان و بلوچستان',
-        '42' => 'آذربایجان شرقی',     '43' => 'آذربایجان شرقی',
-        '44' => 'اردبیل',
-        '45' => 'آذربایجان غربی',
-        '47' => 'کردستان',
-        '49' => 'کرمانشاه',
-        '51' => 'همدان',
-        '53' => 'مرکزی',
-        '55' => 'ایلام',
-        '57' => 'لرستان',
-        '59' => 'قم',
-        '61' => 'اصفهان',             '63' => 'اصفهان',             '67' => 'اصفهان',
-        '71' => 'چهارمحال و بختیاری',
-        '73' => 'یزد',
-        '74' => 'کهکیلویه و بویراحمد',
-        '75' => 'بوشهر',
-        '77' => 'خوزستان',
-        '83' => 'فارس',               '85' => 'فارس',
-        '86' => 'هرمزگان',
-        '89' => 'کرمان',
-    ];
-
     private function __construct(
         private readonly PlateNumberDetails $detail,
     ) {
@@ -133,25 +70,26 @@ final class PlateNumber implements \JsonSerializable, \Stringable
             return ValidationResult::invalid(ErrorCode::PLATE_NUMBER_INVALID_FORMAT);
         }
 
-        $letter   = $m[2];
-        $cityCode = $m[4];
-        $type     = self::LETTER_TYPES[$letter] ?? PlateType::OTHER;
-        $province = self::CITY_PROVINCE[$cityCode] ?? null;
+        $letter    = self::normalizeLetter($m[2]);
+        $cityCode  = $m[4];
+        $typeValue = DataSources::plateLetters()[$letter] ?? null;
+        $provinces = DataSources::plateCodes()[$cityCode] ?? [];
 
         $detail = new PlateNumberDetails(
             twoDigit:   $m[1],
             letter:     $letter,
             threeDigit: $m[3],
             cityCode:   $cityCode,
-            type:       $type,
-            province:   $province,
+            type:       $typeValue === null ? PlateType::OTHER : PlateType::from($typeValue),
+            province:   $provinces === [] ? null : implode(' - ', $provinces),
+            provinces:  $provinces,
         );
 
         $warnings = [];
-        if ($type === PlateType::OTHER && !isset(self::LETTER_TYPES[$letter])) {
+        if ($typeValue === null) {
             $warnings[] = ErrorCode::PLATE_NUMBER_UNKNOWN_LETTER;
         }
-        if ($province === null) {
+        if ($provinces === []) {
             $warnings[] = ErrorCode::PLATE_NUMBER_UNKNOWN_CITY_CODE;
         }
 
@@ -177,27 +115,34 @@ final class PlateNumber implements \JsonSerializable, \Stringable
             );
         }
 
+        $letterTypes = DataSources::plateLetters();
         if ($type === null) {
-            $letters = array_keys(self::LETTER_TYPES);
+            $letters = array_keys($letterTypes);
         } else {
-            $letters = [];
-            foreach (self::LETTER_TYPES as $l => $t) {
-                if ($t === $type) {
-                    $letters[] = $l;
-                }
-            }
+            $letters = array_keys($letterTypes, $type->value, true);
             if ($letters === []) {
                 throw new \InvalidArgumentException('No letter mapped to PlateType::' . $type->name);
             }
         }
 
-        $letter     = $letters[array_rand($letters)];
-        $cityCodes  = array_keys(self::CITY_PROVINCE);
+        $letter     = (string) $letters[array_rand($letters)];
+        $cityCodes  = array_keys(DataSources::plateCodes());
         $cityCode   = (string) $cityCodes[array_rand($cityCodes)];
         $twoDigit   = str_pad((string) random_int(0, 99), 2, '0', STR_PAD_LEFT);
         $threeDigit = str_pad((string) random_int(0, 999), 3, '0', STR_PAD_LEFT);
 
         return $twoDigit . $letter . $threeDigit . '-' . $cityCode;
+    }
+
+    /**
+     * Fold Arabic-keyboard ي / ك to the Persian ی / ک used by the letter table.
+     */
+    private static function normalizeLetter(string $letter): string
+    {
+        static $normalizer = null;
+        $normalizer ??= new CharNormalizer();
+
+        return $normalizer->normalize($letter);
     }
 
     public function twoDigit(): string
@@ -251,7 +196,8 @@ final class PlateNumber implements \JsonSerializable, \Stringable
      *     three_digit: string,
      *     city_code: string,
      *     type: string,
-     *     province: ?string
+     *     province: ?string,
+     *     provinces: list<string>
      * }
      */
     public function jsonSerialize(): array

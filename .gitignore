@@ -5,6 +5,8 @@
 /build/
 /coverage/
 /phpbench-results.xml
+/.phpbench/
+/var/
 .DS_Store
 .idea/
 .vscode/

@@ -14,6 +14,7 @@ enum Province: string
     case AZARBAIJAN_GHARBI  = 'azarbaijan-gharbi';
     case ARDABIL            = 'ardabil';
     case ISFAHAN            = 'isfahan';
+    case ALBORZ             = 'alborz';
     case FOREIGN_AFFAIRS    = 'foreign-affairs';
     case ILAM               = 'ilam';
     case BUSHEHR            = 'bushehr';
@@ -49,6 +50,7 @@ enum Province: string
             self::AZARBAIJAN_GHARBI  => 'آذربایجان غربی',
             self::ARDABIL            => 'اردبیل',
             self::ISFAHAN            => 'اصفهان',
+            self::ALBORZ             => 'البرز',
             self::FOREIGN_AFFAIRS    => 'امور خارجه',
             self::ILAM               => 'ایلام',
             self::BUSHEHR            => 'بوشهر',
@@ -72,11 +74,22 @@ enum Province: string
             self::KORDESTAN          => 'کردستان',
             self::KERMAN             => 'کرمان',
             self::KERMANSHAH         => 'کرمانشاه',
-            self::KOHGILUYEH         => 'کهکیلویه و بویراحمد',
+            self::KOHGILUYEH         => 'کهگیلویه و بویراحمد',
             self::GOLESTAN           => 'گلستان',
             self::GILAN              => 'گیلان',
             self::YAZD               => 'یزد',
         };
+    }
+
+    /**
+     * @return array<string, self>
+     */
+    protected static function persianAliases(): array
+    {
+        return [
+            // Misspelling (ک for گ) carried by the bundled tables before 0.7.
+            'کهکیلویه و بویراحمد' => self::KOHGILUYEH,
+        ];
     }
 
     protected static function normalizeInput(string $name): string

@@ -33,7 +33,7 @@
         "phpunit/phpunit": "^10.5"
     },
     "suggest": {
-        "eramhq/daynum": "Jalali / Shamsi calendar utilities (date parsing, month names, conversions) — companion to abzar.",
+        "eram/daynum": "Jalali / Shamsi calendar utilities (date parsing, month names, conversions) — companion to abzar.",
         "ext-intl": "Required for PersianCollator and CharNormalizer::normalizeToNfc (Unicode NFC normalization); everything else is pure PHP."
     },
     "autoload": {

@@ -38,9 +38,9 @@ For arithmetic and comparisons prefer the `Amount` value object (`Eram\Abzar\Mon
 use Eram\Abzar\Money\Amount;
 
 $subtotal = Amount::fromToman(120_000);
-$vat      = $subtotal->percentOf(9);                 // 10,800 rials
-$total    = $subtotal->add($vat);                    // 1,210,800 rials
-$qty      = $total->times(3);                        // 3,632,400 rials
+$vat      = $subtotal->percentOf(9);                 // 108,000 rials
+$total    = $subtotal->add($vat);                    // 1,308,000 rials
+$qty      = $total->times(3);                        // 3,924,000 rials
 
 usort($amounts, fn (Amount $a, Amount $b) => $a->compareTo($b));
 ```

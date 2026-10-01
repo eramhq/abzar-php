@@ -202,4 +202,13 @@ class NationalIdTest extends TestCase
         $this->assertCount(1, $hits);
         $this->assertSame('0013542419', $hits[0]->value());
     }
+
+    public function test_accepts_ids_pasted_with_rtl_marks_and_nbsp(): void
+    {
+        // B4 — copied from phone / RTL apps.
+        $this->assertTrue(NationalId::validate("\u{200F}0013542419\u{200F}")->isValid());
+        $this->assertTrue(NationalId::validate("001\u{00A0}354\u{00A0}2419")->isValid());
+        $this->assertTrue(NationalId::validate("001\u{2013}354\u{2013}2419")->isValid());
+        $this->assertSame('0013542419', NationalId::from("\u{202B}۰۰۱۳۵۴۲۴۱۹\u{202C}")->value());
+    }
 }

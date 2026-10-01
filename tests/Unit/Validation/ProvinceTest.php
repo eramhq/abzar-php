@@ -27,8 +27,20 @@ final class ProvinceTest extends TestCase
         self::assertNull(Province::fromPersian('foo'));
     }
 
-    public function test_31_cases_present(): void
+    public function test_32_cases_present(): void
     {
-        self::assertCount(31, Province::cases());
+        self::assertCount(32, Province::cases());
+    }
+
+    public function test_alborz_is_a_province(): void
+    {
+        self::assertSame(Province::ALBORZ, Province::fromPersian('البرز'));
+    }
+
+    public function test_kohgiluyeh_canonical_spelling_and_legacy_alias(): void
+    {
+        self::assertSame('کهگیلویه و بویراحمد', Province::KOHGILUYEH->persianName());
+        // The pre-0.7 tables spelled it with ک instead of گ; keep resolving it.
+        self::assertSame(Province::KOHGILUYEH, Province::fromPersian('کهکیلویه و بویراحمد'));
     }
 }

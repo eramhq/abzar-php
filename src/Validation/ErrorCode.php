@@ -66,6 +66,8 @@ enum ErrorCode: string
     case AMOUNT_NEGATIVE                = 'AMOUNT.NEGATIVE';
     case AMOUNT_OVERFLOW                = 'AMOUNT.OVERFLOW';
 
+    case HTML_SEGMENTATION_FAILED       = 'HTML.SEGMENTATION_FAILED';
+
     case ENV_MISSING_EXT_INTL           = 'ENV.MISSING_EXT_INTL';
 
     public function message(): string
@@ -123,6 +125,8 @@ enum ErrorCode: string
 
             self::AMOUNT_NEGATIVE                => 'مبلغ نمی‌تواند منفی باشد',
             self::AMOUNT_OVERFLOW                => 'مبلغ از حداکثر مقدار قابل نمایش بیشتر است',
+
+            self::HTML_SEGMENTATION_FAILED       => 'پردازش متن HTML ناموفق بود',
 
             self::ENV_MISSING_EXT_INTL           => 'این قابلیت به افزونهٔ ext-intl نیاز دارد',
         };

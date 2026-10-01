@@ -96,4 +96,12 @@ class LegalIdTest extends TestCase
             $this->assertTrue(LegalId::validate($id)->isValid(), "generated $id");
         }
     }
+
+    public function test_accepts_grouped_and_pasted_input(): void
+    {
+        // B4 — LegalId previously skipped the shared input cleaner.
+        $this->assertTrue(LegalId::validate('103-8028-4790')->isValid());
+        $this->assertTrue(LegalId::validate('1038 0284 790')->isValid());
+        $this->assertTrue(LegalId::validate("\u{200F}10380284790\u{00A0}")->isValid());
+    }
 }

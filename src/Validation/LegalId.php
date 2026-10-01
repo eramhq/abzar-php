@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Validation;
 
-use Eram\Abzar\Digits\DigitConverter;
 use Eram\Abzar\Exception\ValidationException;
+use Eram\Abzar\Internal\ErrorInput;
 use Eram\Abzar\Validation\Details\LegalIdDetails;
 
 final class LegalId implements \JsonSerializable, \Stringable
@@ -48,7 +48,7 @@ final class LegalId implements \JsonSerializable, \Stringable
 
     public static function validate(string $input): ValidationResult
     {
-        $normalized = DigitConverter::toEnglish(trim($input));
+        $normalized = ErrorInput::digits($input);
 
         if ($normalized === '') {
             return ValidationResult::invalid(ErrorCode::LEGAL_ID_EMPTY);

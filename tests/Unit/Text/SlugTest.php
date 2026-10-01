@@ -76,4 +76,30 @@ class SlugTest extends TestCase
         $slug = 'سلام-دنیا';
         $this->assertSame($slug, Slug::generate($slug));
     }
+
+    /**
+     * B8 — Persian punctuation, kashida and tashkeel never belong in a slug.
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function persianPunctuation(): iterable
+    {
+        yield 'comma and question'  => ['سلام، دنیا؟', 'سلام-دنیا'];
+        yield 'semicolon'           => ['الف؛ ب', 'الف-ب'];
+        yield 'percent'             => ['۵۰٪ تخفیف', '50-تخفیف'];
+        yield 'separators'          => ['۱٬۰۰۰ تومان', '1000-تومان'];
+        yield 'kashida'             => ['سـلام', 'سلام'];
+        yield 'tashkeel'            => ['سَلامٌ', 'سلام'];
+        yield 'shadda superscript'  => ['بِسْمِ اللّٰهِ', 'بسم-الله'];
+        yield 'guillemets'          => ['«نقل قول»', 'نقل-قول'];
+        yield 'zwnj becomes hyphen' => ["می\u{200C}خواهم", 'می-خواهم'];
+    }
+
+    /**
+     * @dataProvider persianPunctuation
+     */
+    public function test_persian_punctuation_stripped(string $input, string $expected): void
+    {
+        $this->assertSame($expected, Slug::generate($input));
+    }
 }

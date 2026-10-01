@@ -117,4 +117,12 @@ class DigitConverterTest extends TestCase
         $expected = '<img src="image-200x300.jpg"><span>۲۰۰x۳۰۰</span>';
         $this->assertSame($expected, DigitConverter::convertContent($html));
     }
+
+    public function test_convert_content_leaves_entities_and_code_alone(): void
+    {
+        // B6 — used to emit "a&#۸۲۰۴;b" and rewrite digits inside <code>.
+        $this->assertSame('a&#8204;b ۱۲', DigitConverter::convertContent('a&#8204;b 12'));
+        $this->assertSame('<code>v1.2</code> ۳', DigitConverter::convertContent('<code>v1.2</code> 3'));
+        $this->assertSame('<pre>10</pre><textarea>20</textarea>۳۰', DigitConverter::convertContent('<pre>10</pre><textarea>20</textarea>30'));
+    }
 }
