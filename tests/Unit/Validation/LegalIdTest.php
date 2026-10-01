@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eram\Abzar\Tests\Unit\Validation;
 
+use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\LegalId;
 use PHPUnit\Framework\TestCase;
 
@@ -103,5 +104,63 @@ class LegalIdTest extends TestCase
         $this->assertTrue(LegalId::validate('103-8028-4790')->isValid());
         $this->assertTrue(LegalId::validate('1038 0284 790')->isValid());
         $this->assertTrue(LegalId::validate("\u{200F}10380284790\u{00A0}")->isValid());
+    }
+
+    /**
+     * One valid ID per check digit, plus one whose weighted sum is 10 (folded
+     * to check digit 0). Computed independently from the persian-tools
+     * algorithm.
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function validPerCheckDigit(): iterable
+    {
+        yield 'check 0'          => ['71049746500'];
+        yield 'check 1'          => ['62527601891'];
+        yield 'check 2'          => ['83016613182'];
+        yield 'check 3'          => ['94821993513'];
+        yield 'check 4'          => ['75291703424'];
+        yield 'check 5'          => ['60313721595'];
+        yield 'check 6'          => ['52601815906'];
+        yield 'check 7'          => ['60913909967'];
+        yield 'check 8'          => ['79754323198'];
+        yield 'check 9'          => ['03082462819'];
+        yield 'sum 10 folds to 0' => ['22330792440'];
+    }
+
+    /**
+     * @dataProvider validPerCheckDigit
+     */
+    public function test_valid_for_every_check_digit(string $id): void
+    {
+        $this->assertTrue(LegalId::validate($id)->isValid());
+
+        // Any other final digit must fail the checksum.
+        $wrong = substr($id, 0, 10) . (((int) $id[10] + 1) % 10);
+        $this->assertSame([ErrorCode::LEGAL_ID_INVALID_CHECKSUM], LegalId::validate($wrong)->errorCodes());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function digitsWithStrayLetter(): iterable
+    {
+        yield 'leading letter'  => ['x10380284790'];
+        yield 'trailing letter' => ['10380284790x'];
+    }
+
+    /**
+     * @dataProvider digitsWithStrayLetter
+     */
+    public function test_stray_letter_is_wrong_length(string $input): void
+    {
+        $this->assertSame([ErrorCode::LEGAL_ID_WRONG_LENGTH], LegalId::validate($input)->errorCodes());
+    }
+
+    public function test_middle_zeros_reported_by_code(): void
+    {
+        // Digits 4–9 are zero and the checksum is otherwise valid; digits 3
+        // and 10 are not zero, so only the exact substr(3, 6) window matches.
+        $this->assertSame([ErrorCode::LEGAL_ID_MIDDLE_ZEROS], LegalId::validate('12300000045')->errorCodes());
     }
 }

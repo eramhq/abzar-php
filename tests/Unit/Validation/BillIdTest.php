@@ -196,4 +196,22 @@ final class BillIdTest extends TestCase
         $this->expectException(\Eram\Abzar\Exception\ValidationException::class);
         BillId::fakePaymentId('123');
     }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function paymentIdWithStrayLetter(): iterable
+    {
+        yield 'leading letter'  => ['x12070160'];
+        yield 'trailing letter' => ['12070160x'];
+    }
+
+    /**
+     * @dataProvider paymentIdWithStrayLetter
+     */
+    public function test_payment_id_with_stray_letter_is_wrong_length(string $paymentId): void
+    {
+        $result = BillId::validatePair('1117753200140', $paymentId);
+        self::assertSame([ErrorCode::BILL_ID_PAYMENT_WRONG_LENGTH], $result->errorCodes());
+    }
 }

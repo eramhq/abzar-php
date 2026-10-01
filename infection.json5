@@ -15,8 +15,14 @@
         summary: "var/infection-summary.log"
     },
     mutators: {
-        "@default": true
+        "@default": true,
+        // Fixture generators are random by design; their output is checked by
+        // round-tripping through validate(), not by exact values.
+        "global-ignore": [
+            "Eram\\Abzar\\*::fake",
+            "Eram\\Abzar\\Validation\\BillId::fakePaymentId"
+        ]
     },
-    minMsi: 80,
-    minCoveredMsi: 85
+    minMsi: 88,
+    minCoveredMsi: 88
 }

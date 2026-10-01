@@ -241,4 +241,37 @@ class NationalIdTest extends TestCase
             $this->assertFalse($e->result()->isValid());
         }
     }
+
+    /**
+     * ErrorInput::digits() keeps letters, so a stray letter beside ten valid
+     * digits must still fail the anchored length check.
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function digitsWithStrayLetter(): iterable
+    {
+        yield 'leading letter'  => ['x0013542419'];
+        yield 'trailing letter' => ['0013542419x'];
+    }
+
+    /**
+     * @dataProvider digitsWithStrayLetter
+     */
+    public function test_stray_letter_is_wrong_length(string $input): void
+    {
+        $this->assertSame([ErrorCode::NATIONAL_ID_WRONG_LENGTH], NationalId::validate($input)->errorCodes());
+    }
+
+    public function test_middle_zeros_reported_by_code(): void
+    {
+        // Digits 4–9 are zero; digits 3 and 10 are not, so only the exact
+        // substr(3, 6) window matches.
+        $this->assertSame([ErrorCode::NATIONAL_ID_MIDDLE_ZEROS], NationalId::validate('1230000005')->errorCodes());
+        $this->assertSame([ErrorCode::NATIONAL_ID_MIDDLE_ZEROS], NationalId::validate('0010000000')->errorCodes());
+    }
+
+    public function test_invalid_checksum_reported_by_code(): void
+    {
+        $this->assertSame([ErrorCode::NATIONAL_ID_INVALID_CHECKSUM], NationalId::validate('1234567890')->errorCodes());
+    }
 }

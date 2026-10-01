@@ -76,4 +76,28 @@ final class CurrencyTest extends TestCase
         $amount = \Eram\Abzar\Money\Amount::fromRials(12345);
         self::assertSame('1,234.5 تومان', Currency::format($amount, persianDigits: false, separator: ','));
     }
+
+    public function test_convert_toman_float_to_rial(): void
+    {
+        self::assertSame(15.0, Currency::convert(1.5, Unit::TOMAN, Unit::RIAL));
+    }
+
+    /**
+     * @return iterable<string, array{int, int|float}>
+     */
+    public static function rialToToman(): iterable
+    {
+        yield 'multiple of 10 stays int' => [30, 3];
+        yield 'zero stays int'           => [0, 0];
+        yield 'multiple of 9 only'       => [18, 1.8];
+        yield 'multiple of 11 only'      => [22, 2.2];
+    }
+
+    /**
+     * @dataProvider rialToToman
+     */
+    public function test_convert_rial_to_toman_keeps_type(int $rials, int|float $expected): void
+    {
+        self::assertSame($expected, Currency::convert($rials, Unit::RIAL, Unit::TOMAN));
+    }
 }

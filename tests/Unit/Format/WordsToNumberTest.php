@@ -161,4 +161,45 @@ final class WordsToNumberTest extends TestCase
         self::assertSame(100, WordsToNumber::parse('صد'));
         self::assertSame(120, WordsToNumber::parse('صد و بیست'));
     }
+
+    public function test_surrounding_whitespace_is_ignored(): void
+    {
+        self::assertSame(-3, WordsToNumber::parse('  منفی سه  '));
+        // The sign strip leaves a leading space on the integer part.
+        self::assertSame(0, WordsToNumber::parse('منفی  صفر'));
+    }
+
+    public function test_second_decimal_separator_returns_null(): void
+    {
+        self::assertNull(WordsToNumber::parse('سه ممیز پنج ممیز دو'));
+    }
+
+    public function test_fraction_zero_padding_survives_empty_tokens(): void
+    {
+        // ZWNJ followed by a space splits into an empty token between the zeros.
+        self::assertSame(3.005, WordsToNumber::parse("سه ممیز صفر\u{200C} صفر پنج"));
+    }
+
+    public function test_bare_hundred_after_thousand(): void
+    {
+        self::assertSame(1100, WordsToNumber::parse('هزار صد'));
+        self::assertSame(1100, WordsToNumber::parse('یک هزار و صد'));
+    }
+
+    public function test_quadrillion_scale(): void
+    {
+        self::assertSame(1_000_000_000_000_000, WordsToNumber::parse('یک کوادریلیون'));
+        self::assertSame(2_000_000_000_000_000, WordsToNumber::parse('دو کوادریلیون'));
+    }
+
+    public function test_php_int_max_boundary(): void
+    {
+        self::assertSame(PHP_INT_MAX, WordsToNumber::parse(NumberToWords::convert(PHP_INT_MAX)));
+        // PHP_INT_MAX + 1 (…۸۰۸) overflows in the trailing sub-million group.
+        $maxPlusOne = preg_replace('/هفت$/u', 'هشت', NumberToWords::convert(PHP_INT_MAX));
+        self::assertStringEndsWith('هشتصد و هشت', (string) $maxPlusOne);
+        self::assertNull(WordsToNumber::parse((string) $maxPlusOne));
+        // Overflow while adding a second big-scale group.
+        self::assertNull(WordsToNumber::parse('نه کوینتیلیون و نهصد کوادریلیون'));
+    }
 }

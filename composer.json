@@ -81,7 +81,7 @@
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix",
         "bench": "phpbench run --report=default",
-        "mutate": "infection --threads=max --min-msi=80 --only-covered",
+        "mutate": "infection --threads=max --min-msi=88 --only-covered",
         "fixtures:pull": "tools/fixtures/pull.sh"
     }
 }
