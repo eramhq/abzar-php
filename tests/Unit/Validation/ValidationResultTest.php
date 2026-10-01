@@ -181,7 +181,7 @@ class ValidationResultTest extends TestCase
 
     public function test_exception_from_result_without_codes_uses_generic_code(): void
     {
-        // 0.8: no more \LogicException for string-only results.
+        // Since 0.7: no more \LogicException for string-only results.
         $e = \Eram\Abzar\Exception\ValidationException::fromResult(ValidationResult::invalid('custom failure'));
         $this->assertSame(ErrorCode::VALIDATION_FAILED, $e->errorCode());
         $this->assertSame('custom failure', $e->getMessage());

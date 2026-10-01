@@ -15,7 +15,7 @@ final class KeyboardFixerTest extends TestCase
     }
 
     /**
-     * Shift layer of the ISIRI 9147 standard layout — 0.8 maps it instead of
+     * Shift layer of the ISIRI 9147 standard layout — since 0.7 it maps it instead of
      * lowercasing, so Shift+H yields آ rather than ا.
      *
      * @return iterable<string, array{string, string}>

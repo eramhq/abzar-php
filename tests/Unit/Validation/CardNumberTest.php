@@ -80,7 +80,7 @@ class CardNumberTest extends TestCase
 
     public function test_from_accepts_unknown_bin_with_null_bank(): void
     {
-        // 0.8: VOs follow isValid(); warnings no longer block construction.
+        // Since 0.7: VOs follow isValid(); warnings no longer block construction.
         $card = CardNumber::from('1234567890123452');
         $this->assertSame('123456', $card->bin());
         $this->assertNull($card->bank());

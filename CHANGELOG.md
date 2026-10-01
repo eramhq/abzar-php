@@ -4,7 +4,9 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
-Targets `0.8.0-beta`. Makes the validators consistent with one another. **Breaking:** see [UPGRADE.md](UPGRADE.md) for migration snippets.
+## [0.7.0-beta] — 2026-10-01
+
+Correctness fixes across the lookup data, input cleaning, formatters and HTML handling, plus a consistency pass that makes every validator follow the same rules. **Contains breaking changes:** see [UPGRADE.md](UPGRADE.md) for migration snippets.
 
 ### Changed (breaking — 0.x)
 
@@ -25,6 +27,13 @@ Targets `0.8.0-beta`. Makes the validators consistent with one another. **Breaki
 
 ### Added
 
+- **`Amount` arithmetic and comparison API** (shipped on `main` after 0.6.0-beta, previously unlisted): `times(int $qty)`, `percentOf(int|float $pct, int $mode = PHP_ROUND_HALF_EVEN)` (banker's rounding by default), `greaterThanOrEqual()`, `lessThanOrEqual()`, `compareTo()` (`usort`-ready). `fromToman()`, `add()` and `times()` trap `PHP_INT_MAX` overflow with the new `ErrorCode::AMOUNT_OVERFLOW`; `fromToman()` also rejects negatives explicitly instead of leaking a `TypeError` for `PHP_INT_MIN`.
+- `Province::ALBORZ` (`البرز`).
+- `PlateType::TEMPORARY` (`گ` — گذر موقت).
+- `PlateNumberDetails::$provinces` (`list<string>`, also in `jsonSerialize()` as `provinces`) — every province a plate city code was issued in. Codes issued before a province split list each successor (e.g. `21` → `['تهران', 'البرز']`); `$province` then holds the names joined with ` - `.
+- `DataSources::plateCodes()` / `DataSources::plateLetters()` — the plate tables now live in `src/Data/PlateCodes.php` / `src/Data/PlateLetters.php` like every other lookup table.
+- `ErrorCode::HTML_SEGMENTATION_FAILED` — raised (as `FormatException`) by `HtmlSegmenter::transformText()` and therefore `DigitConverter::convertContent()` / `CharNormalizer::normalizeContent()` when PCRE cannot segment the input.
+- CI: PHP 8.5 in the test and release matrices, `composer validate --strict`, read-only default token permissions, a per-ref concurrency group, a composer cache keyed on `composer.lock`, and a PHP 8.1 job without `ext-intl`.
 - `extractAll()` on `PhoneNumber`, `Iban`, `PostalCode` and `PlateNumber`, sharing one internal engine with `NationalId::extractAll()` / `CardNumber::extractAll()`.
 - `masked()` on `PhoneNumber` (`0912 *** 4567`, `021 **** 7777`) and `Iban` (`IR82 054* **** **** **** **90 02`).
 - `PlateNumber::value()`, `provinces()`, `provinceEnum()` (single-province codes only) and `provinceEnums()`; `PlateNumberDetails::provinceEnum()` / `provinceEnums()`.
@@ -34,26 +43,6 @@ Targets `0.8.0-beta`. Makes the validators consistent with one another. **Breaki
 - `Exception\MoneyException`; `ValidationException::forFakeArgument()`.
 - `ErrorCode` cases: `NATIONAL_ID_UNKNOWN_CITY_CODE`, `CARD_NUMBER_ALL_SAME_DIGITS`, `IBAN_UNKNOWN_BANK`, `PHONE_NUMBER_UNKNOWN_AREA_CODE`, `VALIDATION_FAILED`, `FAKE_INVALID_ARGUMENT`.
 - `UPGRADE.md`.
-
-### Docs
-
-- README "`isValid()` vs `isStrictlyValid()`" rewritten for the uniform rule; examples for the new extractors, masks, plate provinces, `Currency::format(Amount)` and the fake helpers.
-- `docs/en/words-to-number.md` no longer claims large values overflow to `float`; it documents the ordering rules and `null` on overflow.
-- `docs/en/keyboard-fixer.md`, `bill-id.md`, `currency.md` and `api-stability.md` updated; version pins bumped to `^0.8@beta`.
-
-## [0.7.0-beta] — 2026-10-01
-
-Correctness and hygiene only — no API removals; the behaviour changes below are bug fixes.
-
-### Added
-
-- **`Amount` arithmetic and comparison API** (shipped on `main` after 0.6.0-beta, previously unlisted): `times(int $qty)`, `percentOf(int|float $pct, int $mode = PHP_ROUND_HALF_EVEN)` (banker's rounding by default), `greaterThanOrEqual()`, `lessThanOrEqual()`, `compareTo()` (`usort`-ready). `fromToman()`, `add()` and `times()` trap `PHP_INT_MAX` overflow with the new `ErrorCode::AMOUNT_OVERFLOW`; `fromToman()` also rejects negatives explicitly instead of leaking a `TypeError` for `PHP_INT_MIN`.
-- `Province::ALBORZ` (`البرز`).
-- `PlateType::TEMPORARY` (`گ` — گذر موقت).
-- `PlateNumberDetails::$provinces` (`list<string>`, also in `jsonSerialize()` as `provinces`) — every province a plate city code was issued in. Codes issued before a province split list each successor (e.g. `21` → `['تهران', 'البرز']`); `$province` then holds the names joined with ` - `.
-- `DataSources::plateCodes()` / `DataSources::plateLetters()` — the plate tables now live in `src/Data/PlateCodes.php` / `src/Data/PlateLetters.php` like every other lookup table.
-- `ErrorCode::HTML_SEGMENTATION_FAILED` — raised (as `FormatException`) by `HtmlSegmenter::transformText()` and therefore `DigitConverter::convertContent()` / `CharNormalizer::normalizeContent()` when PCRE cannot segment the input.
-- CI: PHP 8.5 in the test and release matrices, `composer validate --strict`, read-only default token permissions, a per-ref concurrency group, a composer cache keyed on `composer.lock`, and a PHP 8.1 job without `ext-intl`.
 
 ### Fixed
 
@@ -79,6 +68,9 @@ Correctness and hygiene only — no API removals; the behaviour changes below ar
 - `docs/en/async-runtimes.md` lists every process-wide static cache.
 - `.gitattributes` export-ignores `composer.lock`, `infection.json5`, `phpbench.json`, `.php-cs-fixer.dist.php`, `.editorconfig`, `.gitignore` and `.gitattributes`; `.gitignore` adds `var/` and `.phpbench/`.
 - `ErrorCodeMessageSnapshotTest` covers every `ErrorCode` case and fails when a new case lacks a snapshot.
+- README "`isValid()` vs `isStrictlyValid()`" rewritten for the uniform rule; examples for the new extractors, masks, plate provinces, `Currency::format(Amount)` and the fake helpers.
+- `docs/en/words-to-number.md` no longer claims large values overflow to `float`; it documents the ordering rules and `null` on overflow.
+- `docs/en/keyboard-fixer.md`, `bill-id.md`, `currency.md` and `api-stability.md` updated for the changes above.
 
 ## [0.6.0-beta] — 2026-04-18
 

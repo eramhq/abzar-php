@@ -69,4 +69,4 @@ usort($amounts, fn (Amount $a, Amount $b) => $a->compareTo($b));
 | `percentOf(int\|float $pct, int $mode = PHP_ROUND_HALF_EVEN)` | `Amount` | Banker's rounding by default. Throws `AMOUNT_NEGATIVE` on negative pct, `AMOUNT_OVERFLOW` on `NAN` / `INF` / overflow. |
 | `jsonSerialize()` | `array{rials: int}` | `json_encode($amount)` → `{"rials": …}`. |
 
-All throws surface as `Eram\Abzar\Exception\MoneyException` (0.7 and earlier: `FormatException`). Catch via the library's base `AbzarException` for a single pipeline-wide handler — see `docs/en/api-stability.md`.
+All throws surface as `Eram\Abzar\Exception\MoneyException` (0.6 and earlier: `FormatException`). Catch via the library's base `AbzarException` for a single pipeline-wide handler — see `docs/en/api-stability.md`.

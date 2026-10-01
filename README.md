@@ -54,7 +54,7 @@ No framework coupling, no runtime extensions beyond stock PHP, no transitive Com
 ## Install
 
 ```bash
-composer require eram/abzar:^0.8@beta
+composer require eram/abzar:^0.7@beta
 ```
 
 Requires PHP 8.1+. No runtime extensions beyond `mbstring`.
@@ -101,7 +101,7 @@ PhoneNumber::normalize('+989121234567');               // '09121234567'
 > CardNumber::from('1234567890123452')->bank();    // null
 > ```
 >
-> Upgrading from 0.7? `from()` used to reject these for cards, phones and plates. See [UPGRADE.md](UPGRADE.md).
+> Upgrading from 0.6? `from()` used to reject these for cards, phones and plates. See [UPGRADE.md](UPGRADE.md).
 
 ### Formatting
 
@@ -283,7 +283,7 @@ Abzar stays framework-agnostic. Integration recipes for Laravel FormRequest, Sym
 
 ## Stability
 
-Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.8@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
+Abzar is in `0.x`. Breaking changes may happen before `1.0`; pin with `^0.7@beta` until the API stabilizes. The [API stability policy](docs/en/api-stability.md) spells out which parts of the surface are protected — `ErrorCode` values are pinned as stable API as of `0.3`.
 
 ## License
 
