@@ -114,3 +114,20 @@ These are fixes, but they change values you may have stored or asserted on:
 - `Currency::format()` accepts a `Money\Amount`.
 - `BillId::fake(?BillType)` and `BillId::fakePaymentId(string $billId)`.
 - `PhoneNumber::fake(type: PhoneNumberType::LANDLINE, areaCode: '021')`.
+
+## 0.5 → 0.6
+
+Namespace moves only. Behaviour, constructors and method signatures are unchanged, so update your `use` statements:
+
+| 0.5 | 0.6 |
+|---|---|
+| `Eram\Abzar\Format\Currency` | `Eram\Abzar\Money\Currency` |
+| `Eram\Abzar\Format\CurrencyUnit` | `Eram\Abzar\Money\Unit` |
+| `Eram\Abzar\AbzarException` | `Eram\Abzar\Exception\AbzarException` |
+| `Eram\Abzar\AbzarFormatException` | `Eram\Abzar\Exception\FormatException` |
+| `Eram\Abzar\AbzarValidationException` | `Eram\Abzar\Exception\ValidationException` |
+| `Eram\Abzar\AbzarEnvironmentException` | `Eram\Abzar\Exception\EnvironmentException` |
+
+`composer.json` no longer has a top-level `"version"` field. The version comes from Git tags only, so tooling that read it from `composer.json` should use the installed package version instead.
+
+New in 0.6: `Money\Amount`. See the [CHANGELOG](CHANGELOG.md).
