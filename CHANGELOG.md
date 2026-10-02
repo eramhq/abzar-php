@@ -111,6 +111,7 @@ Correctness fixes across the lookup data, input cleaning, formatters and HTML ha
   - `Eram\Abzar\AbzarValidationException` → `Eram\Abzar\Exception\ValidationException`
   - `Eram\Abzar\AbzarEnvironmentException` → `Eram\Abzar\Exception\EnvironmentException`
   - Behaviour, constructors, and static factories are unchanged — only `use` statements and class references.
+- Dropped the top-level `"version"` field from `composer.json`; the version is derived solely from Git tags.
 
 ## [0.5.0-beta] — 2026-04-17
 
