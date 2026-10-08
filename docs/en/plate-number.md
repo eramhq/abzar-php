@@ -1,6 +1,33 @@
+---
+title: "Vehicle plate numbers"
+description: "Parse Iranian vehicle plates and inspect type and province lookups."
+---
+
 # Plate Number
 
 `Eram\Abzar\Validation\PlateNumber` parses Iranian car plates in the canonical `NN[letter]NNN-NN` shape: two digits, a Persian letter, three digits, then the two-digit city code. The letter gives the plate type and the city code gives the province.
+
+## Minimal example
+
+Save beside `vendor/` and run with PHP:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Eram\Abzar\Validation\PlateNumber;
+
+$plate = PlateNumber::from('۱۲ ب ۳۴۵ - ۱۱');
+echo $plate->value(), "\n";
+echo $plate->province(), "\n";
+```
+
+```text
+12ب345-11
+تهران
+```
+
+## More examples
 
 ```php
 use Eram\Abzar\Validation\PlateNumber;
@@ -10,7 +37,7 @@ PlateNumber::validate('12 ب 345 - 11')->isValid(); // true — spaces and dash 
 PlateNumber::validate('۱۲ب۳۴۵۱۱')->isValid();      // true — Persian digits accepted
 PlateNumber::validate('12ب34-11')->isValid();      // false — three digits required after the letter
 
-$plate = PlateNumber::tryFrom($userInput);         // PlateNumber or null
+$plate = PlateNumber::tryFrom('12ب345-11');         // PlateNumber or null
 ```
 
 ## Rules
@@ -85,3 +112,9 @@ PlateNumber::fake(PlateType::TAXI); // e.g. '15ت075-14'
 ```
 
 `fake(PlateType::OTHER)` throws `ValidationException` (`FAKE.INVALID_ARGUMENT`), because `OTHER` stands for unknown letters, not a real category.
+
+## Limitations and common mistakes
+
+This is a shape parser and bundled lookup, not a vehicle registry or ownership check. The implementation accepts a 1–3 Unicode-letter slot, with unknown letters producing a warning. It does not support every special vehicle plate layout.
+
+Related: [validation](validation.md), [error handling](error-handling.md), [error codes](error-codes.md).

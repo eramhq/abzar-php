@@ -1,6 +1,33 @@
+---
+title: "National ID validation"
+description: "Validate Iranian national IDs and inspect issuing-area lookup warnings."
+---
+
 # National ID
 
 `Eram\Abzar\Validation\NationalId` validates the Iranian national ID (`کد ملی`): 10 digits ending in a mod-11 check digit, whose first three digits name the issuing city.
+
+## Minimal example
+
+Save beside `vendor/` and run with PHP:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Eram\Abzar\Validation\NationalId;
+
+$id = NationalId::from('۰۰۱۳۵۴۲۴۱۹');
+echo $id->value(), "\n";
+echo $id->city(), "\n";
+```
+
+```text
+0013542419
+تهران مرکزی
+```
+
+## More examples
 
 ```php
 use Eram\Abzar\Validation\NationalId;
@@ -10,8 +37,8 @@ NationalId::validate('۰۰۱۳۵۴۲۴۱۹')->isValid();   // true — Persian d
 NationalId::validate('001-354241-9')->isValid(); // true — dashes and spaces stripped
 NationalId::validate('1234567890')->isValid();   // false — bad check digit
 
-$id = NationalId::tryFrom($userInput);           // NationalId or null
-$id = NationalId::from($userInput);              // NationalId, or throws ValidationException
+$id = NationalId::tryFrom('0013542419');           // NationalId or null
+$id = NationalId::from('0013542419');              // NationalId, or throws ValidationException
 ```
 
 ## Rules
@@ -86,3 +113,9 @@ NationalId::fake('001'); // pinned to the Tehran prefix
 ```
 
 `fake()` throws `ValidationException` (`FAKE.INVALID_ARGUMENT`) when the prefix isn't exactly three digits. The generated ID is valid by construction, but it may belong to a real person, so keep it out of production data.
+
+## Limitations and common mistakes
+
+This checks local rules, not civil-registry identity or ownership. Store the ID as a string; casting it to an integer destroys leading zeros. The prefix names an issuing area, not a current residence.
+
+Related: [validation](validation.md), [error handling](error-handling.md), [error codes](error-codes.md).

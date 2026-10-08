@@ -1,6 +1,31 @@
+---
+title: "Legal ID validation"
+description: "Validate the structure and checksum of Iranian legal-entity identifiers."
+---
+
 # Legal ID
 
 `Eram\Abzar\Validation\LegalId` validates the 11-digit national ID of Iranian legal entities (`شناسه ملی اشخاص حقوقی`): companies, institutions and other registered organizations.
+
+## Minimal example
+
+Save beside `vendor/` and run with PHP:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Eram\Abzar\Validation\LegalId;
+
+$id = LegalId::from('۱۰۳۸۰۲۸۴۷۹۰');
+echo $id->value(), "\n";
+```
+
+```text
+10380284790
+```
+
+## More examples
 
 ```php
 use Eram\Abzar\Validation\LegalId;
@@ -10,7 +35,7 @@ LegalId::validate('۱۰۳۸۰۲۸۴۷۹۰')->isValid();   // true — Persian di
 LegalId::validate('103-8028-4790')->isValid(); // true — dashes and spaces stripped
 LegalId::validate('10380284792')->isValid();   // false — bad check digit
 
-$legal = LegalId::tryFrom($userInput);         // LegalId or null
+$legal = LegalId::tryFrom('10380284790');         // LegalId or null
 ```
 
 ## Rules
@@ -47,3 +72,9 @@ LegalId::fake(); // random valid 11-digit legal ID
 ```
 
 The ID is valid by construction, but it may belong to a real entity.
+
+## Limitations and common mistakes
+
+This does not query a company registry or establish registration status or ownership. Keep all 11 digits as a string. There is no city or company-name lookup.
+
+Related: [validation](validation.md), [error handling](error-handling.md), [error codes](error-codes.md).

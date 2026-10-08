@@ -1,6 +1,33 @@
+---
+title: "Card number validation"
+description: "Check card numbers with Luhn and look up the bank from the BIN."
+---
+
 # Card Number
 
 `Eram\Abzar\Validation\CardNumber` validates 16-digit Iranian bank cards (Shetab) with the Luhn checksum and names the issuing bank from the 6-digit BIN.
+
+## Minimal example
+
+Save beside `vendor/` and run with PHP:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Eram\Abzar\Validation\CardNumber;
+
+$card = CardNumber::from('6037-7016-8909-5443');
+echo $card->bank(), "\n";
+echo $card->masked(), "\n";
+```
+
+```text
+بانک کشاورزی
+6037 70** **** 5443
+```
+
+## More examples
 
 ```php
 use Eram\Abzar\Validation\CardNumber;
@@ -10,7 +37,7 @@ CardNumber::validate('6037-7016-8909-5443')->isValid(); // true — separators s
 CardNumber::validate('۶۰۳۷۷۰۱۶۸۹۰۹۵۴۴۳')->isValid();    // true — Persian digits accepted
 CardNumber::validate('6037701689095444')->isValid();    // false — Luhn fails
 
-$card = CardNumber::tryFrom($userInput);                // CardNumber or null
+$card = CardNumber::tryFrom('6037701689095443');                // CardNumber or null
 ```
 
 ## Rules
@@ -57,7 +84,7 @@ $card->masked();    // '6037 70** **** 5443'
 json_encode($card, JSON_UNESCAPED_UNICODE); // {"value":"6037701689095443","bin":"603770","bank":"بانک کشاورزی"}
 ```
 
-`masked()` follows PCI display rules: the first 6 and last 4 digits are shown and the middle 6 hidden. Use it for receipts and logs. `(string) $card` and `json_encode()` carry the full number.
+`masked()` shows the first 6 and last 4 digits and hides the middle 6. Masking alone is not a compliance guarantee; choose what your application may display or log. `(string) $card` and `json_encode()` carry the full number.
 
 ## Extracting from text
 
@@ -74,4 +101,10 @@ CardNumber::fake();         // Luhn-valid card with a random known BIN
 CardNumber::fake('603770'); // pinned BIN
 ```
 
-`fake()` throws `ValidationException` (`FAKE.INVALID_ARGUMENT`) when the BIN isn't exactly six digits. The cards pass Luhn but aren't real.
+`fake()` throws `ValidationException` (`FAKE.INVALID_ARGUMENT`) when the BIN isn't exactly six digits. The cards pass Luhn but are not reserved test numbers; they may coincide with real cards.
+
+## Limitations and common mistakes
+
+Luhn validation does not establish that a card exists, is active, or belongs to a customer. A known BIN is only bundled issuer metadata. Keep the number as a string and avoid logging full values.
+
+Related: [validation](validation.md), [error handling](error-handling.md), [error codes](error-codes.md).

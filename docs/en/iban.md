@@ -1,6 +1,33 @@
+---
+title: "IBAN validation"
+description: "Validate Iranian Sheba numbers and inspect bank details."
+---
+
 # IBAN (Sheba)
 
 `Eram\Abzar\Validation\Iban` validates Iranian IBANs (`شماره شبا`): `IR`, two check digits, a 3-digit bank code and 19 account digits, checked with ISO 13616 mod-97.
+
+## Minimal example
+
+Save beside `vendor/` and run with PHP:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Eram\Abzar\Validation\Iban;
+
+$iban = Iban::from('IR820540102680020817909002');
+echo $iban->bank(), "\n";
+echo $iban->formatted(), "\n";
+```
+
+```text
+بانک پارسیان
+IR82 0540 1026 8002 0817 9090 02
+```
+
+## More examples
 
 ```php
 use Eram\Abzar\Validation\Iban;
@@ -11,7 +38,7 @@ Iban::validate('820540102680020817909002')->isValid();           // true — IR 
 Iban::validate('IR۸۲۰۵۴۰۱۰۲۶۸۰۰۲۰۸۱۷۹۰۹۰۰۲')->isValid();         // true — Persian digits accepted
 Iban::validate('IR820540102680020817909003')->isValid();         // false — mod-97 fails
 
-$iban = Iban::tryFrom($userInput);                               // Iban or null
+$iban = Iban::tryFrom('IR820540102680020817909002');                               // Iban or null
 ```
 
 ## Rules
@@ -67,3 +94,9 @@ Iban::fake('054'); // pinned bank code
 ```
 
 `fake()` computes real mod-97 check digits, so the result round-trips through `validate()`. It throws `ValidationException` (`FAKE.INVALID_ARGUMENT`) when the bank code isn't exactly three digits.
+
+## Limitations and common mistakes
+
+Only Iranian IBANs are supported. A passing checksum does not establish account existence, status or ownership. Bare 24-digit input works with validation, but extraction requires the IR prefix.
+
+Related: [validation](validation.md), [error handling](error-handling.md), [error codes](error-codes.md).

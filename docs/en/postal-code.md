@@ -1,6 +1,33 @@
+---
+title: "Postal code validation"
+description: "Check Iranian postal-code patterns without an address lookup."
+---
+
 # Postal Code
 
 `Eram\Abzar\Validation\PostalCode` validates Iranian 10-digit postal codes.
+
+## Minimal example
+
+Save beside `vendor/` and run with PHP:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Eram\Abzar\Validation\PostalCode;
+
+$code = PostalCode::from('۱۶۱۹۷۳۵۷۴۴');
+echo $code->value(), "\n";
+echo $code->zoneCode(), "\n";
+```
+
+```text
+1619735744
+16197
+```
+
+## More examples
 
 ```php
 use Eram\Abzar\Validation\PostalCode;
@@ -39,3 +66,9 @@ $detail = PostalCode::validate('1619735744')->detail();
 $detail->postalCode; // '1619735744'
 $detail->zoneCode;   // '16197'
 ```
+
+## Limitations and common mistakes
+
+This checks a pattern, not a checksum or an address database. A passing code does not verify delivery or residence. Do not confuse any extracted ten-digit number with a confirmed postal address.
+
+Related: [validation](validation.md), [error handling](error-handling.md), [error codes](error-codes.md).

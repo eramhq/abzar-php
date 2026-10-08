@@ -95,6 +95,8 @@
         "cs-fix": "php-cs-fixer fix",
         "bench": "phpbench run --report=default",
         "mutate": "infection --threads=max --min-msi=88 --only-covered",
-        "fixtures:pull": "tools/fixtures/pull.sh"
+        "fixtures:pull": "tools/fixtures/pull.sh",
+        "docs:check": "@php tools/docs/check.php",
+        "docs:examples": "@php tools/docs/examples.php"
     }
 }

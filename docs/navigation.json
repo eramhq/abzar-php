@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "defaultLocale": "en",
+  "locales": [
+    "en",
+    "fa"
+  ],
+  "entry": "overview",
+  "sections": [
+    {
+      "id": "getting-started",
+      "title": {
+        "en": "Getting started",
+        "fa": "شروع استفاده"
+      },
+      "pages": [
+        "overview",
+        "installation"
+      ]
+    },
+    {
+      "id": "validation",
+      "title": {
+        "en": "Validation",
+        "fa": "اعتبارسنجی"
+      },
+      "pages": [
+        "validation",
+        "national-id",
+        "legal-id",
+        "phone-number",
+        "card-number",
+        "iban",
+        "postal-code",
+        "bill-id",
+        "plate-number"
+      ]
+    },
+    {
+      "id": "text",
+      "title": {
+        "en": "Text and digits",
+        "fa": "متن و ارقام"
+      },
+      "pages": [
+        "persian-text",
+        "digits",
+        "keyboard-fixer"
+      ]
+    },
+    {
+      "id": "formatting",
+      "title": {
+        "en": "Formatting and money",
+        "fa": "نمایش عدد و پول"
+      },
+      "pages": [
+        "formatting",
+        "words-to-number",
+        "currency"
+      ]
+    },
+    {
+      "id": "errors",
+      "title": {
+        "en": "Errors and compatibility",
+        "fa": "خطاها و سازگاری"
+      },
+      "pages": [
+        "error-handling",
+        "error-codes",
+        "api-stability",
+        "persian-tools-parity"
+      ]
+    },
+    {
+      "id": "integration",
+      "title": {
+        "en": "Integration",
+        "fa": "اتصال به برنامه"
+      },
+      "pages": [
+        "framework-integration",
+        "recipes/laravel",
+        "recipes/symfony",
+        "recipes/symfony-console",
+        "recipes/wordpress",
+        "async-runtimes",
+        "related"
+      ]
+    }
+  ]
+}

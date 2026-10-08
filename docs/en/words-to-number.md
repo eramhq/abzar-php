@@ -1,6 +1,32 @@
+---
+title: "Words to number"
+description: "Parse Persian number words into integers or floats."
+---
+
 # Words to Number
 
-`Eram\Abzar\Format\WordsToNumber` parses Persian number words back to `int` or `float`. Inverse of `Eram\Abzar\Format\NumberToWords::convert()`.
+`Eram\Abzar\Format\WordsToNumber` parses Persian number words back to `int` or `float`. It complements `Eram\Abzar\Format\NumberToWords::convert()`, but floating-point round trips are not guaranteed to preserve every value.
+
+## Minimal example
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Eram\Abzar\Format\WordsToNumber;
+
+var_dump(WordsToNumber::parse('یک هزار و دویست و سی و چهار'));
+var_dump(WordsToNumber::parse('سه ممیز پنج'));
+var_dump(WordsToNumber::parse('دو سه'));
+```
+
+```text
+int(1234)
+float(3.5)
+NULL
+```
+
+## More examples
 
 ```php
 use Eram\Abzar\Format\WordsToNumber;
@@ -27,4 +53,10 @@ WordsToNumber::parse('هزار میلیارد');                // 1000000000000
 
 ## Precision ceiling
 
-Integer results fit in `int` up to `PHP_INT_MAX` (≈ 9.2 × 10¹⁸). Larger values (e.g. `ده کوینتیلیون`) return `null`. If you need big-integer semantics, use a dedicated math library.
+Integer results fit in `int` up to `PHP_INT_MAX` (≈ 9.2 × 10¹⁸ on 64-bit PHP; lower on 32-bit PHP). Larger values (e.g. `ده کوینتیلیون`) return `null`. If you need big-integer semantics, use a dedicated math library.
+
+## Common mistakes
+
+Do not coerce `null` to zero: it means parsing failed. Currency suffixes, ordinal words, fuzzy prose and mixed digits/words are not supported. Fractional results are PHP floats, not exact money values. Use integer rials with [Amount](currency.md).
+
+Related: [formatting](formatting.md), [digits](digits.md), [Persian text](persian-text.md).

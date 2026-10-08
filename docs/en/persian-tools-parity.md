@@ -1,3 +1,8 @@
+---
+title: "Compatibility with persian-tools"
+description: "Fixture coverage and deliberate differences from the JavaScript library."
+---
+
 # persian-tools parity
 
 abzar covers much of the same ground as the JS library [persian-tools](https://github.com/persian-tools/persian-tools). Its contract tests replay upstream's own test vectors against abzar. This page says which specs are covered, which are not, and every place where abzar deliberately gives a different answer.

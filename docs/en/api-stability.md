@@ -1,3 +1,8 @@
+---
+title: "API stability"
+description: "Beta status, compatibility policy and the protected public API."
+---
+
 # API Stability
 
 Abzar follows [Semantic Versioning](https://semver.org/). This page spells out which parts of the surface area are covered by the BC promise and which are explicitly not.
@@ -10,30 +15,11 @@ From `1.0.0` onward, the commitments below apply.
 
 ## Result-vs-throw policy
 
-Abzar draws a deliberate line between *domain* failures and *caller-contract* failures:
+Validators expose `validate()` for a result, `tryFrom()` for an object or `null`, and `from()` for an object or `ValidationException`. Lookup warnings do not prevent construction. `BillId` constructors require both bill and payment IDs; see [validation](validation.md) for signatures and acceptance rules.
 
-- **Validators** (`NationalId`, `CardNumber`, `Iban`, `LegalId`, `PhoneNumber`, `PostalCode`, `BillId`, `PlateNumber`) treat invalid input as their normal domain. They expose three entry points:
-  - `::validate($input): ValidationResult` — returns a result object for pass/fail checks.
-  - `::from($input): static` — throws `ValidationException` on failure; returns a value-object handle on success.
-  - `::tryFrom($input): ?static` — returns a value-object handle or `null`.
+The exception hierarchy and result shape below are public API. For handling examples, warning semantics, formatter failures and native PHP errors, use the [error-handling guide](error-handling.md). The [error-code reference](error-codes.md) lists exact codes and messages.
 
-  All three agree on one rule: input that is well-formed and passes its checksum is valid. An unknown lookup (city prefix, BIN, bank code, operator, area code, plate letter or city code) adds a warning code and leaves that lookup field `null`; it never makes the input invalid, and it never stops `from()` / `tryFrom()` from building the value object.
-- **Formatters** (`NumberFormatter`, `OrdinalNumber`, `TimeAgo`, `Currency`, …) fail fast. Bad input is a programmer error — a sane caller already holds a sanitized value. They throw `FormatException`.
-
-Both exception types extend the abstract `Eram\Abzar\Exception\AbzarException`, which carries an `errorCode(): ErrorCode`. Catch the base class to handle every library failure uniformly:
-
-```php
-try {
-    $phone = PhoneNumber::from($userInput);
-    echo Currency::format($amount);
-} catch (AbzarException $e) {
-    report($e->errorCode()->value, $e->getMessage());
-}
-```
-
-`ValidationException` additionally exposes `result(): ValidationResult` for callers that want the full error list.
-
-## Stable (BC-protected)
+## Protected surface (full BC promise from 1.0)
 
 - **Public class names and namespaces** (`Eram\Abzar\...`).
 - **Public method signatures**: parameter types, return types, and method names.
@@ -50,7 +36,7 @@ try {
 - **Detail DTO property names** (`$cityCode`, `$bin`, `$bankCode`, `$normalizedLocal`, …). These are public readonly properties under `Eram\Abzar\Validation\Details\`.
 - **`Eram\Abzar\Validation\ErrorCode`** — the backing string value for each case is API surface from `0.3` onward. Renaming or dropping a case is a breaking change. New cases may be added in minor releases.
 - **`Eram\Abzar\Exception\AbzarException` hierarchy**: the abstract root and the four concrete classes are stable — `ValidationException` (thrown by validator `::from()` constructors and by `::fake()` on a bad pinned argument), `FormatException` (thrown by formatters), `MoneyException` (thrown by `Money\Amount`), and `EnvironmentException` (thrown when an optional runtime prerequisite such as `ext-intl` is missing).
-- **Input-accepting conventions**: Persian / Arabic / English digits are accepted interchangeably across all validators and formatters.
+- **Input-accepting conventions**: Validators accept Persian / Arabic / English digit strings. `NumberFormatter` and `Currency::format()` also normalize numeric strings. `Amount` factories and ordinals take integers; `NumberToWords` takes `int|float`. These signatures do not promise Persian digit-string coercion.
 
 ## Explicitly unstable
 
@@ -68,3 +54,9 @@ try {
 ## Data-file changes
 
 Lookup-table changes (city codes, bank BINs, operator prefixes, IBAN issuers) ship in minor or patch releases without a deprecation cycle because they reflect external reality, not API surface. If a change would flip a previously-valid input to invalid (or vice versa), it is called out in the changelog.
+
+## Reading released documentation
+
+The public website imports only published releases at the exact commit resolved from the release tag. Documentation on the default branch can be newer than your installed package. Match the documentation version to your installed release and read the [upgrade guide](../../UPGRADE.md). This policy does not turn a beta into a stable API guarantee.
+
+Related: [installation](installation.md), [error handling](error-handling.md).

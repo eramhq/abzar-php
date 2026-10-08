@@ -1,40 +1,10 @@
-# Abzar — English Documentation
+---
+title: "Documentation index"
+description: "Start with the Abzar overview and browse the full English guides."
+---
 
-Abzar is a zero-runtime-dependency Persian (Farsi) utility toolkit for PHP 8.1+. This directory holds longer-form English documentation. For a quick tour, see the project [README](../../README.md).
+# Abzar documentation
 
-## Contents
+Start at the [Abzar overview](overview.md) for the quick start, feature list and guide links. This compatibility index preserves existing repository links; the overview is the documentation entry page.
 
-- [Installation](installation.md)
-- [API stability & backwards-compatibility policy](api-stability.md)
-- [Async runtime safety (Octane / RoadRunner / Swoole)](async-runtimes.md)
-- Validators
-  - [National ID](national-id.md)
-  - [Legal ID](legal-id.md)
-  - [Card Number](card-number.md)
-  - [IBAN (Sheba)](iban.md)
-  - [Phone Number](phone-number.md)
-  - [Postal Code](postal-code.md)
-  - [Bill ID](bill-id.md)
-  - [Plate Number](plate-number.md)
-  - [Error codes](error-codes.md): every `ErrorCode` with its Persian message
-- Formatting, money and text
-  - [Words to Number](words-to-number.md)
-  - [Currency](currency.md)
-  - [Keyboard Fixer](keyboard-fixer.md)
-- [persian-tools parity](persian-tools-parity.md): contract-test coverage and deliberate divergences
-- [Integration recipes](recipes/)
-  - [Laravel FormRequest](recipes/laravel.md)
-  - [Symfony Validator](recipes/symfony.md)
-  - [Symfony Console](recipes/symfony-console.md)
-  - [WordPress](recipes/wordpress.md)
-- [Related packages](related.md)
-
-## Charter
-
-Abzar ships the small set of Persian utilities every Iranian-facing PHP app reimplements: national-ID / IBAN / bank-card / phone validation, number-to-words and time-ago formatting, slug generation, script detection, and digit conversion.
-
-What it is **not**:
-
-- A jalali / shamsi calendar library — see [`eram/daynum`](https://github.com/eramhq/daynum).
-- A WordPress plugin — see [`eramhq/persian-kit`](https://github.com/eramhq/persian-kit).
-- A framework bridge (Laravel rule objects, Symfony validators) — write the thin adapter in your own application code; recipes below show how.
+[فارسی](../fa/overview.md) · [Project README](../../README.md)

@@ -1,3 +1,8 @@
+---
+title: "Symfony Validator integration"
+description: "Create a constraint and validator for Iranian national IDs."
+---
+
 # Symfony — Validator Component
 
 Abzar doesn't ship a Symfony bridge. Build a constraint + validator pair in your own code.
@@ -82,9 +87,25 @@ final class CustomerDto
 
 ## Exposing the value object
 
-If a downstream service needs the bank / operator / city lookup details, don't re-validate. Call the value-object constructor once in your command/handler and pass the instance alongside the DTO:
+After DTO validation, construct the value object in your handler and pass it downstream. This constructor performs validation again:
 
 ```php
 $card = \Eram\Abzar\Validation\CardNumber::tryFrom($dto->card);
 // $card?->bank(), $card?->bin(), $card?->bankEnum() etc.
 ```
+
+## Result and limitations
+
+Save the constraint and its validator as matching class files in `src/Validator/`. In a Symfony application, enable attribute mapping and the usual service autoconfiguration (or register the validator with `validator.constraint_validator`). The constraint and `NotBlank` apply to the DTO property above.
+
+For `new CustomerDto('1234567890')`, the validation service reports this violation on `nationalId`:
+
+```text
+کد ملی معتبر نیست: کد ملی نامعتبر است
+```
+
+For `0013542419`, this constraint reports no violations. It deliberately ignores `null`/empty input so `NotBlank` can handle required fields. A valid result does not prove identity, and lookup warnings are accepted. Construction does not change the original DTO string; normalize when saving if needed. The recipe requires Symfony Validator and a configured application.
+
+See Symfony's [custom constraint documentation](https://symfony.com/doc/current/validation/custom_constraint.html).
+
+Related: [integration overview](../framework-integration.md), [national ID](../national-id.md), [errors](../error-handling.md).

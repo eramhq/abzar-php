@@ -26,6 +26,7 @@ jobs:
           coverage: none
           tools: composer:v2
       - run: composer install --no-interaction --no-progress --prefer-dist
+      - run: composer docs:check && composer docs:examples
       - run: vendor/bin/phpunit --testsuite=unit
       - run: vendor/bin/phpstan analyse --no-progress
 

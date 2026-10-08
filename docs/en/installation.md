@@ -1,30 +1,30 @@
+---
+title: "Installation"
+description: "Install Abzar with Composer and check required PHP extensions."
+---
+
 # Installation
 
 ## Requirements
 
-- PHP 8.1 or later (8.1, 8.2, 8.3, 8.4 are all tested).
-- `ext-mbstring` (ships enabled in virtually every PHP distribution).
-- No other runtime dependencies.
+- PHP 8.1 or later. The repository CI matrix covers PHP 8.1–8.5.
+- `ext-mbstring` is required by `composer.json`; do not assume your PHP distribution enables it.
+- `ext-intl` is optional. It is required for `PersianCollator` and `new CharNormalizer(normalizeToNfc: true)`. Calling those without it throws `EnvironmentException` with `ENV.MISSING_EXT_INTL`.
+- No third-party Composer runtime packages. Development tools have their own requirements.
 
 ## Install via Composer
 
 ```bash
-composer require eram/abzar:^0.8@beta
+composer require 'eram/abzar:^0.8@beta'
+composer check-platform-reqs
+php -m
 ```
 
-While Abzar is in `0.x`, pin the beta range to opt into stability updates without accidentally jumping a breaking minor.
+`^0.8@beta` allows compatible `0.8` updates below `0.9` and opts into beta packages; it does not pin one exact release. Commit your application's `composer.lock` for reproducible installs. Never bypass platform checks to hide a missing extension. The web server and CLI can use different PHP configurations.
 
-## Optional companions
+## Verify the install
 
-- [`eram/daynum`](https://github.com/eramhq/daynum) — jalali / shamsi calendar utilities. If you need Persian dates alongside abzar, install it separately:
-  ```bash
-  composer require eram/daynum
-  ```
-  Abzar references it through `composer suggest` but never bundles it.
-
-- [`eramhq/persian-kit`](https://github.com/eramhq/persian-kit) — WordPress plugin that wires abzar into WP hooks (`the_content`, `sanitize_title`, `pre_get_posts`, etc.).
-
-## Verifying the install
+Save `example.php` beside `vendor/`, then run `php example.php`:
 
 ```php
 <?php
@@ -32,5 +32,17 @@ require 'vendor/autoload.php';
 
 use Eram\Abzar\Validation\NationalId;
 
-var_dump(NationalId::validate('0013542419')->isValid()); // bool(true)
+var_dump(NationalId::validate('0013542419')->isValid());
 ```
+
+```text
+bool(true)
+```
+
+This checks the ID's structure and checksum, not a person's identity.
+
+## Optional companions
+
+`eram/daynum` is listed in Composer's suggestions for Jalali calendar utilities; it is not installed with Abzar. See [related projects](related.md) and the [WordPress recipe](recipes/wordpress.md) for adjacent work.
+
+Next: [quick start](overview.md), [validation](validation.md), [API stability](api-stability.md).

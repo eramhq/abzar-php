@@ -1,188 +1,46 @@
-<div dir="rtl">
-
-# ابزار (abzar)
+# ابزار (Abzar)
 
 [English](README.md)
 
-**ابزار** یک کتابخانهٔ PHP برای کار با داده‌های فارسی و ایرانی است. هیچ وابستگی زمان اجرا ندارد و روی PHP 8.1 به بالا کار می‌کند.
-
-- **اعتبارسنجی:** کد ملی، شناسهٔ ملی اشخاص حقوقی، شماره کارت، شماره شبا، تلفن همراه و ثابت، کد پستی، شناسهٔ قبض و پرداخت، پلاک خودرو
-- **پول:** تبدیل و نمایش تومان و ریال، و شیء `Amount` برای حساب‌وکتاب بدون خطای ضرب و تقسیم در ۱۰
-- **قالب‌بندی:** عدد به حروف و حروف به عدد، اعداد ترتیبی، «۵ دقیقه پیش»، جداکنندهٔ هزارگان
-- **متن:** یکسان‌سازی «ي» و «ك» عربی، نیم‌فاصله، تشخیص خط فارسی، اصلاح متنی که با صفحه‌کلید اشتباه تایپ شده، اسلاگ
-- **ارقام:** تبدیل میان ارقام فارسی، عربی و انگلیسی
-
-هر اعتبارسنج به‌جای `true` / `false` یک `ValidationResult` برمی‌گرداند. این نتیجه کد خطای پایدار (`ErrorCode`)، پیام فارسی و جزئیات ورودی را در خود دارد.
+ابزار یک کتابخانه برای متن و ارقام فارسی، اعتبارسنجی داده‌های ایرانی، نمایش عدد و کار با تومان و ریال در PHP 8.1 به بالا است. به پکیج دیگری در زمان اجرا وابسته نیست. افزونه `mbstring` لازم است و `intl` فقط برای مرتب‌سازی فارسی و نرمال‌سازی NFC استفاده می‌شود.
 
 ## نصب
 
-<div dir="ltr">
-
 ```bash
-composer require eram/abzar:^0.8@beta
+composer require 'eram/abzar:^0.8@beta'
 ```
 
-</div>
+ابزار هنوز beta و در سری `0.x` است. نسخه‌های minor ممکن است تغییر ناسازگار داشته باشند. دستور بالا نسخه‌ای پایین‌تر از `0.9` نصب می‌کند. قبل از ارتقا، [سیاست سازگاری API](docs/fa/api-stability.md) را بخوانید.
 
-به PHP 8.1 و افزونهٔ `mbstring` نیاز دارد. افزونهٔ `intl` تنها برای `PersianCollator` و یکسان‌سازی NFC لازم است.
+## شروع سریع
 
-## نمونه‌ها
-
-### ۱. کد ملی
-
-<div dir="ltr">
+کد را در فایل `example.php` کنار پوشه `vendor/` ذخیره کنید و با `php example.php` اجرا کنید.
 
 ```php
-use Eram\Abzar\Validation\NationalId;
+<?php
+require 'vendor/autoload.php';
 
-NationalId::validate('۰۰۱۳۵۴۲۴۱۹')->isValid(); // true
-NationalId::from('0013542419')->city();        // 'تهران مرکزی'
-```
-
-</div>
-
-### ۲. شماره کارت و بانک صادرکننده
-
-<div dir="ltr">
-
-```php
-use Eram\Abzar\Validation\CardNumber;
-
-$card = CardNumber::from('6037-7016-8909-5443');
-$card->bank();   // 'بانک کشاورزی'
-$card->masked(); // '6037 70** **** 5443'
-```
-
-</div>
-
-### ۳. شماره شبا
-
-<div dir="ltr">
-
-```php
-use Eram\Abzar\Validation\Iban;
-
-Iban::from('IR820540102680020817909002')->bank(); // 'بانک پارسیان'
-```
-
-</div>
-
-### ۴. شماره تلفن
-
-<div dir="ltr">
-
-```php
 use Eram\Abzar\Validation\PhoneNumber;
-
-$phone = PhoneNumber::from('+98 912 123 4567');
-$phone->value();    // '09121234567'
-$phone->operator(); // 'همراه اول'
-```
-
-</div>
-
-### ۵. خطاها با کد پایدار و پیام فارسی
-
-<div dir="ltr">
-
-```php
-use Eram\Abzar\Validation\NationalId;
-
-$r = NationalId::validate('1234567890');
-$r->errorCodes()[0]->value;     // 'NATIONAL_ID.INVALID_CHECKSUM'
-$r->errorCodes()[0]->message(); // 'کد ملی نامعتبر است'
-```
-
-</div>
-
-### ۶. تومان و ریال
-
-<div dir="ltr">
-
-```php
 use Eram\Abzar\Money\Amount;
 use Eram\Abzar\Money\Currency;
-use Eram\Abzar\Money\Unit;
 
-$price = Amount::fromToman(50_000);
-$price->inRials();                    // 500000
-Currency::format($price);             // '۵۰،۰۰۰ تومان'
-Currency::format($price, Unit::RIAL); // '۵۰۰،۰۰۰ ریال'
-$price->toWords();                    // 'پنجاه هزار تومان'
+$phone = PhoneNumber::from('+98 912 123 4567');
+echo $phone->value(), "\n";
+echo Currency::format(Amount::fromRials(12_345)), "\n";
 ```
 
-</div>
-
-### ۷. عدد به حروف و حروف به عدد
-
-<div dir="ltr">
-
-```php
-use Eram\Abzar\Format\NumberToWords;
-use Eram\Abzar\Format\OrdinalNumber;
-use Eram\Abzar\Format\WordsToNumber;
-
-NumberToWords::convert(1234);                         // 'یک هزار و دویست و سی و چهار'
-OrdinalNumber::toWord(3);                             // 'سوم'
-WordsToNumber::parse('یک هزار و دویست و سی و چهار'); // 1234
+```text
+09121234567
+۱،۲۳۴.۵ تومان
 ```
 
-</div>
-
-### ۸. ارقام
-
-<div dir="ltr">
-
-```php
-use Eram\Abzar\Digits\DigitConverter;
-
-DigitConverter::toPersian('Version 1.2'); // 'Version ۱.۲'
-DigitConverter::toEnglish('نسخه ۱.۲');    // 'نسخه 1.2'
-```
-
-</div>
-
-### ۹. یکسان‌سازی و نیم‌فاصله
-
-<div dir="ltr">
-
-```php
-use Eram\Abzar\Text\CharNormalizer;
-use Eram\Abzar\Text\HalfSpaceFixer;
-
-(new CharNormalizer())->normalize('كتابي'); // 'کتابی'
-HalfSpaceFixer::fix('می روم');              // 'می‌روم'
-```
-
-</div>
-
-### ۱۰. اصلاح صفحه‌کلید و اسلاگ
-
-<div dir="ltr">
-
-```php
-use Eram\Abzar\Text\KeyboardFixer;
-use Eram\Abzar\Text\Slug;
-
-KeyboardFixer::enToFa('sghl'); // 'سلام'
-Slug::generate('سلام دنیا');   // 'سلام-دنیا'
-```
-
-</div>
+اعتبارسنجی فقط ساختار و در موارد لازم checksum را بررسی می‌کند. معتبر بودن ورودی به معنی تایید هویت، مالکیت، وجود حساب یا در دسترس بودن شماره تلفن نیست.
 
 ## مستندات
 
-مستندات کامل به زبان انگلیسی است:
+- [مستندات فارسی](docs/fa/overview.md) · [English documentation](docs/en/overview.md)
+- [نصب](docs/fa/installation.md) · [اعتبارسنجی](docs/fa/validation.md) · [خطاها و هشدارها](docs/fa/error-handling.md)
+- [متن فارسی](docs/fa/persian-text.md) · [ارقام](docs/fa/digits.md) · [نمایش عدد](docs/fa/formatting.md) · [پول](docs/fa/currency.md)
+- [اتصال به فریم‌ورک](docs/fa/framework-integration.md) · [راهنمای ارتقا به انگلیسی](UPGRADE.md) · [تغییرات نسخه‌ها به انگلیسی](CHANGELOG.md)
 
-- [README انگلیسی](README.md): همهٔ قابلیت‌ها با نمونه
-- [فهرست مستندات](docs/en/README.md): صفحهٔ جداگانه برای هر اعتبارسنج، پول، و عدد به حروف
-- [جدول کدهای خطا](docs/en/error-codes.md): همهٔ `ErrorCode`ها با پیام فارسی
-- [راهنمای ارتقا](UPGRADE.md): تغییرات هر نسخه و نحوهٔ مهاجرت
-
-ابزار هنوز در نسخهٔ `0.x` است و پیش از `1.0` ممکن است تغییر ناسازگار داشته باشد. برای تقویم شمسی از [`eram/daynum`](https://github.com/eramhq/daynum) استفاده کنید.
-
-## مجوز
-
-MIT. بخشی از جدول‌های داده از پروژهٔ [persian-tools](https://github.com/persian-tools/persian-tools) با مجوز MIT گرفته شده است.
-
-</div>
+مجوز پروژه MIT است؛ [LICENSE](LICENSE) را ببینید. بخشی از الگوریتم‌ها و جدول‌ها از پروژه [persian-tools](https://github.com/persian-tools/persian-tools) با مجوز MIT گرفته شده است.

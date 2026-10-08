@@ -1,40 +1,34 @@
-# Async Runtimes (Octane / RoadRunner / Swoole / ReactPHP)
+---
+title: "Long-running PHP workers"
+description: "Use Abzar in persistent workers without storing request data in library state."
+---
 
-Abzar is safe to use inside long-running PHP workers. This page documents the specific guarantees and the internal state you should be aware of.
+# Long-running PHP workers
 
-## Summary
+Abzar's PHP code uses bundled data and synchronous computation. Its static caches contain source-derived lookup tables, word maps, or default normalizers. There is no public global configuration setter or cache of request input.
 
-- **No request-scoped state.** Abzar never stores request inputs, user IDs, or session data across calls.
-- **Static caches are pure.** Every process-wide cache is filled from source code alone and never from caller input, so nothing can leak between requests:
-  - `DataSources` — the bundled lookup tables (`src/Data/*.php`), loaded once per table.
-  - `PersianLookup::fromPersian()` — the per-enum Persian-name index for `Bank` / `Operator` / `Province`.
-  - Default-option `CharNormalizer` instances held by `Slug`, `Province` and `PlateNumber`.
-  - `WordsToNumber`'s word table and `KeyboardFixer`'s reverse layout map.
-- **No global configuration.** There is no `setLocale()`, `setConfig()`, or similar mutation point. Every function takes its input explicitly.
-- **Thread-safety** (Swoole coroutines, parallel worker threads) follows PHP's general model: each worker owns its classes and statics. Abzar does not mutate those statics after construction, so concurrent reads are safe.
+```php
+<?php
+require 'vendor/autoload.php';
 
-## What this means in practice
+use Eram\Abzar\Validation\PhoneNumber;
 
-### Laravel Octane
+foreach (['09121234567', 'invalid', '02188887777'] as $input) {
+    echo PhoneNumber::tryFrom($input)?->value() ?? 'invalid';
+    echo "\n";
+}
+```
 
-No special setup is required. You can use abzar freely inside controllers, form requests, jobs, and listeners. No entries are needed in `config/octane.php` for `listeners`, `warm`, `flush`, or `reset`.
+```text
+09121234567
+invalid
+02188887777
+```
 
-### RoadRunner
+## Integration limits
 
-Same — no warmup or reset hooks. Abzar is stateless from worker startup to shutdown.
+For ordinary sequential jobs in Octane or RoadRunner, the current implementation needs no Abzar-specific reset hook. Create or pass configured normalizers explicitly. `CharNormalizer` is final and cannot be subclassed.
 
-### Swoole
+Swoole and ReactPHP callers should treat these calls as synchronous CPU work: there is no promise or asynchronous I/O API. Large text processing still occupies the worker. This source review is not a blanket thread-safety guarantee or a tested runtime support matrix. Manage your application's retained references, native extension objects and worker lifecycle according to its runtime.
 
-Abzar functions are safe to call inside coroutines. Because there's no mutable state, there is no need to wrap calls in channels or mutexes.
-
-### ReactPHP
-
-Abzar is CPU-bound and synchronous. Calls return immediately; there is no I/O, so no promise integration is required.
-
-## When to worry
-
-You should revisit this page if:
-
-- You subclass `CharNormalizer` and introduce mutable instance state.
-- You keep a `CharNormalizer` instance alive across requests yourself. (It is a value object — instantiating a new one per call is cheap and recommended.)
-- A future release of abzar introduces configurable global lookups (pluggable bank tables, etc.) — at that point the pattern will be documented here.
+Related: [framework integration](framework-integration.md), [Persian text](persian-text.md), [stability](api-stability.md).

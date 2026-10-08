@@ -1,10 +1,40 @@
+---
+title: "Bill and payment IDs"
+description: "Validate bill checksums and paired payment identifiers."
+---
+
 # Bill ID
 
 `Eram\Abzar\Validation\BillId` validates the Iranian bank-utility bill-ID (`شناسه قبض`), optionally paired with its payment-ID (`شناسه پرداخت`).
 
+## Minimal example
+
+Save beside `vendor/` and run with PHP:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Eram\Abzar\Validation\BillId;
+
+$bill = BillId::from('7748317800142', '1770160');
+echo $bill->type()->value, "\n";
+var_dump(BillId::validatePair('7748317800142', '1770199')->isValid());
+```
+
+```text
+phone
+bool(false)
+```
+
+## More examples
+
 ```php
 use Eram\Abzar\Validation\BillId;
 use Eram\Abzar\Validation\BillType;
+
+$billId = '7748317800142';
+$paymentId = '1770160';
 
 // Single-field: many systems store only the bill ID.
 $r = BillId::validate($billId);
@@ -60,3 +90,9 @@ Last-digit-before-checksum of the bill ID:
 | 8 | services |
 | 9 | passport |
 | other | `other` |
+
+## Limitations and common mistakes
+
+`validate($billId)` checks a bill alone; `from()` and `tryFrom()` require both IDs. `validatePair()` checks cross-checksums, not outstanding debt, payment status, or a live bill issuer. Keep both fields as strings.
+
+Related: [validation](validation.md), [error handling](error-handling.md), [error codes](error-codes.md).

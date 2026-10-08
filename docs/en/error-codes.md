@@ -1,3 +1,8 @@
+---
+title: "Error code reference"
+description: "Library error and warning codes with their exact Persian messages."
+---
+
 # Error codes
 
 Every failure abzar reports carries an `Eram\Abzar\Validation\ErrorCode`. The value (`NATIONAL_ID.EMPTY`) is stable API: renaming or removing a case is a breaking change (see the [API stability policy](api-stability.md)). Dispatch on the code, not on the message text.
@@ -7,13 +12,12 @@ Every failure abzar reports carries an `Eram\Abzar\Validation\ErrorCode`. The va
 ## Kinds
 
 - **error**: in `ValidationResult::errorCodes()`. The input is invalid and `isValid()` is `false`.
-- **warning**: in `ValidationResult::warningCodes()`. The input is valid, but a lookup (city, bank, operator, plate letter) found nothing, so that detail field is `null`. `isValid()` is `true` and `isStrictlyValid()` is `false`.
+- **warning**: in `ValidationResult::warningCodes()`. The input is valid, but a lookup (city, bank, operator, plate letter) found nothing, so that detail field is generally `null` (an unknown plate letter uses `PlateType::OTHER`). `isValid()` is `true` and `isStrictlyValid()` is `false`.
 - **thrown**: carried by an exception. Every abzar exception extends `AbzarException`, so `catch (AbzarException $e)` and read `$e->errorCode()`.
 
 A validator's `from()` throws `ValidationException` when `validate()` would return invalid. Its `errorCode()` is the first error code, and `result()` gives the full `ValidationResult`.
 
 ```php
-use Eram\Abzar\Exception\ValidationException;
 use Eram\Abzar\Validation\ErrorCode;
 use Eram\Abzar\Validation\NationalId;
 
@@ -22,12 +26,9 @@ $r->errorCodes();              // [ErrorCode::NATIONAL_ID_INVALID_CHECKSUM]
 $r->errorCodes()[0]->value;    // 'NATIONAL_ID.INVALID_CHECKSUM'
 $r->errorCodes()[0]->message(); // 'کد ملی نامعتبر است'
 
-try {
-    NationalId::from('1234567890');
-} catch (ValidationException $e) {
-    $e->errorCode();           // ErrorCode::NATIONAL_ID_INVALID_CHECKSUM
-}
 ```
+
+For a complete exception-handling example, see [errors and warnings](error-handling.md).
 
 ## Validators
 
@@ -93,3 +94,5 @@ Per-validator pages explain when each code fires: [National ID](national-id.md),
 | `ENV.MISSING_EXT_INTL` | این قابلیت به افزونهٔ ext-intl نیاز دارد | `PersianCollator`, `CharNormalizer(normalizeToNfc: true)` | thrown: `EnvironmentException` |
 
 `VALIDATION.FAILED` is a fallback. `ValidationException::fromResult()` uses it for a result that has no code, e.g. one built from plain-string errors.
+
+The `NUMBER_TO_WORDS.PRECISION_LOSS` message is reproduced exactly, but `NumberToWords::convert()` accepts only `int|float`; passing a Persian or arbitrary-precision decimal string is not a supported workaround. Use integer input within range or a separate decimal strategy. See [formatting](formatting.md).

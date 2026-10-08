@@ -1,6 +1,33 @@
+---
+title: "Phone number validation"
+description: "Validate and normalize Iranian mobile and landline numbers."
+---
+
 # Phone Number
 
 `Eram\Abzar\Validation\PhoneNumber` validates Iranian mobile and landline numbers, normalizes them to local (`09121234567`) and E.164 (`+989121234567`) form, and looks up the mobile operator or the landline's city.
+
+## Minimal example
+
+Save beside `vendor/` and run with PHP:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Eram\Abzar\Validation\PhoneNumber;
+
+$phone = PhoneNumber::from('+98 912 123 4567');
+echo $phone->value(), "\n";
+echo $phone->e164(), "\n";
+```
+
+```text
+09121234567
++989121234567
+```
+
+## More examples
 
 ```php
 use Eram\Abzar\Validation\PhoneNumber;
@@ -91,3 +118,9 @@ PhoneNumber::fake(type: PhoneNumberType::LANDLINE, areaCode: '021');
 ```
 
 `fake()` throws `ValidationException` (`FAKE.INVALID_ARGUMENT`) when a pin is malformed or doesn't match the type, e.g. an operator prefix for a landline. The number is valid by construction, but it may belong to a real subscriber.
+
+## Limitations and common mistakes
+
+No OTP is sent and no subscriber or reachability check is made. Operator lookup is based on the prefix table, not a live carrier query; number portability can make it differ from the current carrier. Supply the country/area prefix explicitly for ambiguous numbers.
+
+Related: [validation](validation.md), [error handling](error-handling.md), [error codes](error-codes.md).
