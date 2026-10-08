@@ -15,12 +15,12 @@ description: "Install Abzar with Composer and check required PHP extensions."
 ## Install via Composer
 
 ```bash
-composer require 'eram/abzar:^0.8@beta'
+composer require 'eram/abzar:^0.8.1'
 composer check-platform-reqs
 php -m
 ```
 
-`^0.8@beta` allows compatible `0.8` updates below `0.9` and opts into beta packages; it does not pin one exact release. Commit your application's `composer.lock` for reproducible installs. Never bypass platform checks to hide a missing extension. The web server and CLI can use different PHP configurations.
+`^0.8.1` allows releases from `0.8.1` up to, but not including, `0.9`; it does not pin one exact release. Release `0.8.1` has no prerelease suffix and does not require a beta stability flag. The API remains pre-1.0. Commit your application's `composer.lock` for reproducible installs. Never bypass platform checks to hide a missing extension. The web server and CLI can use different PHP configurations.
 
 ## Verify the install
 

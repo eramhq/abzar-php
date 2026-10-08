@@ -74,6 +74,6 @@ The displayed amount keeps the five-rial remainder. `Amount::inToman()` would re
 
 ## Boundaries
 
-Validators do not contact registries or payment providers and cannot establish identity, ownership, assignment, or reachability. Prefix lookups are bundled snapshots. Text normalization does not index or search documents. Abzar does not provide a Jalali calendar or framework bridges. APIs remain beta; read the [stability policy](api-stability.md).
+Validators do not contact registries or payment providers and cannot establish identity, ownership, assignment, or reachability. Prefix lookups are bundled snapshots. Text normalization does not index or search documents. Abzar does not provide a Jalali calendar or framework bridges. APIs remain pre-1.0; read the [stability policy](api-stability.md).
 
 All standalone snippets assume Composer's autoloader has been loaded. Comments after expressions show return values; an expression alone does not print. Complete examples with a following `text` block print exactly that output. Framework snippets run inside the named application.

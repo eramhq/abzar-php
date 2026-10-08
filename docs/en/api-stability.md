@@ -1,6 +1,6 @@
 ---
 title: "API stability"
-description: "Beta status, compatibility policy and the protected public API."
+description: "Pre-1.0 status, compatibility policy and the protected public API."
 ---
 
 # API Stability
@@ -9,7 +9,7 @@ Abzar follows [Semantic Versioning](https://semver.org/). This page spells out w
 
 ## Current status: `0.x`
 
-While abzar is in `0.x`, breaking changes can happen in any minor release. Pin with `^0.8@beta` and review the [CHANGELOG](../../CHANGELOG.md) before upgrading.
+Release `0.8.1` has no prerelease suffix. While Abzar is in `0.x`, breaking changes can happen in any minor release. Use `^0.8.1` and review the [CHANGELOG](../../CHANGELOG.md) before upgrading.
 
 From `1.0.0` onward, the commitments below apply.
 
@@ -57,6 +57,6 @@ Lookup-table changes (city codes, bank BINs, operator prefixes, IBAN issuers) sh
 
 ## Reading released documentation
 
-The public website imports only published releases at the exact commit resolved from the release tag. Documentation on the default branch can be newer than your installed package. Match the documentation version to your installed release and read the [upgrade guide](../../UPGRADE.md). This policy does not turn a beta into a stable API guarantee.
+The public website imports only published releases at the exact commit resolved from the release tag. Documentation on the default branch can be newer than your installed package. Match the documentation version to your installed release and read the [upgrade guide](../../UPGRADE.md). Publication does not add the full API compatibility guarantees planned for 1.0.
 
 Related: [installation](installation.md), [error handling](error-handling.md).

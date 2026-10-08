@@ -1,5 +1,13 @@
 # Upgrade guide
 
+## 0.8.0-beta → 0.8.1
+
+No PHP implementation or API changes. This release updates documentation, translations and documentation checks; no code migration is needed.
+
+Use `composer require 'eram/abzar:^0.8.1'` to require this release or later `0.8` patches below `0.9`. The beta stability flag is no longer needed for this release. `0.8.1` is a regular release without a prerelease suffix, but the project remains pre-1.0: minor releases may still introduce breaking changes. See the [API stability policy](docs/en/api-stability.md).
+
+Composer infers the package version from the `0.8.1` tag; no `version` field is added to `composer.json`.
+
 ## 0.7 → 0.8
 
 No breaking changes. Bump the constraint to `^0.8@beta`.

@@ -7,10 +7,10 @@ Persian text, digits, number formatting, Iranian validators, and rial/toman mone
 ## Install
 
 ```bash
-composer require 'eram/abzar:^0.8@beta'
+composer require 'eram/abzar:^0.8.1'
 ```
 
-Abzar is beta (`0.x`); minor releases may break compatibility. The constraint above stays below `0.9`. Review the [stability policy](docs/en/api-stability.md) before upgrading.
+Abzar remains pre-1.0 (`0.x`); minor releases may break compatibility. Release `0.8.1` has no prerelease suffix. The constraint above stays below `0.9`. Review the [stability policy](docs/en/api-stability.md) before upgrading.
 
 ## Quick start
 

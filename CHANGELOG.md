@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file. The format is l
 
 ## [Unreleased]
 
+## [0.8.1] — 2026-10-08
+
+Documentation release for the shared Eram website. The PHP implementation is unchanged from `0.8.0-beta`; no application migration is required. This release has no prerelease suffix, while the API remains pre-1.0 and minor releases may still introduce breaking changes. See [UPGRADE.md](UPGRADE.md).
+
+### Added
+
+- Matching English and Persian documentation for 28 public pages, with YAML titles and descriptions, shared `docs/navigation.json`, and a reserved `docs/assets/` directory.
+- Practical guides for validation, Persian text and digits, formatting, money, error handling, and framework integration, with runnable examples and exact outputs.
+- `composer docs:check` for navigation, metadata, local links and translation reporting, plus `composer docs:examples` for PHP snippet syntax and runnable output checks. Existing test and release workflows run both checks.
+- Documentation-check regression tests and Persian error-code table coverage.
+- A release-only website importer contract: public documentation comes from the exact commit associated with a published release tag.
+
+### Changed
+
+- Concise English and Persian READMEs now link to full documentation. Existing guide paths and compatibility indexes remain available; overlapping explanations are consolidated.
+- Documentation now accurately distinguishes required `mbstring` from optional `intl`, validation from ownership verification, errors from lookup warnings, and text normalization from a search engine.
+- Money guides explain whole-rial storage, preservation of rial remainders in toman display, truncation in `inToman()`, and percentage precision limits.
+- Framework examples have clearer prerequisites and input handling; the upgrade guide retains the previously added 0.5 to 0.6 migration guidance.
+- Current install examples use `^0.8.1` without a beta stability flag. Composer continues to infer the package version from Git tags.
+
 ## [0.8.0-beta] — 2026-10-01
 
 `Amount::toWords()`, reference docs for every validator and an `ErrorCode` table, contract tests for four more persian-tools domains, and a higher mutation-testing floor. No breaking changes: see [UPGRADE.md](UPGRADE.md).
